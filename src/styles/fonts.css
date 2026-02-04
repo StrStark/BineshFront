@@ -1,26 +1,17 @@
 @font-face {
   font-family: 'Yekan Bakh FaNum';
-  src: url('./fonts/YekanBakhFaNum-Regular.ttf') format('trueType'),
-       url('./fonts/YekanBakhFaNum-Regular.ttf') format('trueType');
+  src: url('https://cdn.jsdelivr.net/gh/font-store/font-face/yekan-bakh-fanum/yekan-bakh-fanum-light.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/font-store/font-face/yekan-bakh-fanum/yekan-bakh-fanum-light.woff') format('woff');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Yekan Bakh FaNum';
-  src: url('./fonts/YekanBakhFaNum-Regular.ttf') format('trueType'),
-       url('./fonts/YekanBakhFaNum-Regular.ttf') format('trueType');
-       font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Yekan Bakh FaNum';
-  src: url('./fonts/YekanBakhFaNum-Regular.ttf') format('trueType'),
-       url('./fonts/YekanBakhFaNum-Regular.ttf') format('trueType');
-       font-weight: 700;
+  font-family: 'Yekan Bakh';
+  src: url('https://cdn.jsdelivr.net/gh/yekan-font/yekan-bakh-font@latest/fonts/woff2/YekanBakh-Light.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/yekan-font/yekan-bakh-font@latest/fonts/woff/YekanBakh-Light.woff') format('woff');
+  font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
