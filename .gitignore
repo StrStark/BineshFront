@@ -4,11 +4,7 @@ node_modules/
 .pnp.js
 
 # Build outputs
-dist/
-build/
-.out/
-.next/
-coverage/
+
 
 # Env files
 .env
