@@ -1,36 +1,29 @@
-# Stage 1: Build the Vite app
+# Stage 1: Build the application
 FROM node:20-alpine AS builder
-
-# Install some dependencies for building (optional but safer for Alpine)
-RUN apk add --no-cache bash git
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files first for caching
+# Copy package files first for caching dependencies
 COPY package.json package-lock.json ./
 
-# Install all dependencies including devDependencies
-RUN npm ci --include=dev
-
-# Debug: check that vite exists (can remove later)
-RUN ls -la node_modules/.bin
-RUN npx vite --version
+# Install dependencies
+RUN npm ci
 
 # Copy the rest of the application code
 COPY . .
 
-# Build using npx to guarantee local vite binary is used
-RUN npx vite build
+# Build the Vite app for production
+RUN npm run build
 
-# Stage 2: Serve built files with Nginx
+# Stage 2: Serve with Nginx
 FROM nginx:alpine
 
-# Copy the build output from builder stage
+# Copy built assets from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expose port 80
 EXPOSE 80
 
-# Start Nginx in foreground
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
