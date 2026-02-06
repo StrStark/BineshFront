@@ -1,7 +1,21 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Edit, Filter as FilterIcon, History, X, Trash2, Download } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Filter as FilterIcon,
+  History,
+  X,
+  Trash2,
+  Download,
+  Search, // ← added (was missing)
+} from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
-import { removeFilter, clearAllFilters, setOpenColumnFilter } from "../store/filtersSlice";
+import {
+  removeFilter,
+  clearAllFilters,
+  setOpenColumnFilter,
+} from "../store/filtersSlice";
 import { ColumnCustomizer, ColumnConfig } from "./ColumnCustomizer";
 import { PurchaseHistoryModal } from "./PurchaseHistoryModal";
 import { FilterPanel } from "./FilterPanel";
@@ -45,37 +59,54 @@ interface CustomersTableProps {
   handleDelete?: (customerId: string) => void;
 }
 
-export function CustomersTableWithFilters({ customers, customColumns, setCustomColumns, handleEdit, handleDelete }: CustomersTableProps) {
+export function CustomersTableWithFilters({
+  customers,
+  customColumns,
+  setCustomColumns,
+  handleEdit,
+  handleDelete,
+}: CustomersTableProps) {
   const dispatch = useAppDispatch();
   const TABLE_ID = "customers-table";
   const { activeFilters, openColumnFilter } = useAppSelector(
-    (state) => state.filters
+    (state) => state.filters,
   );
   const tableFilters = activeFilters[TABLE_ID] || [];
   const colors = useCurrentColors();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [localVisibleColumns, setLocalVisibleColumns] = useState<ColumnConfig[]>(customColumns || defaultColumns);
+  const [searchQuery, setSearchQuery] = useState(""); // ← added
+  const [localVisibleColumns, setLocalVisibleColumns] = useState<
+    ColumnConfig[]
+  >(customColumns || defaultColumns);
   const [isCallHistoryModalOpen, setIsCallHistoryModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [customColumnData, setCustomColumnData] = useState<Record<string, Record<string, string | string[]>>>({});
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
+  const [customColumnData, setCustomColumnData] = useState<
+    Record<string, Record<string, string | string[]>>
+  >({});
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Load custom column data from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('customColumnData_customers-table');
+    const saved = localStorage.getItem("customColumnData_customers-table");
     if (saved) {
       try {
         setCustomColumnData(JSON.parse(saved));
       } catch (e) {
-        console.error('Failed to load custom column data:', e);
+        console.error("Failed to load custom column data:", e);
       }
     }
   }, []);
 
   // Save custom column data to localStorage
-  const handleCustomColumnChange = (rowId: number, columnKey: string, value: string | string[]) => {
+  const handleCustomColumnChange = (
+    rowId: number,
+    columnKey: string,
+    value: string | string[],
+  ) => {
     setCustomColumnData((prev) => {
       const newData = {
         ...prev,
@@ -84,7 +115,10 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
           [columnKey]: value,
         },
       };
-      localStorage.setItem('customColumnData_customers-table', JSON.stringify(newData));
+      localStorage.setItem(
+        "customColumnData_customers-table",
+        JSON.stringify(newData),
+      );
       return newData;
     });
   };
@@ -100,15 +134,18 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
     dispatch(setOpenColumnFilter(column));
   };
 
-  const handleColumnsChange = useCallback((newColumns: ColumnConfig[]) => {
-    setLocalVisibleColumns(newColumns);
-    if (setCustomColumns) {
-      setCustomColumns(newColumns);
-    }
-  }, [setCustomColumns]);
+  const handleColumnsChange = useCallback(
+    (newColumns: ColumnConfig[]) => {
+      setLocalVisibleColumns(newColumns);
+      if (setCustomColumns) {
+        setCustomColumns(newColumns);
+      }
+    },
+    [setCustomColumns],
+  );
 
   // Filter only visible columns
-  const activeColumns = localVisibleColumns.filter(col => col.visible);
+  const activeColumns = localVisibleColumns.filter((col) => col.visible);
 
   // Render cell content based on column key
   const renderCell = (customer: Customer, column: ColumnConfig) => {
@@ -130,49 +167,79 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
     switch (column.key) {
       case "name":
         return (
-          <td key={column.key} className="p-3 text-sm text-[#1c1c1c] dark:text-white font-medium" dir="auto">
+          <td
+            key={column.key}
+            className="p-3 text-sm text-[#1c1c1c] dark:text-white font-medium"
+            dir="auto"
+          >
             {customer.name}
           </td>
         );
       case "phone":
         return (
-          <td key={column.key} className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]" dir="ltr">
+          <td
+            key={column.key}
+            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]"
+            dir="ltr"
+          >
             {customer.phone}
           </td>
         );
       case "email":
         return (
-          <td key={column.key} className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]" dir="ltr">
+          <td
+            key={column.key}
+            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]"
+            dir="ltr"
+          >
             {customer.email}
           </td>
         );
       case "province":
         return (
-          <td key={column.key} className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]" dir="rtl">
+          <td
+            key={column.key}
+            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]"
+            dir="rtl"
+          >
             {customer.province || "-"}
           </td>
         );
       case "city":
         return (
-          <td key={column.key} className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]" dir="rtl">
+          <td
+            key={column.key}
+            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]"
+            dir="rtl"
+          >
             {customer.city || "-"}
           </td>
         );
       case "neighborhood":
         return (
-          <td key={column.key} className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]" dir="rtl">
+          <td
+            key={column.key}
+            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]"
+            dir="rtl"
+          >
             {customer.neighborhood || "-"}
           </td>
         );
       case "totalCalls":
         return (
-          <td key={column.key} className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8] text-center">
+          <td
+            key={column.key}
+            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8] text-center"
+          >
             {customer.totalCalls}
           </td>
         );
       case "lastCall":
         return (
-          <td key={column.key} className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]">
+          <td
+            key={column.key}
+            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]"
+          >
             {customer.lastCall}
           </td>
         );
@@ -231,7 +298,12 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
               </button>
               <button
                 onClick={() => {
-                  generateInvoicePDF(customer.id, customer.name, customer.phone, customer.email);
+                  generateInvoicePDF(
+                    customer.id,
+                    customer.name,
+                    customer.phone,
+                    customer.email,
+                  );
                 }}
                 className="p-2 text-[#4caf50] hover:bg-[#e8f5e9] dark:hover:bg-[#2e5c3a] rounded-lg transition-colors"
                 title="دانلود فاکتور"
@@ -246,23 +318,35 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
     }
   };
 
-  // Apply filters to data
+  // Apply filters + search to data
   const filteredCustomers = useMemo(() => {
     let result = customers;
+
+    // Search bar filter (now connected)
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((customer) =>
+        customer.name.toLowerCase().includes(query) ||
+        customer.phone.toLowerCase().includes(query) ||
+        customer.email.toLowerCase().includes(query)
+      );
+    }
 
     // Filter by custom tags
     if (selectedTags.length > 0) {
       result = result.filter((customer) => {
-        // Get all tag columns
-        const tagColumns = localVisibleColumns.filter(col => col.isCustom && col.type === 'tags');
-        
-        // Check if any of the selected tags are in this customer's data
-        return tagColumns.some(col => {
+        const tagColumns = localVisibleColumns.filter(
+          (col) => col.isCustom && col.type === "tags",
+        );
+
+        return tagColumns.some((col) => {
           const customerTags = customColumnData[customer.id]?.[col.key];
           if (!customerTags) return false;
-          
-          const tagsArray = Array.isArray(customerTags) ? customerTags : [customerTags];
-          return tagsArray.some(tag => selectedTags.includes(tag));
+
+          const tagsArray = Array.isArray(customerTags)
+            ? customerTags
+            : [customerTags];
+          return tagsArray.some((tag) => selectedTags.includes(tag));
         });
       });
     }
@@ -301,7 +385,14 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
     });
 
     return result;
-  }, [tableFilters, customers, selectedTags, localVisibleColumns, customColumnData]);
+  }, [
+    tableFilters,
+    customers,
+    selectedTags,
+    localVisibleColumns,
+    customColumnData,
+    searchQuery, // ← added
+  ]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredCustomers.length / rowsPerPage);
@@ -309,10 +400,10 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
   const endIndex = startIndex + rowsPerPage;
   const currentPageData = filteredCustomers.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [tableFilters, rowsPerPage]);
+  }, [tableFilters, rowsPerPage, searchQuery]); // ← added searchQuery
 
   const getOperatorLabel = (operator: string) => {
     const labels: Record<string, string> = {
@@ -328,21 +419,21 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
   };
 
   return (
-    <div 
+    <div
       className="rounded-lg border overflow-hidden transition-colors duration-300"
       style={{
         backgroundColor: colors.cardBackground,
-        borderColor: colors.border
+        borderColor: colors.border,
       }}
     >
       {/* Header with Saved Filters Button */}
-      <div 
-        className="p-3 md:p-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0" 
+      <div
+        className="p-3 md:p-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0"
         dir="rtl"
         style={{ borderColor: colors.border }}
       >
-        <h2 
-          className="text-lg md:text-xl font-semibold" 
+        <h2
+          className="text-lg md:text-xl font-semibold"
           dir="auto"
           style={{ color: colors.textPrimary }}
         >
@@ -350,29 +441,73 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
         </h2>
         <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
           <SavedFiltersButton tableId="customers-table" />
-          <ColumnCustomizer 
-            tableId="customers-table" 
+          <ColumnCustomizer
+            tableId="customers-table"
             defaultColumns={customColumns}
             onColumnsChange={setCustomColumns}
           />
         </div>
       </div>
+      
+      {/* Search Bar (now fully working) */}
+      <div
+        className="rounded-lg p-4 border"
+        style={{
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+        }}
+      >
+        <div
+          className="flex items-center gap-3 rounded-lg px-4 py-2.5 sm:py-3 border"
+          style={{
+            backgroundColor: colors.backgroundSecondary,
+            borderColor: colors.border,
+          }}
+        >
+          <Search
+            className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
+            style={{ color: colors.textSecondary }}
+          />
+          <input
+            type="text"
+            placeholder="جستجو در مشتریان (نام، شماره تلفن، ایمیل)"
+            className="bg-transparent flex-1 outline-none text-xs sm:text-sm placeholder:opacity-60"
+            style={{ color: colors.textPrimary }}
+            dir="rtl"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="transition-colors flex-shrink-0"
+              style={{ color: colors.textSecondary }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = colors.textPrimary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = colors.textSecondary;
+              }}
+            >
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Active Filters Display */}
       {tableFilters.length > 0 && (
-        <div 
-          className="p-4 border-b" 
+        <div
+          className="p-4 border-b"
           dir="rtl"
           style={{
             backgroundColor: colors.backgroundSecondary,
-            borderColor: colors.border
+            borderColor: colors.border,
           }}
         >
           <div className="flex items-center gap-2 flex-wrap">
-            <span 
-              className="text-sm"
-              style={{ color: colors.textSecondary }}
-            >
+            <span className="text-sm" style={{ color: colors.textSecondary }}>
               فیلترهای فعال:
             </span>
             {tableFilters.map((filter) => (
@@ -381,18 +516,26 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
                 className="flex items-center gap-1 px-2 py-1 border rounded text-xs"
                 style={{
                   backgroundColor: colors.cardBackground,
-                  borderColor: colors.border
+                  borderColor: colors.border,
                 }}
               >
                 <span style={{ color: colors.textPrimary }}>
-                  {localVisibleColumns.find((c) => c.key === filter.column)?.customLabel || 
-                   localVisibleColumns.find((c) => c.key === filter.column)?.label ||
-                   filter.column}{" "}
-                  <span style={{ color: colors.primary }}>{getOperatorLabel(filter.operator)}</span>{" "}
+                  {localVisibleColumns.find((c) => c.key === filter.column)
+                    ?.customLabel ||
+                    localVisibleColumns.find((c) => c.key === filter.column)
+                      ?.label ||
+                    filter.column}{" "}
+                  <span style={{ color: colors.primary }}>
+                    {getOperatorLabel(filter.operator)}
+                  </span>{" "}
                   {filter.value}
                 </span>
                 <button
-                  onClick={() => dispatch(removeFilter({ tableId: TABLE_ID, filterId: filter.id }))}
+                  onClick={() =>
+                    dispatch(
+                      removeFilter({ tableId: TABLE_ID, filterId: filter.id }),
+                    )
+                  }
                   style={{ color: colors.error }}
                   className="hover:opacity-70"
                 >
@@ -412,40 +555,53 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
       )}
 
       {/* Tag Filters */}
-      {localVisibleColumns.some(col => col.isCustom && col.type === 'tags' && col.options && col.options.length > 0) && (
-        <div 
-          className="p-4 border-b" 
+      {localVisibleColumns.some(
+        (col) =>
+          col.isCustom &&
+          col.type === "tags" &&
+          col.options &&
+          col.options.length > 0,
+      ) && (
+        <div
+          className="p-4 border-b"
           dir="rtl"
           style={{ borderColor: colors.border }}
         >
           <div className="flex items-center gap-2 flex-wrap">
             {localVisibleColumns
-              .filter(col => col.isCustom && col.type === 'tags' && col.options && col.options.length > 0)
-              .flatMap(col => col.options || [])
+              .filter(
+                (col) =>
+                  col.isCustom &&
+                  col.type === "tags" &&
+                  col.options &&
+                  col.options.length > 0,
+              )
+              .flatMap((col) => col.options || [])
               .map((option) => {
                 const isSelected = selectedTags.includes(option.value);
                 return (
                   <button
                     key={option.value}
                     onClick={() => {
-                      setSelectedTags(prev => 
+                      setSelectedTags((prev) =>
                         prev.includes(option.value)
-                          ? prev.filter(t => t !== option.value)
-                          : [...prev, option.value]
+                          ? prev.filter((t) => t !== option.value)
+                          : [...prev, option.value],
                       );
                     }}
                     className="px-3 py-1.5 border rounded-lg text-sm transition-all"
                     style={{
-                      backgroundColor: isSelected ? option.color : colors.cardBackground,
-                      borderColor: isSelected ? 'transparent' : colors.border,
+                      backgroundColor: isSelected
+                        ? option.color
+                        : colors.cardBackground,
+                      borderColor: isSelected ? "transparent" : colors.border,
                       color: isSelected ? "white" : option.color,
                     }}
                   >
                     {option.label}
                   </button>
                 );
-              })
-            }
+              })}
           </div>
         </div>
       )}
@@ -454,11 +610,11 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1400px]" dir="rtl">
           <thead>
-            <tr 
+            <tr
               className="border-b"
               style={{
                 backgroundColor: colors.backgroundSecondary,
-                borderColor: colors.border
+                borderColor: colors.border,
               }}
             >
               {activeColumns.map((column, index, array) => (
@@ -468,8 +624,11 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
                   style={{ color: colors.textSecondary }}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center justify-between gap-2 group cursor-pointer flex-1" onClick={() => handleFilterClick(column.key)}>
-                      <span 
+                    <div
+                      className="flex items-center justify-between gap-2 group cursor-pointer flex-1"
+                      onClick={() => handleFilterClick(column.key)}
+                    >
+                      <span
                         className="transition-colors text-right flex-1"
                         style={{ color: colors.textSecondary }}
                         onMouseEnter={(e) => {
@@ -481,31 +640,41 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
                       >
                         {column.customLabel || column.label}
                       </span>
-                      {column.key !== 'actions' && !(column.isCustom && column.type === 'tags') && (
-                        <div
-                          className="p-1 rounded transition-colors"
-                          style={{
-                            color: tableFilters.some((f) => f.column === column.key)
-                              ? colors.primary
-                              : colors.textSecondary
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = colors.cardBackground;
-                            e.currentTarget.style.color = colors.primary;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = tableFilters.some((f) => f.column === column.key)
-                              ? colors.primary
-                              : colors.textSecondary;
-                          }}
-                        >
-                          <FilterIcon className="w-4 h-4" />
-                        </div>
-                      )}
+                      {column.key !== "actions" &&
+                        !(column.isCustom && column.type === "tags") && (
+                          <div
+                            className="p-1 rounded transition-colors"
+                            style={{
+                              color: tableFilters.some(
+                                (f) => f.column === column.key,
+                              )
+                                ? colors.primary
+                                : colors.textSecondary,
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                colors.cardBackground;
+                              e.currentTarget.style.color = colors.primary;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
+                              e.currentTarget.style.color = tableFilters.some(
+                                (f) => f.column === column.key,
+                              )
+                                ? colors.primary
+                                : colors.textSecondary;
+                            }}
+                          >
+                            <FilterIcon className="w-4 h-4" />
+                          </div>
+                        )}
                     </div>
                     {index < array.length - 1 && (
-                      <div className="h-6 w-px" style={{ backgroundColor: colors.border }}></div>
+                      <div
+                        className="h-6 w-px"
+                        style={{ backgroundColor: colors.border }}
+                      ></div>
                     )}
                   </div>
                 </th>
@@ -518,25 +687,27 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
                 key={customer.id}
                 className="border-b transition-colors"
                 style={{
-                  borderColor: colors.border
+                  borderColor: colors.border,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                  e.currentTarget.style.backgroundColor =
+                    colors.backgroundSecondary;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.backgroundColor = "transparent";
                 }}
               >
-                {activeColumns.map((column) => 
-                  renderCell(customer, column)
-                )}
+                {activeColumns.map((column) => renderCell(customer, column))}
               </tr>
             ))}
           </tbody>
         </table>
 
         {filteredCustomers.length === 0 && (
-          <div className="p-8 text-center text-[#969696] dark:text-[#8b92a8]" dir="rtl">
+          <div
+            className="p-8 text-center text-[#969696] dark:text-[#8b92a8]"
+            dir="rtl"
+          >
             هیچ مشتری با این فیلترها یافت نشد
           </div>
         )}
@@ -544,17 +715,22 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
 
       {/* Pagination */}
       {filteredCustomers.length > 0 && (
-        <div 
-          className="p-3 md:p-4 border-t flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-0" 
+        <div
+          className="p-3 md:p-4 border-t flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-0"
           dir="rtl"
           style={{
-            borderColor: colors.border
+            borderColor: colors.border,
           }}
         >
           {/* Rows per page selector */}
           <div className="flex items-center gap-2 justify-between md:justify-start">
             <div className="flex items-center gap-2">
-              <span className="text-xs md:text-sm whitespace-nowrap" style={{ color: colors.textSecondary }}>نمایش:</span>
+              <span
+                className="text-xs md:text-sm whitespace-nowrap"
+                style={{ color: colors.textSecondary }}
+              >
+                نمایش:
+              </span>
               <select
                 value={rowsPerPage}
                 onChange={(e) => setRowsPerPage(Number(e.target.value))}
@@ -562,7 +738,7 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
                 style={{
                   backgroundColor: colors.cardBackground,
                   borderColor: colors.border,
-                  color: colors.textPrimary
+                  color: colors.textPrimary,
                 }}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = colors.primary;
@@ -570,7 +746,7 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = colors.border;
-                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.boxShadow = "none";
                 }}
               >
                 <option value={5}>5 سطر</option>
@@ -580,13 +756,22 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
                 <option value={100}>100 سطر</option>
               </select>
             </div>
-            <span className="text-xs md:text-sm whitespace-nowrap md:hidden" style={{ color: colors.textSecondary }}>
-              {startIndex + 1} تا {Math.min(endIndex, filteredCustomers.length)} از {filteredCustomers.length}
+            <span
+              className="text-xs md:text-sm whitespace-nowrap md:hidden"
+              style={{ color: colors.textSecondary }}
+            >
+              {startIndex + 1} تا {Math.min(endIndex, filteredCustomers.length)}{" "}
+              از {filteredCustomers.length}
             </span>
           </div>
 
-          <span className="text-xs md:text-sm whitespace-nowrap hidden md:inline" style={{ color: colors.textSecondary }}>
-            نمایش {startIndex + 1} تا {Math.min(endIndex, filteredCustomers.length)} از {filteredCustomers.length} مورد
+          <span
+            className="text-xs md:text-sm whitespace-nowrap hidden md:inline"
+            style={{ color: colors.textSecondary }}
+          >
+            نمایش {startIndex + 1} تا{" "}
+            {Math.min(endIndex, filteredCustomers.length)} از{" "}
+            {filteredCustomers.length} مورد
           </span>
 
           {/* Page navigation */}
@@ -596,25 +781,28 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
               disabled={currentPage === 1}
               className="p-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               style={{
-                color: colors.textSecondary
+                color: colors.textSecondary,
               }}
               onMouseEnter={(e) => {
                 if (currentPage !== 1) {
-                  e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                  e.currentTarget.style.backgroundColor =
+                    colors.backgroundSecondary;
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <ChevronRight className="w-5 h-5" style={{ color: colors.textSecondary }} />
+              <ChevronRight
+                className="w-5 h-5"
+                style={{ color: colors.textSecondary }}
+              />
             </button>
 
             {/* Page numbers */}
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((page) => {
-                  // Show first page, last page, current page, and neighbors
                   return (
                     page === 1 ||
                     page === totalPages ||
@@ -622,33 +810,48 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
                   );
                 })
                 .map((page, index, array) => {
-                  // Add ellipsis if there's a gap
                   const prevPage = array[index - 1];
                   const showEllipsis = prevPage && page - prevPage > 1;
 
                   return (
                     <div key={page} className="flex items-center gap-1">
                       {showEllipsis && (
-                        <span className="px-2" style={{ color: colors.textSecondary }}>...</span>
+                        <span
+                          className="px-2"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          ...
+                        </span>
                       )}
                       <button
                         onClick={() => setCurrentPage(page)}
                         className={`min-w-[32px] h-8 px-2 flex items-center justify-center rounded text-sm transition-colors`}
                         style={{
-                          backgroundColor: currentPage === page ? colors.primary : colors.cardBackground,
-                          borderWidth: '1px',
-                          borderStyle: 'solid',
-                          borderColor: currentPage === page ? colors.primary : colors.border,
-                          color: currentPage === page ? '#ffffff' : colors.textPrimary
+                          backgroundColor:
+                            currentPage === page
+                              ? colors.primary
+                              : colors.cardBackground,
+                          borderWidth: "1px",
+                          borderStyle: "solid",
+                          borderColor:
+                            currentPage === page
+                              ? colors.primary
+                              : colors.border,
+                          color:
+                            currentPage === page
+                              ? "#ffffff"
+                              : colors.textPrimary,
                         }}
                         onMouseEnter={(e) => {
                           if (currentPage !== page) {
-                            e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                            e.currentTarget.style.backgroundColor =
+                              colors.backgroundSecondary;
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (currentPage !== page) {
-                            e.currentTarget.style.backgroundColor = colors.cardBackground;
+                            e.currentTarget.style.backgroundColor =
+                              colors.cardBackground;
                           }
                         }}
                       >
@@ -656,27 +859,32 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
                       </button>
                     </div>
                   );
-                })
-              }
+                })}
             </div>
 
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
               disabled={currentPage === totalPages}
               className="p-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               style={{
-                color: colors.textSecondary
+                color: colors.textSecondary,
               }}
               onMouseEnter={(e) => {
                 if (currentPage !== totalPages) {
-                  e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                  e.currentTarget.style.backgroundColor =
+                    colors.backgroundSecondary;
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <ChevronLeft className="w-5 h-5" style={{ color: colors.textSecondary }} />
+              <ChevronLeft
+                className="w-5 h-5"
+                style={{ color: colors.textSecondary }}
+              />
             </button>
           </div>
         </div>
@@ -687,7 +895,10 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
         <FilterPanel
           tableId={TABLE_ID}
           column={openColumnFilter}
-          columnLabel={localVisibleColumns.find((c) => c.key === openColumnFilter)?.label || openColumnFilter}
+          columnLabel={
+            localVisibleColumns.find((c) => c.key === openColumnFilter)
+              ?.label || openColumnFilter
+          }
           onClose={() => dispatch(setOpenColumnFilter(null))}
         />
       )}
@@ -709,7 +920,7 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
               unitPrice: 10000000,
               totalPrice: 10000000,
               paymentStatus: "پرداخت شده",
-              orderStatus: "تحویل شده"
+              orderStatus: "تحویل شده",
             },
             {
               id: 2,
@@ -720,7 +931,7 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
               unitPrice: 5500000,
               totalPrice: 11000000,
               paymentStatus: "پرداخت شده",
-              orderStatus: "تحویل شده"
+              orderStatus: "تحویل شده",
             },
             {
               id: 3,
@@ -731,7 +942,7 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
               unitPrice: 8500000,
               totalPrice: 8500000,
               paymentStatus: "پرداخت شده",
-              orderStatus: "تحویل شده"
+              orderStatus: "تحویل شده",
             },
             {
               id: 4,
@@ -742,7 +953,7 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
               unitPrice: 2000000,
               totalPrice: 6000000,
               paymentStatus: "پرداخت شده",
-              orderStatus: "تحویل شده"
+              orderStatus: "تحویل شده",
             },
             {
               id: 5,
@@ -753,8 +964,8 @@ export function CustomersTableWithFilters({ customers, customColumns, setCustomC
               unitPrice: 12000000,
               totalPrice: 12000000,
               paymentStatus: "در انتظار",
-              orderStatus: "در حال ارسال"
-            }
+              orderStatus: "در حال ارسال",
+            },
           ]}
         />
       )}
