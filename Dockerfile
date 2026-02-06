@@ -1,29 +1,33 @@
-# Stage 1: Build the application
-FROM node:20-alpine AS builder
-
-# Set working directory
+# Install dependencies
+FROM node:18-alpine AS deps
 WORKDIR /app
 
-# Copy package files first for caching dependencies
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install --frozen-lockfile; \
+  else echo "No lockfile found." && exit 1; \
+  fi
 
-# Install dependencies
-RUN npm ci
+# Build the Vite project
+FROM node:18-alpine AS build
+WORKDIR /app
 
-# Copy the rest of the application code
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the Vite app for production
+ENV NODE_ENV=production
 RUN npm run build
 
-# Stage 2: Serve with Nginx
-FROM nginx:alpine
+# Production image - serve static files using a lightweight web server
+FROM nginx:1.25-alpine AS runner
+WORKDIR /usr/share/nginx/html
 
-# Copy built assets from the builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy generated build output into nginx web root
+COPY --from=build /app/dist .
 
-# Expose port 80
+# Expose the port nginx will serve on
 EXPOSE 80
 
-# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
