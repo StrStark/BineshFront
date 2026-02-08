@@ -1,7 +1,21 @@
 import { useState, useMemo, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Filter as FilterIcon, X, Edit, Trash, Phone, Building2, MapPin, Clock } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter as FilterIcon,
+  X,
+  Edit,
+  Trash,
+  Phone,
+  Building2,
+  MapPin,
+  Clock,
+} from "lucide-react";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
-import { useExhibitionVisits, ExhibitionVisit } from "../contexts/ExhibitionVisitsContext";
+import {
+  useExhibitionVisits,
+  ExhibitionVisit,
+} from "../contexts/ExhibitionVisitsContext";
 import { EditExhibitionVisitModal } from "./EditExhibitionVisitModal";
 
 const priorityLabels = {
@@ -32,8 +46,11 @@ const statusColors = {
 
 export function ExhibitionVisitsTable() {
   const colors = useCurrentColors();
-  const { visits, deleteVisit, searchTerm, filterStatus, filterPriority } = useExhibitionVisits();
-  const [editingVisit, setEditingVisit] = useState<ExhibitionVisit | null>(null);
+  const { visits, deleteVisit, searchTerm, filterStatus, filterPriority } =
+    useExhibitionVisits();
+  const [editingVisit, setEditingVisit] = useState<ExhibitionVisit | null>(
+    null,
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -45,8 +62,10 @@ export function ExhibitionVisitsTable() {
         visit.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
         visit.city.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesStatus = filterStatus === "all" || visit.followUpStatus === filterStatus;
-      const matchesPriority = filterPriority === "all" || visit.priority === filterPriority;
+      const matchesStatus =
+        filterStatus === "all" || visit.followUpStatus === filterStatus;
+      const matchesPriority =
+        filterPriority === "all" || visit.priority === filterPriority;
 
       return matchesSearch && matchesStatus && matchesPriority;
     });
@@ -97,6 +116,21 @@ export function ExhibitionVisitsTable() {
           >
             بازدیدکنندگان
           </h2>
+        </div>
+
+  {/* Search */}
+        <div className="flex-1 relative">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="جستجو در نام، شماره تماس، شرکت یا شهر..."
+            className="w-full pr-12 pl-4 py-3 rounded-lg border focus:outline-none focus:ring-2 bg-white dark:bg-[#1a1f2e] dark:text-white dark:border-gray-700"
+            style={{
+              borderColor: colors.border,
+            }}
+          />
         </div>
 
         {/* Table */}
@@ -229,7 +263,8 @@ export function ExhibitionVisitsTable() {
                     <span
                       className="px-3 py-1 rounded-full text-xs font-semibold"
                       style={{
-                        backgroundColor: statusColors[visit.followUpStatus] + "22",
+                        backgroundColor:
+                          statusColors[visit.followUpStatus] + "22",
                         color: statusColors[visit.followUpStatus],
                       }}
                     >
@@ -281,7 +316,9 @@ export function ExhibitionVisitsTable() {
             >
               <Building2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
               <p className="text-lg">هیچ بازدیدی با این فیلترها یافت نشد</p>
-              <p className="text-sm mt-2">با کلیک روی دکمه "ثبت بازدیدکننده جدید" شروع کنید</p>
+              <p className="text-sm mt-2">
+                با کلیک روی دکمه "ثبت بازدیدکننده جدید" شروع کنید
+              </p>
             </div>
           )}
         </div>
@@ -331,8 +368,8 @@ export function ExhibitionVisitsTable() {
                 className="text-xs md:text-sm whitespace-nowrap md:hidden"
                 style={{ color: colors.textSecondary }}
               >
-                {startIndex + 1} تا {Math.min(endIndex, filteredVisits.length)} از{" "}
-                {filteredVisits.length}
+                {startIndex + 1} تا {Math.min(endIndex, filteredVisits.length)}{" "}
+                از {filteredVisits.length}
               </span>
             </div>
 
@@ -403,9 +440,13 @@ export function ExhibitionVisitsTable() {
                             borderWidth: "1px",
                             borderStyle: "solid",
                             borderColor:
-                              currentPage === page ? colors.primary : colors.border,
+                              currentPage === page
+                                ? colors.primary
+                                : colors.border,
                             color:
-                              currentPage === page ? "#ffffff" : colors.textPrimary,
+                              currentPage === page
+                                ? "#ffffff"
+                                : colors.textPrimary,
                           }}
                           onMouseEnter={(e) => {
                             if (currentPage !== page) {

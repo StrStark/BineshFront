@@ -181,7 +181,8 @@ export function PersianCalendar({ value, onConfirm, onCancel }: PersianCalendarP
             onClick={goToNextMonth}
             className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" style={{ color: colors.textSecondary }} />
+                        <ChevronRight className="w-4 h-4" style={{ color: colors.textSecondary }} />
+
           </button>
           <div className="px-4 py-1 rounded-lg text-xs font-medium" style={{ 
             backgroundColor: colors.backgroundSecondary,
@@ -193,7 +194,8 @@ export function PersianCalendar({ value, onConfirm, onCancel }: PersianCalendarP
             onClick={goToPrevMonth}
             className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <ChevronRight className="w-4 h-4" style={{ color: colors.textSecondary }} />
+             <ChevronLeft className="w-4 h-4" style={{ color: colors.textSecondary }} />
+
           </button>
         </div>
 
@@ -270,9 +272,9 @@ export function PersianCalendar({ value, onConfirm, onCancel }: PersianCalendarP
         onClick={(e) => e.stopPropagation()}
       >
         {/* Calendars */}
-        <div className="flex gap-6 p-6">
+        <div className="flex gap-6 p-6">          {renderCalendar(rightMonth.year, rightMonth.month)}
           {renderCalendar(leftMonth.year, leftMonth.month)}
-          {renderCalendar(rightMonth.year, rightMonth.month)}
+
         </div>
 
         {/* Footer */}

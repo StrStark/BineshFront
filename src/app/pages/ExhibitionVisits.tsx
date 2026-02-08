@@ -269,7 +269,7 @@ export default function ExhibitionVisits() {
         {/* Search and Filters */}
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
-          <div className="flex-1 relative">
+          {/* <div className="flex-1 relative">
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
@@ -281,7 +281,7 @@ export default function ExhibitionVisits() {
                 borderColor: colors.border,
               }}
             />
-          </div>
+          </div> */}
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3">

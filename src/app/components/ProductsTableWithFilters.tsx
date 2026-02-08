@@ -411,7 +411,7 @@ export function ProductsTableWithFilters({
 
       {/* Search Bar (fully working now) */}
       <div
-        className="rounded-lg p-4 border"
+        className="rounded-lg p-4 "
         style={{
           backgroundColor: colors.cardBackground,
           borderColor: colors.border,

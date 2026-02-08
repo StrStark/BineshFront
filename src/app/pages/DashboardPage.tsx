@@ -662,7 +662,7 @@ export function DashboardPage() {
                       <CheckCircle2 className="w-8 h-8" style={{ color: colors.success }} />
                     </div>
                     <h4 className="text-lg font-bold mb-2" style={{ color: colors.textPrimary }}>
-                      همه ویجت‌ها فعال شده‌اند! 🎉
+                      همه ویجت‌ها فعال شده‌اند! 
                     </h4>
                     <p className="text-sm" style={{ color: colors.textSecondary }}>
                       تمام ویجت‌های موجود را به داشبورد اضافه کرده‌اید

@@ -161,7 +161,7 @@ export function UsersAndPermissions() {
   };
 
   const handleEditUser = (user: User) => {
-    setIsEditMode(true);
+    setIsEditMode(false);
     setSelectedUser(user);
     setFormData({
       name: user.name,
@@ -173,7 +173,7 @@ export function UsersAndPermissions() {
       permissions: user.permissions,
       avatar: user.avatar || "",
     });
-    setShowAddUserModal(true);
+    setShowAddUserModal(false);
   };
 
   const handleDeleteUser = (user: User) => {
@@ -271,7 +271,6 @@ export function UsersAndPermissions() {
           </p>
         </div>
         <ThemedButton onClick={handleAddUser} className="flex items-center gap-2 px-4 py-2 rounded-lg">
-          <Plus className="w-4 h-4" />
           افزودن کاربر جدید
         </ThemedButton>
       </div>
@@ -829,7 +828,7 @@ export function UsersAndPermissions() {
             </div>
 
             <div
-              className="px-6 py-4 border-t flex items-center justify-center gap-3"
+              className="px-6 py-4 border-t flex items-center justify-center gap-3 rounded-lg"
               style={{
                 backgroundColor: colors.cardBackground,
                 borderColor: colors.border,
