@@ -69,27 +69,7 @@ const quickActions = [
 const otherSoftware = [
   {
     id: 1,
-    title: "طراحی بیزینس پلن شخصی",
-    link: "#",
-  },
-  {
-    id: 2,
-    title: "کنترل کلیش تماس با بیش همگر",
-    link: "#",
-  },
-  {
-    id: 3,
-    title: "مدیریت داده‌ها با پنل بینش",
-    link: "#",
-  },
-  {
-    id: 4,
-    title: "کنترل هوشمند انبار",
-    link: "#",
-  },
-  {
-    id: 5,
-    title: "انجام تماس استعلامات بانکی",
+    title: "سیستم مدیریت تماس هوشمند رهگیر",
     link: "#",
   },
 ];
@@ -662,7 +642,7 @@ export function DashboardPage() {
                       <CheckCircle2 className="w-8 h-8" style={{ color: colors.success }} />
                     </div>
                     <h4 className="text-lg font-bold mb-2" style={{ color: colors.textPrimary }}>
-                      همه ویجت‌ها فعال شده‌اند! 🎉
+                      همه ویجت‌ها فعال شده‌اند! 
                     </h4>
                     <p className="text-sm" style={{ color: colors.textSecondary }}>
                       تمام ویجت‌های موجود را به داشبورد اضافه کرده‌اید

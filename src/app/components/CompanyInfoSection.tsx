@@ -33,6 +33,7 @@ export function CompanyInfoSection() {
         backgroundColor: colors.cardBackground,
         borderColor: colors.border,
       }}
+      dir="rtl"
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
@@ -99,12 +100,11 @@ export function CompanyInfoSection() {
                       className="text-xs"
                       style={{ color: colors.textSecondary }}
                     >
-                      فقط فرمت‌های JPG / PNG کمتر از 10 مگ
+                      فقط فرمت‌های JPG / PNG کمتر از ۱۰ مگابایت
                     </p>
                   </div>
                   <ThemedButton className="px-4 py-2 rounded-lg text-sm flex items-center gap-2 mx-auto">
-                    <Upload className="w-4 h-4" />
-                    <span>انتخاب کنید</span>
+                    <span>انتخاب فایل</span>
                   </ThemedButton>
                 </div>
               )}
@@ -159,18 +159,17 @@ export function CompanyInfoSection() {
                       className="text-sm font-medium mb-1"
                       style={{ color: colors.textPrimary }}
                     >
-                      سربرگ سایز A4 خود را بکشید
+                      فایل سربرگ A4 خود را بکشید و رها کنید
                     </p>
                     <p
                       className="text-xs"
                       style={{ color: colors.textSecondary }}
                     >
-                      فقط فرمت‌های JPG / PNG کمتر از 10 مگ
+                      فقط فرمت‌های JPG / PNG کمتر از ۱۰ مگابایت
                     </p>
                   </div>
                   <ThemedButton className="px-4 py-2 rounded-lg text-sm flex items-center gap-2 mx-auto">
-                    <Upload className="w-4 h-4" />
-                    <span>انتخاب کنید</span>
+                    <span>انتخاب فایل</span>
                   </ThemedButton>
                 </div>
               )}
@@ -186,17 +185,18 @@ export function CompanyInfoSection() {
               className="block text-sm font-semibold mb-2"
               style={{ color: colors.textPrimary }}
             >
-              نام شخص حقیقی/حقوقی*
+              نام شخص حقیقی/حقوقی *
             </label>
             <input
               type="text"
-              placeholder="نام را وارد کنید"
-              className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+              placeholder="نام کامل شخص حقیقی یا حقوقی را وارد کنید"
+              className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
               style={{
                 backgroundColor: colors.backgroundSecondary,
                 borderColor: colors.border,
                 color: colors.textPrimary,
               }}
+              dir="rtl"
             />
           </div>
 
@@ -210,13 +210,14 @@ export function CompanyInfoSection() {
             </label>
             <input
               type="text"
-              placeholder="نام خانوادگی را وارد کنید"
-              className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+              placeholder="نام تجاری شرکت را وارد کنید"
+              className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
               style={{
                 backgroundColor: colors.backgroundSecondary,
                 borderColor: colors.border,
                 color: colors.textPrimary,
               }}
+              dir="rtl"
             />
           </div>
         </div>
@@ -231,13 +232,14 @@ export function CompanyInfoSection() {
           </label>
           <input
             type="text"
-            placeholder="آدرس شرکت را وارد کنید"
-            className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+            placeholder="آدرس دقیق پستی شرکت (پلاک، واحد، خیابان، ...) را وارد کنید"
+            className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
             style={{
               backgroundColor: colors.backgroundSecondary,
               borderColor: colors.border,
               color: colors.textPrimary,
             }}
+            dir="rtl"
           />
         </div>
 
@@ -247,19 +249,19 @@ export function CompanyInfoSection() {
             className="block text-sm font-semibold mb-2"
             style={{ color: colors.textPrimary }}
           >
-            کد پستی 10 رقمی
+            کد پستی ۱۰ رقمی
           </label>
           <input
             type="text"
-            placeholder="کد پستی را وارد کنید"
+            placeholder="مثال: ۱۲۳۴۵۶۷۸۹۰"
             maxLength={10}
-            className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+            className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
             style={{
               backgroundColor: colors.backgroundSecondary,
               borderColor: colors.border,
               color: colors.textPrimary,
             }}
-            dir="ltr"
+            dir="rtl"
           />
         </div>
 
@@ -274,14 +276,14 @@ export function CompanyInfoSection() {
             </label>
             <input
               type="text"
-              placeholder="شماره اقتصادی را وارد کنید"
-              className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+              placeholder="شماره اقتصادی ۱۲ رقمی را وارد کنید"
+              className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
               style={{
                 backgroundColor: colors.backgroundSecondary,
                 borderColor: colors.border,
                 color: colors.textPrimary,
               }}
-              dir="ltr"
+              dir="rtl"
             />
           </div>
 
@@ -291,18 +293,18 @@ export function CompanyInfoSection() {
               className="block text-sm font-semibold mb-2"
               style={{ color: colors.textPrimary }}
             >
-              شماره ثبت/شماره ملی
+              شماره ثبت / کد ملی
             </label>
             <input
               type="text"
-              placeholder="شماره ثبت/شماره ملی را وارد کنید"
-              className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+              placeholder="شماره ثبت شرکت یا کد ملی شخص را وارد کنید"
+              className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
               style={{
                 backgroundColor: colors.backgroundSecondary,
                 borderColor: colors.border,
                 color: colors.textPrimary,
               }}
-              dir="ltr"
+              dir="rtl"
             />
           </div>
         </div>
@@ -318,14 +320,14 @@ export function CompanyInfoSection() {
             </label>
             <input
               type="text"
-              placeholder="1404/08/23"
-              className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+              placeholder="مثال: ۱۴۰۴/۰۵/۱۷"
+              className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
               style={{
                 backgroundColor: colors.backgroundSecondary,
                 borderColor: colors.border,
                 color: colors.textPrimary,
               }}
-              dir="ltr"
+              dir="rtl"
             />
           </div>
 
@@ -335,18 +337,18 @@ export function CompanyInfoSection() {
               className="block text-sm font-semibold mb-2"
               style={{ color: colors.textPrimary }}
             >
-              شماره تلفن نمابر
+              شماره تلفن / نمابر
             </label>
             <input
               type="tel"
-              placeholder="شماره تلفن/نمابر را وارد کنید"
-              className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+              placeholder="مثال: ۰۲۱۸۸۷۷۷۷۷۷"
+              className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
               style={{
                 backgroundColor: colors.backgroundSecondary,
                 borderColor: colors.border,
                 color: colors.textPrimary,
               }}
-              dir="ltr"
+              dir="rtl"
             />
           </div>
         </div>
@@ -357,18 +359,18 @@ export function CompanyInfoSection() {
             className="block text-sm font-semibold mb-2"
             style={{ color: colors.textPrimary }}
           >
-            آدرس وبسایت
+            آدرس وب‌سایت
           </label>
           <input
             type="url"
-            placeholder="آدرس وبسایت خود را وارد کنید"
-            className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+            placeholder="مثال: https://example.com"
+            className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
             style={{
               backgroundColor: colors.backgroundSecondary,
               borderColor: colors.border,
               color: colors.textPrimary,
             }}
-            dir="ltr"
+            dir="rtl"
           />
         </div>
 
@@ -382,22 +384,22 @@ export function CompanyInfoSection() {
           </label>
           <input
             type="email"
-            placeholder="ایمیل خود را وارد کنید"
-            className="w-full px-4 py-3 rounded-lg border outline-none transition-all"
+            placeholder="مثال: info@company.ir"
+            className="w-full px-4 py-3 rounded-lg border outline-none transition-all text-right"
             style={{
               backgroundColor: colors.backgroundSecondary,
               borderColor: colors.border,
               color: colors.textPrimary,
             }}
-            dir="ltr"
+            dir="rtl"
           />
         </div>
 
         {/* Save Button */}
         <div className="flex justify-end pt-4">
-          <ThemedButton className="px-6 py-3 rounded-lg text-sm font-semibold">
+          {/* <ThemedButton className="px-6 py-3 rounded-lg text-sm font-semibold">
             ذخیره اطلاعات
-          </ThemedButton>
+          </ThemedButton> */}
         </div>
       </div>
     </div>

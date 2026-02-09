@@ -1,7 +1,22 @@
 import { useState, useMemo, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Filter as FilterIcon, X, Edit, Trash, Phone, Building2, MapPin, Clock } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter as FilterIcon,
+  X,
+  Edit,
+  Trash,
+  Phone,
+  Building2,
+  MapPin,
+  Clock,
+  Search,
+} from "lucide-react";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
-import { useExhibitionVisits, ExhibitionVisit } from "../contexts/ExhibitionVisitsContext";
+import {
+  useExhibitionVisits,
+  ExhibitionVisit,
+} from "../contexts/ExhibitionVisitsContext";
 import { EditExhibitionVisitModal } from "./EditExhibitionVisitModal";
 
 const priorityLabels = {
@@ -9,20 +24,17 @@ const priorityLabels = {
   medium: "متوسط",
   high: "بالا",
 };
-
 const priorityColors = {
   low: "#10b981",
   medium: "#f59e0b",
   high: "#ef4444",
 };
-
 const statusLabels = {
   pending: "در انتظار پیگیری",
   contacted: "تماس گرفته شده",
   converted: "تبدیل به مشتری",
   not_interested: "عدم علاقه",
 };
-
 const statusColors = {
   pending: "#6b7280",
   contacted: "#3b82f6",
@@ -32,8 +44,17 @@ const statusColors = {
 
 export function ExhibitionVisitsTable() {
   const colors = useCurrentColors();
-  const { visits, deleteVisit, searchTerm, filterStatus, filterPriority } = useExhibitionVisits();
-  const [editingVisit, setEditingVisit] = useState<ExhibitionVisit | null>(null);
+  const {
+    visits,
+    deleteVisit,
+    searchTerm,
+    setSearchTerm,
+    filterStatus,
+    filterPriority,
+  } = useExhibitionVisits();
+  const [editingVisit, setEditingVisit] = useState<ExhibitionVisit | null>(
+    null,
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -44,10 +65,10 @@ export function ExhibitionVisitsTable() {
         visit.phoneNumber.includes(searchTerm) ||
         visit.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
         visit.city.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus = filterStatus === "all" || visit.followUpStatus === filterStatus;
-      const matchesPriority = filterPriority === "all" || visit.priority === filterPriority;
-
+      const matchesStatus =
+        filterStatus === "all" || visit.followUpStatus === filterStatus;
+      const matchesPriority =
+        filterPriority === "all" || visit.priority === filterPriority;
       return matchesSearch && matchesStatus && matchesPriority;
     });
   }, [visits, searchTerm, filterStatus, filterPriority]);
@@ -97,8 +118,53 @@ export function ExhibitionVisitsTable() {
           >
             بازدیدکنندگان
           </h2>
+        </div>{" "}
+        {/* Search */}
+        <div
+          className=" p-4 "
+          style={{
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          }}
+        >
+          <div
+            className="flex items-center gap-3 rounded-lg px-4 py-2.5 sm:py-3 border"
+            style={{
+              backgroundColor: colors.backgroundSecondary,
+              borderColor: colors.border,
+            }}
+          >
+            <Search
+              className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
+              style={{ color: colors.textSecondary }}
+            />
+            <input
+              type="text"
+              placeholder="جستجو در مشتریان (نام، شماره تلفن، ایمیل)"
+              className="bg-transparent flex-1 outline-none text-xs sm:text-sm placeholder:opacity-60"
+              style={{ color: colors.textPrimary }}
+              dir="rtl"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="transition-colors flex-shrink-0"
+                style={{ color: colors.textSecondary }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = colors.textPrimary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = colors.textSecondary;
+                }}
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            )}
+          </div>
         </div>
-
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]" dir="rtl">
@@ -229,7 +295,8 @@ export function ExhibitionVisitsTable() {
                     <span
                       className="px-3 py-1 rounded-full text-xs font-semibold"
                       style={{
-                        backgroundColor: statusColors[visit.followUpStatus] + "22",
+                        backgroundColor:
+                          statusColors[visit.followUpStatus] + "22",
                         color: statusColors[visit.followUpStatus],
                       }}
                     >
@@ -272,7 +339,6 @@ export function ExhibitionVisitsTable() {
               ))}
             </tbody>
           </table>
-
           {filteredVisits.length === 0 && (
             <div
               className="p-8 text-center"
@@ -281,11 +347,12 @@ export function ExhibitionVisitsTable() {
             >
               <Building2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
               <p className="text-lg">هیچ بازدیدی با این فیلترها یافت نشد</p>
-              <p className="text-sm mt-2">با کلیک روی دکمه "ثبت بازدیدکننده جدید" شروع کنید</p>
+              <p className="text-sm mt-2">
+                با کلیک روی دکمه "ثبت بازدیدکننده جدید" شروع کنید
+              </p>
             </div>
           )}
         </div>
-
         {/* Pagination */}
         {filteredVisits.length > 0 && (
           <div
@@ -331,11 +398,10 @@ export function ExhibitionVisitsTable() {
                 className="text-xs md:text-sm whitespace-nowrap md:hidden"
                 style={{ color: colors.textSecondary }}
               >
-                {startIndex + 1} تا {Math.min(endIndex, filteredVisits.length)} از{" "}
-                {filteredVisits.length}
+                {startIndex + 1} تا {Math.min(endIndex, filteredVisits.length)}{" "}
+                از {filteredVisits.length}
               </span>
             </div>
-
             <span
               className="text-xs md:text-sm whitespace-nowrap hidden md:inline"
               style={{ color: colors.textSecondary }}
@@ -344,7 +410,6 @@ export function ExhibitionVisitsTable() {
               {Math.min(endIndex, filteredVisits.length)} از{" "}
               {filteredVisits.length} مورد
             </span>
-
             <div className="flex items-center gap-1.5 md:gap-2 justify-center md:justify-end">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
@@ -368,7 +433,6 @@ export function ExhibitionVisitsTable() {
                   style={{ color: colors.textSecondary }}
                 />
               </button>
-
               <div className="flex items-center gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter((page) => {
@@ -381,7 +445,6 @@ export function ExhibitionVisitsTable() {
                   .map((page, index, array) => {
                     const prevPage = array[index - 1];
                     const showEllipsis = prevPage && page - prevPage > 1;
-
                     return (
                       <div key={page} className="flex items-center gap-1">
                         {showEllipsis && (
@@ -403,9 +466,13 @@ export function ExhibitionVisitsTable() {
                             borderWidth: "1px",
                             borderStyle: "solid",
                             borderColor:
-                              currentPage === page ? colors.primary : colors.border,
+                              currentPage === page
+                                ? colors.primary
+                                : colors.border,
                             color:
-                              currentPage === page ? "#ffffff" : colors.textPrimary,
+                              currentPage === page
+                                ? "#ffffff"
+                                : colors.textPrimary,
                           }}
                           onMouseEnter={(e) => {
                             if (currentPage !== page) {
@@ -426,7 +493,6 @@ export function ExhibitionVisitsTable() {
                     );
                   })}
               </div>
-
               <button
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
@@ -455,7 +521,6 @@ export function ExhibitionVisitsTable() {
           </div>
         )}
       </div>
-
       {/* Edit Modal */}
       {editingVisit && (
         <EditExhibitionVisitModal

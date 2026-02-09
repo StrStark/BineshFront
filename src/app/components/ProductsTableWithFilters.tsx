@@ -7,11 +7,16 @@ import {
   Eye,
   Filter as FilterIcon,
   X,
+  Search,
 } from "lucide-react";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { ColumnCustomizer, ColumnConfig } from "./ColumnCustomizer";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
-import { removeFilter, clearAllFilters, setOpenColumnFilter } from "../store/filtersSlice";
+import {
+  removeFilter,
+  clearAllFilters,
+  setOpenColumnFilter,
+} from "../store/filtersSlice";
 import { FilterPanel } from "./FilterPanel";
 import { CustomColumnCell } from "./CustomColumnCell";
 import { SavedFiltersButton } from "./SavedFiltersButton";
@@ -55,15 +60,16 @@ export function ProductsTableWithFilters({
   const dispatch = useAppDispatch();
   const TABLE_ID = "products-table";
   const { activeFilters, openColumnFilter } = useAppSelector(
-    (state) => state.filters
+    (state) => state.filters,
   );
   const tableFilters = activeFilters[TABLE_ID] || [];
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [localVisibleColumns, setLocalVisibleColumns] = useState<ColumnConfig[]>(
-    customColumns || defaultColumns
-  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [localVisibleColumns, setLocalVisibleColumns] = useState<
+    ColumnConfig[]
+  >(customColumns || defaultColumns);
   const [customColumnData, setCustomColumnData] = useState<
     Record<string, Record<string, string | string[]>>
   >({});
@@ -85,7 +91,7 @@ export function ProductsTableWithFilters({
   const handleCustomColumnChange = (
     rowId: number,
     columnKey: string,
-    value: string | string[]
+    value: string | string[],
   ) => {
     setCustomColumnData((prev) => {
       const newData = {
@@ -97,7 +103,7 @@ export function ProductsTableWithFilters({
       };
       localStorage.setItem(
         "customColumnData_products-table",
-        JSON.stringify(newData)
+        JSON.stringify(newData),
       );
       return newData;
     });
@@ -121,7 +127,7 @@ export function ProductsTableWithFilters({
         setCustomColumns(newColumns);
       }
     },
-    [setCustomColumns]
+    [setCustomColumns],
   );
 
   // Filter only visible columns
@@ -271,19 +277,28 @@ export function ProductsTableWithFilters({
     }
   };
 
-  // Apply filters to data
+  // Apply filters + search to data
   const filteredProducts = useMemo(() => {
     let result = products;
+
+    // Search bar filter (connected now)
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((product) =>
+        product.name.toLowerCase().includes(query) ||
+        product.code.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query) ||
+        product.warehouse.toLowerCase().includes(query)
+      );
+    }
 
     // Filter by custom tags
     if (selectedTags.length > 0) {
       result = result.filter((product) => {
-        // Get all tag columns
         const tagColumns = localVisibleColumns.filter(
-          (col) => col.isCustom && col.type === "tags"
+          (col) => col.isCustom && col.type === "tags",
         );
 
-        // Check if any of the selected tags are in this product's data
         return tagColumns.some((col) => {
           const productTags = customColumnData[product.id]?.[col.key];
           if (!productTags) return false;
@@ -330,7 +345,14 @@ export function ProductsTableWithFilters({
     });
 
     return result;
-  }, [tableFilters, products, selectedTags, localVisibleColumns, customColumnData]);
+  }, [
+    tableFilters,
+    products,
+    selectedTags,
+    localVisibleColumns,
+    customColumnData,
+    searchQuery, // ← search is now connected
+  ]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredProducts.length / rowsPerPage);
@@ -338,10 +360,10 @@ export function ProductsTableWithFilters({
   const endIndex = startIndex + rowsPerPage;
   const currentPageData = filteredProducts.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [tableFilters, rowsPerPage]);
+  }, [tableFilters, rowsPerPage, searchQuery]);
 
   const getOperatorLabel = (operator: string) => {
     const labels: Record<string, string> = {
@@ -387,6 +409,53 @@ export function ProductsTableWithFilters({
         </div>
       </div>
 
+      {/* Search Bar (fully working now) */}
+      <div
+        className="rounded-lg p-4 "
+        style={{
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+        }}
+      >
+        <div
+          className="flex items-center gap-3 rounded-lg px-4 py-2.5 sm:py-3 border"
+          style={{
+            backgroundColor: colors.backgroundSecondary,
+            borderColor: colors.border,
+          }}
+        >
+          <Search
+            className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
+            style={{ color: colors.textSecondary }}
+          />
+          <input
+            type="text"
+            placeholder="جستجو در محصولات (نام، کد، دسته‌بندی، انبار)"
+            className="bg-transparent flex-1 outline-none text-xs sm:text-sm placeholder:opacity-60"
+            style={{ color: colors.textPrimary }}
+            dir="rtl"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="transition-colors flex-shrink-0"
+              style={{ color: colors.textSecondary }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = colors.textPrimary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = colors.textSecondary;
+              }}
+            >
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Active Filters Display */}
       {tableFilters.length > 0 && (
         <div
@@ -424,7 +493,7 @@ export function ProductsTableWithFilters({
                 <button
                   onClick={() =>
                     dispatch(
-                      removeFilter({ tableId: TABLE_ID, filterId: filter.id })
+                      removeFilter({ tableId: TABLE_ID, filterId: filter.id }),
                     )
                   }
                   style={{ color: colors.error }}
@@ -451,7 +520,7 @@ export function ProductsTableWithFilters({
           col.isCustom &&
           col.type === "tags" &&
           col.options &&
-          col.options.length > 0
+          col.options.length > 0,
       ) && (
         <div
           className="p-4 border-b"
@@ -465,7 +534,7 @@ export function ProductsTableWithFilters({
                   col.isCustom &&
                   col.type === "tags" &&
                   col.options &&
-                  col.options.length > 0
+                  col.options.length > 0,
               )
               .flatMap((col) => col.options || [])
               .map((option) => {
@@ -477,7 +546,7 @@ export function ProductsTableWithFilters({
                       setSelectedTags((prev) =>
                         prev.includes(option.value)
                           ? prev.filter((t) => t !== option.value)
-                          : [...prev, option.value]
+                          : [...prev, option.value],
                       );
                     }}
                     className="px-3 py-1.5 border rounded-lg text-sm transition-all"
@@ -537,7 +606,7 @@ export function ProductsTableWithFilters({
                             className="p-1 rounded transition-colors"
                             style={{
                               color: tableFilters.some(
-                                (f) => f.column === column.key
+                                (f) => f.column === column.key,
                               )
                                 ? colors.primary
                                 : colors.textSecondary,
@@ -551,7 +620,7 @@ export function ProductsTableWithFilters({
                               e.currentTarget.style.backgroundColor =
                                 "transparent";
                               e.currentTarget.style.color = tableFilters.some(
-                                (f) => f.column === column.key
+                                (f) => f.column === column.key,
                               )
                                 ? colors.primary
                                 : colors.textSecondary;
@@ -695,7 +764,6 @@ export function ProductsTableWithFilters({
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((page) => {
-                  // Show first page, last page, current page, and neighbors
                   return (
                     page === 1 ||
                     page === totalPages ||
@@ -703,7 +771,6 @@ export function ProductsTableWithFilters({
                   );
                 })
                 .map((page, index, array) => {
-                  // Add ellipsis if there's a gap
                   const prevPage = array[index - 1];
                   const showEllipsis = prevPage && page - prevPage > 1;
 
@@ -728,9 +795,13 @@ export function ProductsTableWithFilters({
                           borderWidth: "1px",
                           borderStyle: "solid",
                           borderColor:
-                            currentPage === page ? colors.primary : colors.border,
+                            currentPage === page
+                              ? colors.primary
+                              : colors.border,
                           color:
-                            currentPage === page ? "#ffffff" : colors.textPrimary,
+                            currentPage === page
+                              ? "#ffffff"
+                              : colors.textPrimary,
                         }}
                         onMouseEnter={(e) => {
                           if (currentPage !== page) {

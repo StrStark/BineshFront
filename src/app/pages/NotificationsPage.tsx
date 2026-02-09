@@ -30,7 +30,7 @@ const mockNotifications: Notification[] = [
     id: 1,
     type: "promotion",
     category: "promotions",
-    title: "🎉 تخفیف ویژه پکیج پرمیوم",
+    title: " تخفیف ویژه پکیج پرمیوم",
     message: "با کد تخفیف QUALITY30 از ۳۰٪ تخفیف پکیج پرمیوم رهگیر بهره‌مند شوید",
     time: "۱ ساعت پیش",
     promoCode: "QUALITY30",
@@ -40,7 +40,7 @@ const mockNotifications: Notification[] = [
     id: 2,
     type: "success",
     category: "activity",
-    title: "✨ عملکرد عالی کارشناس",
+    title: " عملکرد عالی کارشناس",
     message: "کارشناس رضا احمدی امروز ۱۵ تماس با امتیاز بالای ۹۰ انجام داده است",
     time: "۲ ساعت پیش",
     changes: [
@@ -53,7 +53,7 @@ const mockNotifications: Notification[] = [
     id: 3,
     type: "warning",
     category: "warnings",
-    title: "⚠️ کاهش کیفیت تماس‌ها",
+    title: " کاهش کیفیت تماس‌ها",
     message: "میانگین کیفیت تماس‌ها در ۲ ساعت اخیر به زیر ۷۰ رسیده است",
     time: "۳ ساعت پیش",
     changes: [
@@ -66,7 +66,7 @@ const mockNotifications: Notification[] = [
     id: 4,
     type: "promotion",
     category: "promotions",
-    title: "🎁 هدیه ویژه کاربران فعال",
+    title: " هدیه ویژه کاربران فعال",
     message: "به پاس استفاده مستمر شما، یک ماه اشتراک پرمیوم رایگان دریافت کنید",
     time: "۴ ساعت پیش",
     promoCode: "FREE1MONTH",
@@ -76,7 +76,7 @@ const mockNotifications: Notification[] = [
     id: 5,
     type: "system",
     category: "system",
-    title: "🔄 به‌روزرسانی سیستم",
+    title: " به‌روزرسانی سیستم",
     message: "نسخه جدید رهگیر با قابلیت‌های جدید منتشر شد",
     time: "۱ روز پیش",
     changes: [
@@ -89,7 +89,7 @@ const mockNotifications: Notification[] = [
     id: 6,
     type: "success",
     category: "activity",
-    title: "🏆 رکورد جدید ثبت شد",
+    title: " رکورد جدید ثبت شد",
     message: "تیم شما امروز بیشترین تعداد تماس موفق ماه را ثبت کرد",
     time: "۲ روز پیش",
     changes: [
@@ -102,7 +102,7 @@ const mockNotifications: Notification[] = [
     id: 7,
     type: "warning",
     category: "warnings",
-    title: "🚨 تماس بدون ارزیابی",
+    title: " تماس بدون ارزیابی",
     message: "۱۲ تماس در انتظار ارزیابی کیفی هستند",
     time: "۳ روز پیش",
     changes: [
@@ -115,7 +115,7 @@ const mockNotifications: Notification[] = [
     id: 8,
     type: "promotion",
     category: "promotions",
-    title: "💎 پیشنهاد ویژه سازمانی",
+    title: " پیشنهاد ویژه سازمانی",
     message: "برای سازمان‌های بالای ۵۰ نفر، تخفیف ویژه ۴۰٪ با کد ENTERPRISE40",
     time: "۴ روز پیش",
     promoCode: "ENTERPRISE40",
@@ -125,7 +125,7 @@ const mockNotifications: Notification[] = [
     id: 9,
     type: "activity",
     category: "activity",
-    title: "📊 گزارش هفتگی آماده است",
+    title: " گزارش هفتگی آماده است",
     message: "گزارش عملکرد هفته گذشته تیم شما آماده مشاهده است",
     time: "۵ روز پیش",
     changes: [
@@ -138,7 +138,7 @@ const mockNotifications: Notification[] = [
     id: 10,
     type: "system",
     category: "system",
-    title: "⚙️ نگهداری برنامه‌ریزی شده",
+    title: " نگهداری برنامه‌ریزی شده",
     message: "سیستم در تاریخ ۱۵ اردیبهشت به مدت ۲ ساعت در دسترس نخواهد بود",
     time: "۶ روز پیش",
     changes: [
@@ -151,7 +151,7 @@ const mockNotifications: Notification[] = [
     id: 11,
     type: "promotion",
     category: "promotions",
-    title: "🌟 جشنواره تخفیف بهاره",
+    title: " جشنواره تخفیف بهاره",
     message: "تا پایان فصل بهار، از تخفیف‌های ویژه رهگیر با کد SPRING25 استفاده کنید",
     time: "۷ روز پیش",
     promoCode: "SPRING25",

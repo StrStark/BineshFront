@@ -1,8 +1,23 @@
 import { useState } from "react";
-import { Shield, Users, CheckCircle, XCircle, Plus, Edit2, Trash2, Crown, Search, ChevronDown, Upload, Camera, User } from "lucide-react";
+import {
+  Shield,
+  Users,
+  CheckCircle,
+  XCircle,
+  Plus,
+  Edit2,
+  Trash2,
+  Crown,
+  Search,
+  ChevronDown,
+  User,
+} from "lucide-react";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { ThemedButton } from "./ThemedButton";
-import { PermissionsModal, Permission as ModalPermission } from "./PermissionsModal";
+import {
+  PermissionsModal,
+  Permission as ModalPermission,
+} from "./PermissionsModal";
 
 interface Permission {
   id: string;
@@ -27,10 +42,22 @@ interface User {
 const availablePermissions: Permission[] = [
   { id: "dashboard", name: "داشبورد", description: "دسترسی به داشبورد اصلی" },
   { id: "calls", name: "اطلاعات تماس", description: "مشاهده و مدیریت تماس‌ها" },
-  { id: "customers", name: "اطلاعات مشتریان", description: "مشاهده و مدیریت مشتریان" },
+  {
+    id: "customers",
+    name: "اطلاعات مشتریان",
+    description: "مشاهده و مدیریت مشتریان",
+  },
   { id: "agents", name: "کارشناسان", description: "مدیریت کارشناسان" },
-  { id: "analytics", name: "تحلیل‌ها", description: "دسترسی به گزارش‌های تحلیلی" },
-  { id: "reports", name: "گزارش‌گیری", description: "دانلود و مشاهده گزارش‌ها" },
+  {
+    id: "analytics",
+    name: "تحلیل‌ها",
+    description: "دسترسی به گزارش‌های تحلیلی",
+  },
+  {
+    id: "reports",
+    name: "گزارش‌گیری",
+    description: "دانلود و مشاهده گزارش‌ها",
+  },
   { id: "settings", name: "تنظیمات", description: "تغییر تنظیمات سیستم" },
   { id: "users", name: "مدیریت کاربران", description: "افزودن و حذف کاربران" },
 ];
@@ -43,8 +70,17 @@ const mockUsers: User[] = [
     mobile: "09120509859",
     position: "مدیر عامل",
     birthDate: "1370/05/15",
-    role: "admin",
-    permissions: ["dashboard", "calls", "customers", "agents", "analytics", "reports", "settings", "users"],
+    role: "manager",
+    permissions: [
+      "dashboard",
+      "calls",
+      "customers",
+      "agents",
+      "analytics",
+      "reports",
+      "settings",
+      "users",
+    ],
     status: "active",
     lastLogin: "1402/12/16 13:50:00",
   },
@@ -119,6 +155,7 @@ export function UsersAndPermissions() {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -128,7 +165,6 @@ export function UsersAndPermissions() {
     birthDate: "",
     position: "",
     role: "user" as "admin" | "manager" | "user",
-    permissions: [] as string[],
     avatar: "" as string,
   });
 
@@ -139,14 +175,17 @@ export function UsersAndPermissions() {
   const adminUsers = users.filter((u) => u.role === "admin").length;
 
   // Filtered Users
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.mobile.includes(searchTerm)
+  const filteredUsers = users.filter(
+    (user) =>
+      `${user.name} ${user.lastName}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) || user.mobile.includes(searchTerm),
   );
 
   const handleAddUser = () => {
     setIsEditMode(false);
+    setEditingUser(null);
+    setSelectedUser(null);
     setFormData({
       name: "",
       lastName: "",
@@ -154,7 +193,6 @@ export function UsersAndPermissions() {
       birthDate: "",
       position: "",
       role: "user",
-      permissions: [],
       avatar: "",
     });
     setShowAddUserModal(true);
@@ -162,7 +200,7 @@ export function UsersAndPermissions() {
 
   const handleEditUser = (user: User) => {
     setIsEditMode(true);
-    setSelectedUser(user);
+    setEditingUser(user);
     setFormData({
       name: user.name,
       lastName: user.lastName,
@@ -170,7 +208,6 @@ export function UsersAndPermissions() {
       birthDate: user.birthDate || "",
       position: user.position,
       role: user.role,
-      permissions: user.permissions,
       avatar: user.avatar || "",
     });
     setShowAddUserModal(true);
@@ -191,71 +228,60 @@ export function UsersAndPermissions() {
 
   const handleSubmitUser = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isEditMode && selectedUser) {
-      // Edit existing user
-      setUsers(users.map((u) => 
-        u.id === selectedUser.id 
-          ? { ...u, ...formData }
-          : u
-      ));
+
+    if (isEditMode && editingUser) {
+      // Edit existing user — only update the fields from the info modal
+      setUsers(
+        users.map((u) =>
+          u.id === editingUser.id
+            ? {
+                ...u,
+                name: formData.name,
+                lastName: formData.lastName,
+                mobile: formData.mobile,
+                birthDate: formData.birthDate || undefined,
+                position: formData.position,
+                role: formData.role,
+                avatar: formData.avatar || undefined,
+              }
+            : u,
+        ),
+      );
     } else {
       // Add new user
       const newUser: User = {
-        id: String(users.length + 1),
-        ...formData,
+        id: String(Date.now()),
+        name: formData.name,
+        lastName: formData.lastName,
+        mobile: formData.mobile,
+        birthDate: formData.birthDate || undefined,
+        position: formData.position,
+        role: formData.role,
+        avatar: formData.avatar || undefined,
+        permissions: [], // new users start with no permissions
         status: "active",
-        lastLogin: new Date().toLocaleDateString("fa-IR") + " " + new Date().toLocaleTimeString("fa-IR"),
+        lastLogin:
+          new Date().toLocaleDateString("fa-IR") +
+          " " +
+          new Date().toLocaleTimeString("fa-IR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
       };
       setUsers([...users, newUser]);
     }
-    
+
     setShowAddUserModal(false);
-    setSelectedUser(null);
+    setIsEditMode(false);
+    setEditingUser(null);
   };
 
   const handleEditPermissions = (user: User) => {
     setSelectedUser(user);
-    setFormData({
-      name: user.name,
-      lastName: user.lastName,
-      mobile: user.mobile,
-      birthDate: user.birthDate || "",
-      position: user.position,
-      role: user.role,
-      permissions: user.permissions,
-      avatar: user.avatar || "",
-    });
   };
 
-  const handleSavePermissions = (permissions: string[]) => {
-    if (selectedUser) {
-      setUsers(users.map((u) => 
-        u.id === selectedUser.id 
-          ? { ...u, permissions: permissions }
-          : u
-      ));
-      setSelectedUser(null);
-    }
-  };
-
-  const togglePermission = (permissionId: string) => {
-    if (formData.permissions.includes(permissionId)) {
-      setFormData({
-        ...formData,
-        permissions: formData.permissions.filter((p) => p !== permissionId),
-      });
-    } else {
-      setFormData({
-        ...formData,
-        permissions: [...formData.permissions, permissionId],
-      });
-    }
-  };
-
-  const getInitials = (name: string) => {
-    const parts = name.split(" ");
-    return parts.length >= 2 ? parts[0][0] + parts[1][0] : name[0];
+  const getInitials = (name: string, lastName: string) => {
+    return (name[0] || "") + (lastName[0] || "");
   };
 
   return (
@@ -263,15 +289,20 @@ export function UsersAndPermissions() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-bold" style={{ color: colors.textPrimary }}>
+          <h3
+            className="text-xl font-bold"
+            style={{ color: colors.textPrimary }}
+          >
             کاربران و دسترسی‌ها
           </h3>
           <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
             مدیریت کاربران و سطوح دسترسی آن‌ها
           </p>
         </div>
-        <ThemedButton onClick={handleAddUser} className="flex items-center gap-2 px-4 py-2 rounded-lg">
-          <Plus className="w-4 h-4" />
+        <ThemedButton
+          onClick={handleAddUser}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg"
+        >
           افزودن کاربر جدید
         </ThemedButton>
       </div>
@@ -290,7 +321,10 @@ export function UsersAndPermissions() {
               <p className="text-sm" style={{ color: colors.textSecondary }}>
                 کل کاربران
               </p>
-              <p className="text-3xl font-bold mt-1" style={{ color: colors.textPrimary }}>
+              <p
+                className="text-3xl font-bold mt-1"
+                style={{ color: colors.textPrimary }}
+              >
                 {totalUsers}
               </p>
             </div>
@@ -315,7 +349,10 @@ export function UsersAndPermissions() {
               <p className="text-sm" style={{ color: colors.textSecondary }}>
                 مدیران
               </p>
-              <p className="text-3xl font-bold mt-1" style={{ color: colors.textPrimary }}>
+              <p
+                className="text-3xl font-bold mt-1"
+                style={{ color: colors.textPrimary }}
+              >
                 {adminUsers}
               </p>
             </div>
@@ -367,31 +404,47 @@ export function UsersAndPermissions() {
           <table className="w-full min-w-[900px]">
             <thead>
               <tr style={{ backgroundColor: colors.backgroundSecondary }}>
-                <th className="text-right px-6 py-4 text-sm font-medium" style={{ color: colors.textPrimary }}>
+                <th
+                  className="text-right px-6 py-4 text-sm font-medium"
+                  style={{ color: colors.textPrimary }}
+                >
                   نام کاربر
                 </th>
-                <th className="text-right px-6 py-4 text-sm font-medium" style={{ color: colors.textPrimary }}>
+                <th
+                  className="text-right px-6 py-4 text-sm font-medium"
+                  style={{ color: colors.textPrimary }}
+                >
                   موبایل
                 </th>
-                <th className="text-right px-6 py-4 text-sm font-medium" style={{ color: colors.textPrimary }}>
+                <th
+                  className="text-right px-6 py-4 text-sm font-medium"
+                  style={{ color: colors.textPrimary }}
+                >
                   دسترسی‌ها
                 </th>
-                <th className="text-right px-6 py-4 text-sm font-medium" style={{ color: colors.textPrimary }}>
+                <th
+                  className="text-right px-6 py-4 text-sm font-medium"
+                  style={{ color: colors.textPrimary }}
+                >
                   آخرین ورود
                 </th>
-                <th className="text-right px-6 py-4 text-sm font-medium" style={{ color: colors.textPrimary }}>
+                <th
+                  className="text-right px-6 py-4 text-sm font-medium"
+                  style={{ color: colors.textPrimary }}
+                >
                   عملیات
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((user, index) => (
+              {filteredUsers.map((user) => (
                 <tr
                   key={user.id}
                   className="border-t transition-colors hover:bg-opacity-50"
                   style={{ borderColor: colors.border }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                    e.currentTarget.style.backgroundColor =
+                      colors.backgroundSecondary;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = "transparent";
@@ -407,17 +460,32 @@ export function UsersAndPermissions() {
                           color: roleColors[user.role].text,
                         }}
                       >
-                        {getInitials(user.name)}
+                        {getInitials(user.name, user.lastName)}
                       </div>
-                      <span className="font-medium" style={{ color: colors.textPrimary }}>
-                        {user.name}
-                      </span>
+                      <div>
+                        <div
+                          className="font-medium"
+                          style={{ color: colors.textPrimary }}
+                        >
+                          {user.name} {user.lastName}
+                        </div>
+                        <div
+                          className="text-xs"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          {user.position}
+                        </div>
+                      </div>
                     </div>
                   </td>
 
                   {/* Mobile */}
                   <td className="px-6 py-4">
-                    <span className="text-sm" style={{ color: colors.textSecondary }} dir="ltr">
+                    <span
+                      className="text-sm"
+                      style={{ color: colors.textSecondary }}
+                      dir="ltr"
+                    >
                       {user.mobile}
                     </span>
                   </td>
@@ -436,7 +504,8 @@ export function UsersAndPermissions() {
                         e.currentTarget.style.color = "#ffffff";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                        e.currentTarget.style.backgroundColor =
+                          colors.backgroundSecondary;
                         e.currentTarget.style.color = colors.textSecondary;
                       }}
                     >
@@ -446,7 +515,10 @@ export function UsersAndPermissions() {
 
                   {/* Last Login */}
                   <td className="px-6 py-4">
-                    <div className="text-xs" style={{ color: colors.textSecondary }}>
+                    <div
+                      className="text-xs"
+                      style={{ color: colors.textSecondary }}
+                    >
                       <div>{user.lastLogin.split(" ")[0]}</div>
                       <div className="mt-0.5" dir="ltr">
                         {user.lastLogin.split(" ")[1]}
@@ -464,7 +536,8 @@ export function UsersAndPermissions() {
                           color: colors.textSecondary,
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                          e.currentTarget.style.backgroundColor =
+                            colors.backgroundSecondary;
                           e.currentTarget.style.color = colors.primary;
                         }}
                         onMouseLeave={(e) => {
@@ -483,7 +556,8 @@ export function UsersAndPermissions() {
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.backgroundColor = "#fee2e2";
-                          e.currentTarget.style.color = colors.error;
+                          e.currentTarget.style.color =
+                            colors.error || "#ef4444";
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor = "transparent";
@@ -505,12 +579,12 @@ export function UsersAndPermissions() {
 
       {/* Add/Edit User Modal */}
       {showAddUserModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm dark:bg-black/70 flex items-center justify-center z-50 p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div
-            className="rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-fadeIn"
+            className="rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             style={{
               backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
+              border: `1px solid ${colors.border}`,
             }}
           >
             <div
@@ -520,50 +594,47 @@ export function UsersAndPermissions() {
                 borderColor: colors.border,
               }}
             >
-              <h3 className="text-xl font-bold text-center" style={{ color: colors.textPrimary }}>
-                افزودن کاربر
+              <h3
+                className="text-xl font-bold text-center"
+                style={{ color: colors.textPrimary }}
+              >
+                {isEditMode ? "ویرایش کاربر" : "افزودن کاربر جدید"}
               </h3>
             </div>
 
             <form onSubmit={handleSubmitUser}>
-              <div
-                className="px-8 py-8"
-                style={{
-                  backgroundColor: colors.cardBackground,
-                }}
-              >
+              <div className="px-8 py-8">
                 {/* Avatar Upload Section */}
-                <div 
+                <div
                   className="flex items-center gap-6 p-6 rounded-xl mb-8"
                   style={{
                     backgroundColor: colors.backgroundSecondary,
                   }}
                 >
-                  {/* Avatar with Icon Badge */}
                   <div className="relative flex-shrink-0">
                     {formData.avatar ? (
-                      <img 
-                        src={formData.avatar} 
-                        alt="Avatar" 
-                        className="w-28 h-28 rounded-full object-cover border-2"
+                      <img
+                        src={formData.avatar}
+                        alt="Avatar"
+                        className="w-28 h-28 rounded-full object-cover border-4"
                         style={{ borderColor: colors.border }}
                       />
                     ) : (
                       <div
-                        className="w-28 h-28 rounded-full flex items-center justify-center text-4xl font-bold border-2"
+                        className="w-28 h-28 rounded-full flex items-center justify-center text-4xl font-bold border-4"
                         style={{
                           backgroundColor: colors.cardBackground,
                           borderColor: colors.border,
                           color: colors.primary,
                         }}
                       >
-                        {formData.name ? formData.name[0] : "م"}
+                        {formData.name && formData.lastName
+                          ? formData.name[0] + formData.lastName[0]
+                          : "م"}
                       </div>
                     )}
-                    
-                    {/* User Icon Badge */}
                     <div
-                      className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full flex items-center justify-center border-2"
+                      className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full flex items-center justify-center border-4"
                       style={{
                         backgroundColor: colors.primary,
                         borderColor: colors.cardBackground,
@@ -573,23 +644,26 @@ export function UsersAndPermissions() {
                     </div>
                   </div>
 
-                  {/* Upload Info and Button */}
                   <div className="flex-1 text-right">
-                    <h4 className="text-lg font-bold mb-1" style={{ color: colors.textPrimary }}>
-                      {formData.name && formData.lastName 
+                    <h4
+                      className="text-lg font-bold mb-1"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      {formData.name && formData.lastName
                         ? `${formData.name} ${formData.lastName}`
-                        : "مهندس میرحسینی"
-                      }
+                        : "نام کاربر"}
                     </h4>
-                    <p className="text-sm mb-3" style={{ color: colors.textSecondary }}>
-                      {formData.position || "مدیر مرکز تماس"}
+                    <p
+                      className="text-sm mb-3"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {formData.position || "عنوان شغلی"}
                     </p>
-                    
-                    {/* File Input Hidden */}
+
                     <input
                       type="file"
                       id="avatar-upload"
-                      accept="image/jpeg,image/png,image/jpg"
+                      accept="image/*"
                       className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
@@ -600,27 +674,23 @@ export function UsersAndPermissions() {
                           }
                           const reader = new FileReader();
                           reader.onloadend = () => {
-                            setFormData({ ...formData, avatar: reader.result as string });
+                            setFormData({
+                              ...formData,
+                              avatar: reader.result as string,
+                            });
                           };
                           reader.readAsDataURL(file);
                         }
                       }}
                     />
-                    
-                    {/* Upload Button */}
+
                     <button
                       type="button"
-                      onClick={() => document.getElementById("avatar-upload")?.click()}
+                      onClick={() =>
+                        document.getElementById("avatar-upload")?.click()
+                      }
                       className="text-sm font-medium underline decoration-2 underline-offset-4 transition-colors"
-                      style={{
-                        color: colors.primary,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.opacity = "0.7";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.opacity = "1";
-                      }}
+                      style={{ color: colors.primary }}
                     >
                       تغییر تصویر
                     </button>
@@ -628,138 +698,210 @@ export function UsersAndPermissions() {
                 </div>
 
                 {/* Form Fields */}
-                <div className="space-y-4">
-                  {/* Row 1: Name, Last Name, Birth Date */}
+                <div className="space-y-6">
+                  {/* Row 1 */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-right" style={{ color: colors.textPrimary }}>
+                      <label
+                        className="block text-sm font-semibold mb-2 text-right"
+                        style={{ color: colors.textPrimary }}
+                      >
                         نام*
                       </label>
                       <input
                         type="text"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
                         className="w-full px-4 py-3 rounded-xl border outline-none transition-colors"
                         style={{
                           backgroundColor: colors.backgroundSecondary,
                           borderColor: colors.border,
                           color: colors.textPrimary,
                         }}
-                        onFocus={(e) => {
-                          e.currentTarget.style.borderColor = colors.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.currentTarget.style.borderColor = colors.border;
-                        }}
-                        placeholder="نام را وارد کنید"
+                        onFocus={(e) =>
+                          (e.currentTarget.style.borderColor = colors.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.currentTarget.style.borderColor = colors.border)
+                        }
+                        placeholder="نام"
                         required
                         dir="rtl"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-right" style={{ color: colors.textPrimary }}>
+                      <label
+                        className="block text-sm font-semibold mb-2 text-right"
+                        style={{ color: colors.textPrimary }}
+                      >
                         نام خانوادگی*
                       </label>
                       <input
                         type="text"
                         value={formData.lastName}
-                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, lastName: e.target.value })
+                        }
                         className="w-full px-4 py-3 rounded-xl border outline-none transition-colors"
                         style={{
                           backgroundColor: colors.backgroundSecondary,
                           borderColor: colors.border,
                           color: colors.textPrimary,
                         }}
-                        onFocus={(e) => {
-                          e.currentTarget.style.borderColor = colors.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.currentTarget.style.borderColor = colors.border;
-                        }}
-                        placeholder="نام خانوادگی را وارد کنید"
+                        onFocus={(e) =>
+                          (e.currentTarget.style.borderColor = colors.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.currentTarget.style.borderColor = colors.border)
+                        }
+                        placeholder="نام خانوادگی"
                         required
                         dir="rtl"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-right" style={{ color: colors.textPrimary }}>
+                      <label
+                        className="block text-sm font-semibold mb-2 text-right"
+                        style={{ color: colors.textPrimary }}
+                      >
                         تاریخ تولد
                       </label>
                       <input
                         type="text"
                         value={formData.birthDate}
-                        onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            birthDate: e.target.value,
+                          })
+                        }
                         className="w-full px-4 py-3 rounded-xl border outline-none transition-colors"
                         style={{
                           backgroundColor: colors.backgroundSecondary,
                           borderColor: colors.border,
                           color: colors.textPrimary,
                         }}
-                        onFocus={(e) => {
-                          e.currentTarget.style.borderColor = colors.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.currentTarget.style.borderColor = colors.border;
-                        }}
-                        placeholder="1404/08/23"
+                        onFocus={(e) =>
+                          (e.currentTarget.style.borderColor = colors.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.currentTarget.style.borderColor = colors.border)
+                        }
+                        placeholder="1404/11/20"
                         dir="ltr"
                       />
                     </div>
                   </div>
 
-                  {/* Row 2: Mobile, Position */}
+                  {/* Row 2 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-right" style={{ color: colors.textPrimary }}>
+                      <label
+                        className="block text-sm font-semibold mb-2 text-right"
+                        style={{ color: colors.textPrimary }}
+                      >
                         شماره موبایل*
                       </label>
                       <input
                         type="tel"
                         value={formData.mobile}
-                        onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, mobile: e.target.value })
+                        }
                         className="w-full px-4 py-3 rounded-xl border outline-none transition-colors"
                         style={{
                           backgroundColor: colors.backgroundSecondary,
                           borderColor: colors.border,
                           color: colors.textPrimary,
                         }}
-                        onFocus={(e) => {
-                          e.currentTarget.style.borderColor = colors.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.currentTarget.style.borderColor = colors.border;
-                        }}
-                        placeholder="شماره موبایل را وارد کنید"
+                        onFocus={(e) =>
+                          (e.currentTarget.style.borderColor = colors.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.currentTarget.style.borderColor = colors.border)
+                        }
+                        placeholder="09xx xxx xxxx"
                         required
                         dir="ltr"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-right" style={{ color: colors.textPrimary }}>
-                        لقب شخص*
+                      <label
+                        className="block text-sm font-semibold mb-2 text-right"
+                        style={{ color: colors.textPrimary }}
+                      >
+                        عنوان شغلی*
                       </label>
                       <input
                         type="text"
                         value={formData.position}
-                        onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, position: e.target.value })
+                        }
                         className="w-full px-4 py-3 rounded-xl border outline-none transition-colors"
                         style={{
                           backgroundColor: colors.backgroundSecondary,
                           borderColor: colors.border,
                           color: colors.textPrimary,
                         }}
-                        onFocus={(e) => {
-                          e.currentTarget.style.borderColor = colors.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.currentTarget.style.borderColor = colors.border;
-                        }}
-                        placeholder="مهندس"
+                        onFocus={(e) =>
+                          (e.currentTarget.style.borderColor = colors.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.currentTarget.style.borderColor = colors.border)
+                        }
+                        placeholder="مدیر فروش"
                         required
                         dir="rtl"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Role Select */}
+                  <div>
+                    <label
+                      className="block text-sm font-semibold mb-2 text-right"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      سطح دسترسی*
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={formData.role}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            role: e.target.value as
+                              | "admin"
+                              | "manager"
+                              | "user",
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-xl border outline-none appearance-none transition-colors pr-12"
+                        style={{
+                          backgroundColor: colors.backgroundSecondary,
+                          borderColor: colors.border,
+                          color: colors.textPrimary,
+                        }}
+                        onFocus={(e) =>
+                          (e.currentTarget.style.borderColor = colors.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.currentTarget.style.borderColor = colors.border)
+                        }
+                      >
+                        <option value="user">کاربر</option>
+                        <option value="manager">مدیر</option>
+                        <option value="admin">مدیر کل</option>
+                      </select>
+                      <ChevronDown
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
+                        style={{ color: colors.textSecondary }}
                       />
                     </div>
                   </div>
@@ -777,25 +919,22 @@ export function UsersAndPermissions() {
                   type="button"
                   onClick={() => {
                     setShowAddUserModal(false);
-                    setSelectedUser(null);
                     setIsEditMode(false);
+                    setEditingUser(null);
                   }}
                   className="px-6 py-2.5 rounded-xl text-sm transition-colors"
                   style={{
                     color: colors.textSecondary,
                     backgroundColor: colors.backgroundSecondary,
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = "0.8";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = "1";
-                  }}
                 >
                   انصراف
                 </button>
-                <ThemedButton type="submit" className="px-6 py-2.5 rounded-xl text-sm font-medium">
-                  ثبت کاربر
+                <ThemedButton
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl text-sm font-medium"
+                >
+                  {isEditMode ? "ذخیره تغییرات" : "ثبت کاربر"}
                 </ThemedButton>
               </div>
             </form>
@@ -805,9 +944,9 @@ export function UsersAndPermissions() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && userToDelete && (
-        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div
-            className="rounded-xl shadow-2xl max-w-md w-full animate-fadeIn"
+            className="rounded-xl shadow-2xl max-w-md w-full"
             style={{
               backgroundColor: colors.cardBackground,
             }}
@@ -817,21 +956,32 @@ export function UsersAndPermissions() {
                 className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
                 style={{ backgroundColor: "#fee2e2" }}
               >
-                <Trash2 className="w-6 h-6" style={{ color: colors.error }} />
+                <Trash2
+                  className="w-6 h-6"
+                  style={{ color: colors.error || "#ef4444" }}
+                />
               </div>
-              <h3 className="text-lg font-bold text-center" style={{ color: colors.textPrimary }}>
+              <h3
+                className="text-lg font-bold text-center"
+                style={{ color: colors.textPrimary }}
+              >
                 حذف کاربر
               </h3>
-              <p className="text-sm text-center mt-2" style={{ color: colors.textSecondary }}>
-                آیا از حذف کاربر <span className="font-bold">{userToDelete.name}</span> اطمینان دارید؟
-                این عملیات قابل بازگشت نیست.
+              <p
+                className="text-sm text-center mt-2"
+                style={{ color: colors.textSecondary }}
+              >
+                آیا از حذف کاربر{" "}
+                <span className="font-bold">
+                  {userToDelete.name} {userToDelete.lastName}
+                </span>{" "}
+                اطمینان دارید؟ این عملیات قابل بازگشت نیست.
               </p>
             </div>
 
             <div
               className="px-6 py-4 border-t flex items-center justify-center gap-3"
               style={{
-                backgroundColor: colors.cardBackground,
                 borderColor: colors.border,
               }}
             >
@@ -844,12 +994,6 @@ export function UsersAndPermissions() {
                 style={{
                   color: colors.textSecondary,
                   backgroundColor: colors.backgroundSecondary,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.8";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "1";
                 }}
               >
                 انصراف
@@ -866,27 +1010,37 @@ export function UsersAndPermissions() {
         </div>
       )}
 
-      {/* Permissions Modal */}
+      {/* Permissions Modal - key forces remount on user change to ensure fresh initialPermissions */}
       <PermissionsModal
+        key={selectedUser ? selectedUser.id : "closed"}
         isOpen={selectedUser !== null}
         onClose={() => setSelectedUser(null)}
-        userName={selectedUser ? `${selectedUser.name} ${selectedUser.lastName}` : ""}
-        initialPermissions={selectedUser ? availablePermissions.map((p) => ({
-          id: p.id,
-          label: p.name,
-          description: p.description,
-          enabled: selectedUser.permissions.includes(p.id),
-        })) : []}
+        userName={
+          selectedUser ? `${selectedUser.name} ${selectedUser.lastName}` : ""
+        }
+        initialPermissions={
+          selectedUser
+            ? availablePermissions.map((p) => ({
+                id: p.id,
+                label: p.name,
+                description: p.description,
+                enabled: selectedUser.permissions.includes(p.id),
+              }))
+            : []
+        }
         onSave={(permissions: ModalPermission[]) => {
           if (selectedUser) {
-            const enabledPermissions = permissions
+            const enabledIds = permissions
               .filter((p) => p.enabled)
               .map((p) => p.id);
-            setUsers(users.map((u) => 
-              u.id === selectedUser.id 
-                ? { ...u, permissions: enabledPermissions }
-                : u
-            ));
+            setUsers(
+              users.map((u) =>
+                u.id === selectedUser.id
+                  ? { ...u, permissions: enabledIds }
+                  : u,
+              ),
+            );
+            setSelectedUser(null);
           }
         }}
       />

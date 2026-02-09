@@ -278,7 +278,7 @@ export function ProductsPage() {
       </div>
 
       {/* Search Bar */}
-      <div
+      {/* <div
         className="rounded-lg p-4 border"
         style={{
           backgroundColor: colors.cardBackground,
@@ -322,7 +322,7 @@ export function ProductsPage() {
             </button>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Products Table */}
       <ProductsTableWithFilters
