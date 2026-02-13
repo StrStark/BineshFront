@@ -1,21 +1,52 @@
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { AlertCircle, TrendingUp } from "lucide-react";
 
-const data = [
-  { month: "فروردین", sales: 45000000, orders: 120 },
-  { month: "اردیبهشت", sales: 52000000, orders: 145 },
-  { month: "خرداد", sales: 48000000, orders: 135 },
-  { month: "تیر", sales: 61000000, orders: 160 },
-  { month: "مرداد", sales: 55000000, orders: 150 },
-  { month: "شهریور", sales: 67000000, orders: 180 },
-  { month: "مهر", sales: 72000000, orders: 195 },
-  { month: "آبان", sales: 69000000, orders: 185 },
-  { month: "آذر", sales: 78000000, orders: 210 },
-  { month: "دی", sales: 85000000, orders: 230 },
+interface SalesDataPoint {
+  type: number;
+  count: number;
+  onDate: string;
+}
+
+interface SalesLineChartProps {
+  data: SalesDataPoint[];
+  loading?: boolean;
+  error?: string | null;
+}
+
+// Persian month names
+const persianMonths = [
+  "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
+  "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"
 ];
 
-export function SalesLineChart() {
+export function SalesLineChart({ data = [], loading = false, error = null }: SalesLineChartProps) {
   const colors = useCurrentColors();
+
+  // Transform API data to chart format
+  const chartData = data.map(item => {
+    const date = new Date(item.onDate);
+    const month = persianMonths[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return {
+      month: month,
+      sales: item.count,
+      orders: item.count, // Using count for both since API doesn't provide separate order count
+      fullDate: `${month} ${year}`,
+    };
+  }).sort((a, b) => {
+    // Sort by date
+    const dateA = new Date(data.find(d => {
+      const date = new Date(d.onDate);
+      return persianMonths[date.getMonth()] === a.month;
+    })?.onDate || 0);
+    const dateB = new Date(data.find(d => {
+      const date = new Date(d.onDate);
+      return persianMonths[date.getMonth()] === b.month;
+    })?.onDate || 0);
+    return dateA.getTime() - dateB.getTime();
+  });
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -28,13 +59,10 @@ export function SalesLineChart() {
           }}
         >
           <p className="font-semibold mb-2" style={{ color: colors.textPrimary }}>
-            {payload[0].payload.month}
+            {payload[0].payload.fullDate}
           </p>
           <p className="text-sm" style={{ color: colors.primary }}>
-            فروش: {payload[0].value.toLocaleString("fa-IR")} تومان
-          </p>
-          <p className="text-sm" style={{ color: colors.success }}>
-            تعداد سفارش: {payload[1].value.toLocaleString("fa-IR")}
+            تعداد فروش: {payload[0].value.toLocaleString("fa-IR")}
           </p>
         </div>
       );
@@ -44,7 +72,7 @@ export function SalesLineChart() {
 
   return (
     <div
-      className="rounded-xl p-6 border"
+      className="rounded-xl border p-[24px]"
       style={{
         backgroundColor: colors.cardBackground,
         borderColor: colors.border,
@@ -55,59 +83,89 @@ export function SalesLineChart() {
           روند فروش ماهانه
         </h2>
         <p className="text-sm" style={{ color: colors.textSecondary }}>
-          مقایسه مبلغ فروش و تعداد سفارشات
+          نمودار تعداد فروش در بازه زمانی انتخاب شده
         </p>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
-          <XAxis
-            dataKey="month"
-            stroke={colors.textSecondary}
-            style={{ fontSize: "12px", fontFamily: "inherit" }}
-          />
-          <YAxis
-            yAxisId="left"
-            stroke={colors.textSecondary}
-            style={{ fontSize: "12px", fontFamily: "inherit" }}
-            domain={[40000000, 90000000]}
-            ticks={[40000000, 50000000, 60000000, 70000000, 80000000, 90000000]}
-            tickFormatter={(value) => (value / 1000000).toLocaleString("fa-IR") + "م"}
-          />
-          <YAxis
-            yAxisId="right"
-            orientation="right"
-            stroke={colors.textSecondary}
-            style={{ fontSize: "12px", fontFamily: "inherit" }}
-            domain={[100, 250]}
-            ticks={[100, 125, 150, 175, 200, 225, 250]}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ fontFamily: "inherit" }}
-            formatter={(value) => (value === "sales" ? "مبلغ فروش (میلیون تومان)" : "تعداد سفارش")}
-          />
-          <Line
-            yAxisId="left"
-            type="monotone"
-            dataKey="sales"
-            stroke={colors.primary}
-            strokeWidth={3}
-            dot={{ fill: colors.primary, r: 5 }}
-            activeDot={{ r: 7 }}
-          />
-          <Line
-            yAxisId="right"
-            type="monotone"
-            dataKey="orders"
-            stroke={colors.success}
-            strokeWidth={3}
-            dot={{ fill: colors.success, r: 5 }}
-            activeDot={{ r: 7 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div
+              className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
+              style={{ borderColor: colors.primary }}
+            />
+            <p className="text-sm" style={{ color: colors.textSecondary }}>
+              در حال بارگذاری داده‌ها...
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <AlertCircle
+              className="w-12 h-12 mx-auto mb-4"
+              style={{ color: colors.error }}
+            />
+            <p className="text-base font-semibold mb-2" style={{ color: colors.textPrimary }}>
+              خطا در دریافت اطلاعات
+            </p>
+            <p className="text-sm" style={{ color: colors.textSecondary }}>
+              {error}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && chartData.length === 0 && (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <TrendingUp
+              className="w-12 h-12 mx-auto mb-4 opacity-40"
+              style={{ color: colors.textSecondary }}
+            />
+            <p className="text-sm" style={{ color: colors.textSecondary }}>
+              داده‌ای برای نمایش وجود ندارد
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Chart */}
+      {!loading && !error && chartData.length > 0 && (
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
+            <XAxis
+              dataKey="month"
+              stroke={colors.textSecondary}
+              style={{ fontSize: "12px", fontFamily: "inherit" }}
+            />
+            <YAxis
+              stroke={colors.textSecondary}
+              style={{ fontSize: "12px", fontFamily: "inherit" }}
+              tickFormatter={(value) => value.toLocaleString("fa-IR")}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend
+              wrapperStyle={{ fontFamily: "inherit" }}
+              formatter={(value) => (value === "sales" ? "تعداد فروش" : "تعداد سفارش")}
+            />
+            <Line
+              type="monotone"
+              dataKey="sales"
+              stroke={colors.primary}
+              strokeWidth={3}
+              dot={{ fill: colors.primary, r: 5 }}
+              activeDot={{ r: 7 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }

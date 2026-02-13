@@ -1,166 +1,61 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, ReactNode } from "react";
 import {
   ChevronLeft,
   ChevronRight,
   Edit,
-  Filter as FilterIcon,
-  History,
-  X,
   Trash2,
-  Download,
-  Search, // ← added (was missing)
+  Eye,
+  Filter as FilterIcon,
+  X,
 } from "lucide-react";
-import { useAppSelector, useAppDispatch } from "../store/hooks";
-import {
-  removeFilter,
-  clearAllFilters,
-  setOpenColumnFilter,
-} from "../store/filtersSlice";
-import { ColumnCustomizer, ColumnConfig } from "./ColumnCustomizer";
-import { PurchaseHistoryModal } from "./PurchaseHistoryModal";
-import { FilterPanel } from "./FilterPanel";
-import { CustomColumnCell } from "./CustomColumnCell";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
+import { ColumnCustomizer, ColumnConfig } from "./ColumnCustomizer";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { removeFilter, clearAllFilters, setOpenColumnFilter } from "../store/filtersSlice";
+import { CustomColumnCell } from "./CustomColumnCell";
 import { SavedFiltersButton } from "./SavedFiltersButton";
-import { getCallHistoryByCustomer, statusLabels } from "../data/callsData";
-import { generateInvoicePDF } from "../utils/invoiceGenerator";
-import { FilterDropdown } from "./FilterDropdown";
-import { CustomerSalesModal } from "./CustomerSalesModal";
-import { customerAPI, CustomerSalesData } from "../api/customerAPI";
 
-interface Customer {
-  id: string;
-  fullName: string;
-  isActive: boolean;
-  salesCount: number;
-  place: string;
-}
-
-const defaultColumns: ColumnConfig[] = [
-  { key: "fullName", label: "نام مشتری", visible: true },
-  { key: "isActive", label: "وضعیت", visible: true },
-  { key: "salesCount", label: "تعداد فروش‌ها", visible: true },
-  { key: "place", label: "محل", visible: true },
-  { key: "history", label: "جزئیات", visible: true },
-  { key: "actions", label: "عملیات", visible: true },
-];
-
-interface CustomersTableProps {
-  customers: Customer[];
-  customColumns?: ColumnConfig[];
+interface GenericTableProps<T extends { id: string | number }> {
+  data: T[];
+  tableId: string;
+  title: string;
+  customColumns: ColumnConfig[];
   setCustomColumns?: (columns: ColumnConfig[]) => void;
-  handleEdit?: (customerId: string) => void;
-  handleDelete?: (customerId: string) => void;
-  loading?: boolean;
-  totalCount?: number;
-  currentPage?: number;
-  pageSize?: number;
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
-  selectedCustomerType?: string;
-  selectedProductType?: string;
-  onCustomerTypeChange?: (type: string) => void;
-  onProductTypeChange?: (type: string) => void;
-  customerTypeOptions?: Array<{ value: string; label: string }>;
-  productTypeOptions?: Array<{ value: string; label: string }>;
+  renderCell: (item: T, column: ColumnConfig) => ReactNode;
+  handleEdit?: (itemId: string | number) => void;
+  handleDelete?: (itemId: string | number) => void;
 }
 
-export function CustomersTableWithFilters({
-  customers,
+export function GenericTableWithFilters<T extends { id: string | number }>({
+  data,
+  tableId,
+  title,
   customColumns,
   setCustomColumns,
+  renderCell,
   handleEdit,
   handleDelete,
-  loading,
-  totalCount,
-  currentPage,
-  pageSize,
-  onPageChange,
-  onPageSizeChange,
-  selectedCustomerType,
-  selectedProductType,
-  onCustomerTypeChange,
-  onProductTypeChange,
-  customerTypeOptions,
-  productTypeOptions,
-}: CustomersTableProps) {
-  const dispatch = useAppDispatch();
-  const TABLE_ID = "customers-table";
-  const { activeFilters, openColumnFilter } = useAppSelector(
-    (state) => state.filters,
-  );
-  const tableFilters = activeFilters[TABLE_ID] || [];
+}: GenericTableProps<T>) {
   const colors = useCurrentColors();
+  const dispatch = useAppDispatch();
+  const { activeFilters, openColumnFilter } = useAppSelector(
+    (state) => state.filters
+  );
+  const tableFilters = activeFilters[tableId] || [];
 
+  const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Sync local rowsPerPage with controlled prop from parent
-  useEffect(() => {
-    if (pageSize !== undefined) {
-      setRowsPerPage(pageSize);
-    }
-  }, [pageSize]);
-  const [localVisibleColumns, setLocalVisibleColumns] = useState<
-    ColumnConfig[]
-  >(customColumns || defaultColumns);
-  const [isCallHistoryModalOpen, setIsCallHistoryModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null,
+  const [localVisibleColumns, setLocalVisibleColumns] = useState<ColumnConfig[]>(
+    customColumns
   );
   const [customColumnData, setCustomColumnData] = useState<
     Record<string, Record<string, string | string[]>>
   >({});
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  // Customer sales modal state
-  const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
-  const [salesData, setSalesData] = useState<CustomerSalesData | null>(null);
-  const [salesLoading, setSalesLoading] = useState(false);
-
-    // Rows per page handler (calls parent + resets page)
-
-  // Function to fetch customer sales
-  const handleViewSales = async (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setIsSalesModalOpen(true);
-    setSalesLoading(true);
-    setSalesData(null);
-
-    try {
-      const response = await customerAPI.getCustomerSales({
-        customerIds: {
-          ids: [customer.id],
-        },
-        paggination: {
-          pageNumber: 1,
-          pageSize: 100,
-        },
-      });
-
-      if (response.code === 200 && response.body.items.length > 0) {
-        setSalesData(response.body.items[0]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch customer sales:", error);
-    } finally {
-      setSalesLoading(false);
-    }
-  };
-
-    // Rows per page handler (calls parent + resets page)
-  const handleRowsPerPageChange = (newSize: number) => {
-    if (onPageSizeChange) {
-      onPageSizeChange(newSize);
-    } else {
-      setRowsPerPage(newSize);
-    }
-    if (onPageChange) onPageChange(1);
-  };
-
   // Load custom column data from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("customColumnData_customers-table");
+    const saved = localStorage.getItem(`customColumnData_${tableId}`);
     if (saved) {
       try {
         setCustomColumnData(JSON.parse(saved));
@@ -168,13 +63,13 @@ export function CustomersTableWithFilters({
         console.error("Failed to load custom column data:", e);
       }
     }
-  }, []);
+  }, [tableId]);
 
   // Save custom column data to localStorage
   const handleCustomColumnChange = (
-    rowId: number,
+    rowId: string | number,
     columnKey: string,
-    value: string | string[],
+    value: string | string[]
   ) => {
     setCustomColumnData((prev) => {
       const newData = {
@@ -185,8 +80,8 @@ export function CustomersTableWithFilters({
         },
       };
       localStorage.setItem(
-        "customColumnData_customers-table",
-        JSON.stringify(newData),
+        `customColumnData_${tableId}`,
+        JSON.stringify(newData)
       );
       return newData;
     });
@@ -210,193 +105,118 @@ export function CustomersTableWithFilters({
         setCustomColumns(newColumns);
       }
     },
-    [setCustomColumns],
+    [setCustomColumns]
   );
 
   // Filter only visible columns
   const activeColumns = localVisibleColumns.filter((col) => col.visible);
 
-  // Render cell content based on column key
-  const renderCell = (customer: Customer, column: ColumnConfig) => {
+  // Render cell content based on column
+  const renderCellContent = (item: T, column: ColumnConfig) => {
     // Check if this is a custom column
     if (column.isCustom) {
-      // Only render custom columns that have actual data
-      const hasData = customColumnData[customer.id]?.[column.key];
-      if (!hasData && column.type !== "tags") {
-        return (
-          <td key={column.key} className="p-3">
-            <span className="text-xs" style={{ color: colors.textSecondary }}>
-              -
-            </span>
-          </td>
-        );
-      }
       return (
         <td key={column.key} className="p-3">
           <CustomColumnCell
             column={column}
-            rowId={Number(customer.id)}
-            value={customColumnData[customer.id]?.[column.key] || ""}
+            rowId={item.id}
+            value={customColumnData[item.id]?.[column.key] || ""}
             onChange={handleCustomColumnChange}
           />
         </td>
       );
     }
 
-    // Default columns - only render if data exists in API
-    switch (column.key) {
-      case "fullName":
-        return (
-          <td
-            key={column.key}
-            className="p-3 text-sm text-[#1c1c1c] dark:text-white font-medium"
-            dir="auto"
-          >
-            {customer.fullName}
-          </td>
-        );
-      case "isActive":
-        return (
-          <td
-            key={column.key}
-            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]"
-            dir="ltr"
-          >
-            {customer.isActive ? "فعال" : "غیرفعال"}
-          </td>
-        );
-      case "salesCount":
-        return (
-          <td
-            key={column.key}
-            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8] text-center"
-          >
-            {customer.salesCount}
-          </td>
-        );
-      case "place":
-        return (
-          <td
-            key={column.key}
-            className="p-3 text-sm text-[#585757] dark:text-[#b8bfc8]"
-            dir="rtl"
-          >
-            {customer.place || "-"}
-          </td>
-        );
-      case "history":
-        return (
-          <td key={column.key} className="p-3">
+    // Actions column
+    if (column.key === "actions") {
+      return (
+        <td key={column.key} className="p-3">
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => handleViewSales(customer)}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:shadow-md flex items-center gap-2 whitespace-nowrap"
-              style={{
-                backgroundColor: colors.primary + "15",
-                color: colors.primary,
+              onClick={() => {
+                console.log("View item details:", item.id);
               }}
+              className="p-2 rounded-lg transition-colors"
+              style={{ color: colors.primary }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = colors.primary;
-                e.currentTarget.style.color = "#ffffff";
+                e.currentTarget.style.backgroundColor = `${colors.primary}15`;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = colors.primary + "15";
-                e.currentTarget.style.color = colors.primary;
+                e.currentTarget.style.backgroundColor = "transparent";
               }}
+              title="مشاهده جزئیات"
             >
-              <History className="w-4 h-4" />
-              <span>جزئیات</span>
+              <Eye className="w-4 h-4" />
             </button>
-          </td>
-        );
-      case "actions":
-        return (
-          <td key={column.key} className="p-3">
-            <div className="flex items-center gap-2">
+            {handleEdit && (
               <button
-                onClick={() => {
-                  if (handleEdit) {
-                    handleEdit(customer.id);
-                  }
+                onClick={() => handleEdit(item.id)}
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: colors.warning }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = `${colors.warning}15`;
                 }}
-                className="p-2 text-[#ff9800] hover:bg-[#fff3e0] dark:hover:bg-[#3a2d1a] rounded-lg transition-colors"
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
                 title="ویرایش"
               >
                 <Edit className="w-4 h-4" />
               </button>
+            )}
+            {handleDelete && (
               <button
-                onClick={() => {
-                  if (handleDelete) {
-                    handleDelete(customer.id);
-                  }
+                onClick={() => handleDelete(item.id)}
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: colors.error }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = `${colors.error}15`;
                 }}
-                className="p-2 text-[#f44336] hover:bg-[#ffcdd2] dark:hover:bg-[#5c2e2e] rounded-lg transition-colors"
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
                 title="حذف"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => {
-                  generateInvoicePDF(
-                    customer.id,
-                    customer.fullName,
-                    "",
-                    "",
-                  );
-                }}
-                className="p-2 text-[#4caf50] hover:bg-[#e8f5e9] dark:hover:bg-[#2e5c3a] rounded-lg transition-colors"
-                title="دانلود فاکتور"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-            </div>
-          </td>
-        );
-      default:
-        // For any column not in API response, show dash
-        return (
-          <td key={column.key} className="p-3">
-            <span className="text-xs" style={{ color: colors.textSecondary }}>
-              -
-            </span>
-          </td>
-        );
-    }
-  };
-
-  // Apply filters + search to data
-  const filteredCustomers = useMemo(() => {
-    let result = customers;
-
-    // Search bar filter (now connected)
-    if (searchQuery.trim() !== "") {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter((customer) =>
-        customer.fullName.toLowerCase().includes(query)
+            )}
+          </div>
+        </td>
       );
     }
 
+    // Use custom render function
+    return renderCell(item, column);
+  };
+
+  // Apply filters to data
+  const filteredData = useMemo(() => {
+    let result = data;
+
     // Filter by custom tags
     if (selectedTags.length > 0) {
-      result = result.filter((customer) => {
+      result = result.filter((item) => {
+        // Get all tag columns
         const tagColumns = localVisibleColumns.filter(
-          (col) => col.isCustom && col.type === "tags",
+          (col) => col.isCustom && col.type === "tags"
         );
 
+        // Check if any of the selected tags are in this item's data
         return tagColumns.some((col) => {
-          const customerTags = customColumnData[customer.id]?.[col.key];
-          if (!customerTags) return false;
+          const itemTags = customColumnData[item.id]?.[col.key];
+          if (!itemTags) return false;
 
-          const tagsArray = Array.isArray(customerTags)
-            ? customerTags
-            : [customerTags];
+          const tagsArray = Array.isArray(itemTags)
+            ? itemTags
+            : [itemTags];
           return tagsArray.some((tag) => selectedTags.includes(tag));
         });
       });
     }
 
     tableFilters.forEach((filter) => {
-      result = result.filter((customer) => {
-        const value = String(customer[filter.column as keyof Customer] || "");
+      result = result.filter((item) => {
+        const value = String((item as any)[filter.column] || "");
         const filterValue = filter.value.toLowerCase();
         const cellValue = value.toLowerCase();
 
@@ -428,20 +248,18 @@ export function CustomersTableWithFilters({
     });
 
     return result;
-  }, [
-    tableFilters,
-    customers,
-    selectedTags,
-    localVisibleColumns,
-    customColumnData,
-    searchQuery, // ← added
-  ]);
+  }, [tableFilters, data, selectedTags, localVisibleColumns, customColumnData]);
 
-  // Reset to page 1 when filters or search change
-   // Reset to page 1 when filters or search change
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentPageData = filteredData.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
   useEffect(() => {
-    if (onPageChange) onPageChange(1);
-  }, [tableFilters, searchQuery, onPageChange]);
+    setCurrentPage(1);
+  }, [tableFilters, rowsPerPage]);
 
   const getOperatorLabel = (operator: string) => {
     const labels: Record<string, string> = {
@@ -455,19 +273,6 @@ export function CustomersTableWithFilters({
     };
     return labels[operator] || operator;
   };
-
-  // ==================== CLIENT-SIDE PAGINATION ====================
-  const effectiveCurrentPage = currentPage || 1;
-  const effectivePageSize = pageSize || rowsPerPage;
-  const effectiveTotalCount = totalCount || filteredCustomers.length;
-  const totalPages = Math.ceil(effectiveTotalCount / effectivePageSize);
-
-  const startIndex = (effectiveCurrentPage - 1) * effectivePageSize;
-  const endIndex = startIndex + effectivePageSize;
-
-  const paginatedCustomers = useMemo(() => {
-    return filteredCustomers.slice(startIndex, endIndex);
-  }, [filteredCustomers, startIndex, endIndex]);
 
   return (
     <div
@@ -488,79 +293,15 @@ export function CustomersTableWithFilters({
           dir="auto"
           style={{ color: colors.textPrimary }}
         >
-          مشتریان
+          {title}
         </h2>
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
-          {/* Filter Dropdowns */}
-          {customerTypeOptions && onCustomerTypeChange && (
-            <FilterDropdown
-              label="نوع مشتری"
-              value={selectedCustomerType || ""}
-              options={customerTypeOptions}
-              onChange={onCustomerTypeChange}
-            />
-          )}
-          {productTypeOptions && onProductTypeChange && (
-            <FilterDropdown
-              label="نوع محصول"
-              value={selectedProductType || ""}
-              options={productTypeOptions}
-              onChange={onProductTypeChange}
-            />
-          )}
-          <SavedFiltersButton tableId="customers-table" />
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+          <SavedFiltersButton tableId={tableId} />
           <ColumnCustomizer
-            tableId="customers-table"
+            tableId={tableId}
             defaultColumns={customColumns}
             onColumnsChange={setCustomColumns}
           />
-        </div>
-      </div>
-      
-      {/* Search Bar (now fully working) */}
-      <div
-        className="rounded-lg p-4 border"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderColor: colors.border,
-        }}
-      >
-        <div
-          className="flex items-center gap-3 rounded-lg px-4 py-2.5 sm:py-3 border"
-          style={{
-            backgroundColor: colors.backgroundSecondary,
-            borderColor: colors.border,
-          }}
-        >
-          <Search
-            className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
-            style={{ color: colors.textSecondary }}
-          />
-          <input
-            type="text"
-            placeholder="جستجو در مشتریان (نام، شماره تلفن، ایمیل)"
-            className="bg-transparent flex-1 outline-none text-xs sm:text-sm placeholder:opacity-60"
-            style={{ color: colors.textPrimary }}
-            dir="rtl"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="transition-colors flex-shrink-0"
-              style={{ color: colors.textSecondary }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = colors.textPrimary;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = colors.textSecondary;
-              }}
-            >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          )}
         </div>
       </div>
 
@@ -601,7 +342,7 @@ export function CustomersTableWithFilters({
                 <button
                   onClick={() =>
                     dispatch(
-                      removeFilter({ tableId: TABLE_ID, filterId: filter.id }),
+                      removeFilter({ tableId: tableId, filterId: filter.id })
                     )
                   }
                   style={{ color: colors.error }}
@@ -612,7 +353,7 @@ export function CustomersTableWithFilters({
               </div>
             ))}
             <button
-              onClick={() => dispatch(clearAllFilters(TABLE_ID))}
+              onClick={() => dispatch(clearAllFilters(tableId))}
               className="text-xs hover:underline"
               style={{ color: colors.error }}
             >
@@ -628,7 +369,7 @@ export function CustomersTableWithFilters({
           col.isCustom &&
           col.type === "tags" &&
           col.options &&
-          col.options.length > 0,
+          col.options.length > 0
       ) && (
         <div
           className="p-4 border-b"
@@ -642,7 +383,7 @@ export function CustomersTableWithFilters({
                   col.isCustom &&
                   col.type === "tags" &&
                   col.options &&
-                  col.options.length > 0,
+                  col.options.length > 0
               )
               .flatMap((col) => col.options || [])
               .map((option) => {
@@ -654,7 +395,7 @@ export function CustomersTableWithFilters({
                       setSelectedTags((prev) =>
                         prev.includes(option.value)
                           ? prev.filter((t) => t !== option.value)
-                          : [...prev, option.value],
+                          : [...prev, option.value]
                       );
                     }}
                     className="px-3 py-1.5 border rounded-lg text-sm transition-all"
@@ -714,7 +455,7 @@ export function CustomersTableWithFilters({
                             className="p-1 rounded transition-colors"
                             style={{
                               color: tableFilters.some(
-                                (f) => f.column === column.key,
+                                (f) => f.column === column.key
                               )
                                 ? colors.primary
                                 : colors.textSecondary,
@@ -728,7 +469,7 @@ export function CustomersTableWithFilters({
                               e.currentTarget.style.backgroundColor =
                                 "transparent";
                               e.currentTarget.style.color = tableFilters.some(
-                                (f) => f.column === column.key,
+                                (f) => f.column === column.key
                               )
                                 ? colors.primary
                                 : colors.textSecondary;
@@ -750,9 +491,9 @@ export function CustomersTableWithFilters({
             </tr>
           </thead>
           <tbody>
-            {paginatedCustomers.map((customer) => (
+            {currentPageData.map((item) => (
               <tr
-                key={customer.id}
+                key={item.id}
                 className="border-b transition-colors"
                 style={{
                   borderColor: colors.border,
@@ -765,24 +506,25 @@ export function CustomersTableWithFilters({
                   e.currentTarget.style.backgroundColor = "transparent";
                 }}
               >
-                {activeColumns.map((column) => renderCell(customer, column))}
+                {activeColumns.map((column) => renderCellContent(item, column))}
               </tr>
             ))}
           </tbody>
         </table>
 
-        {filteredCustomers.length === 0 && (
+        {filteredData.length === 0 && (
           <div
-            className="p-8 text-center text-[#969696] dark:text-[#8b92a8]"
+            className="p-8 text-center"
+            style={{ color: colors.textSecondary }}
             dir="rtl"
           >
-            هیچ مشتری با این فیلترها یافت نشد
+            هیچ موردی با این فیلترها یافت نشد
           </div>
         )}
       </div>
 
       {/* Pagination */}
-      {filteredCustomers.length > 0 && (
+      {filteredData.length > 0 && (
         <div
           className="p-3 md:p-4 border-t flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-0"
           dir="rtl"
@@ -800,8 +542,8 @@ export function CustomersTableWithFilters({
                 نمایش:
               </span>
               <select
-                value={effectivePageSize}
-                onChange={(e) => handleRowsPerPageChange(Number(e.target.value))}
+                value={rowsPerPage}
+                onChange={(e) => setRowsPerPage(Number(e.target.value))}
                 className="px-2 md:px-3 py-1 md:py-1.5 border rounded-lg text-xs md:text-sm focus:outline-none transition-colors"
                 style={{
                   backgroundColor: colors.cardBackground,
@@ -828,8 +570,8 @@ export function CustomersTableWithFilters({
               className="text-xs md:text-sm whitespace-nowrap md:hidden"
               style={{ color: colors.textSecondary }}
             >
-              {startIndex + 1} تا {Math.min(endIndex, filteredCustomers.length)}{" "}
-              از {filteredCustomers.length}
+              {startIndex + 1} تا {Math.min(endIndex, filteredData.length)}{" "}
+              از {filteredData.length}
             </span>
           </div>
 
@@ -838,23 +580,21 @@ export function CustomersTableWithFilters({
             style={{ color: colors.textSecondary }}
           >
             نمایش {startIndex + 1} تا{" "}
-            {Math.min(endIndex, filteredCustomers.length)} از{" "}
-            {filteredCustomers.length} مورد
+            {Math.min(endIndex, filteredData.length)} از{" "}
+            {filteredData.length} مورد
           </span>
 
           {/* Page navigation */}
           <div className="flex items-center gap-1.5 md:gap-2 justify-center md:justify-end">
             <button
-              onClick={() =>
-                onPageChange && onPageChange(Math.max(1, effectiveCurrentPage - 1))
-              }
-              disabled={effectiveCurrentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
               className="p-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               style={{
                 color: colors.textSecondary,
               }}
               onMouseEnter={(e) => {
-                if (effectiveCurrentPage !== 1) {
+                if (currentPage !== 1) {
                   e.currentTarget.style.backgroundColor =
                     colors.backgroundSecondary;
                 }
@@ -873,13 +613,15 @@ export function CustomersTableWithFilters({
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((page) => {
+                  // Show first page, last page, current page, and neighbors
                   return (
                     page === 1 ||
                     page === totalPages ||
-                    (page >= effectiveCurrentPage - 1 && page <= effectiveCurrentPage + 1)
+                    (page >= currentPage - 1 && page <= currentPage + 1)
                   );
                 })
                 .map((page, index, array) => {
+                  // Add ellipsis if there's a gap
                   const prevPage = array[index - 1];
                   const showEllipsis = prevPage && page - prevPage > 1;
 
@@ -894,32 +636,28 @@ export function CustomersTableWithFilters({
                         </span>
                       )}
                       <button
-                        onClick={() => onPageChange && onPageChange(page)}
+                        onClick={() => setCurrentPage(page)}
                         className={`min-w-[32px] h-8 px-2 flex items-center justify-center rounded text-sm transition-colors`}
                         style={{
                           backgroundColor:
-                            effectiveCurrentPage === page
+                            currentPage === page
                               ? colors.primary
                               : colors.cardBackground,
                           borderWidth: "1px",
                           borderStyle: "solid",
                           borderColor:
-                            effectiveCurrentPage === page
-                              ? colors.primary
-                              : colors.border,
+                            currentPage === page ? colors.primary : colors.border,
                           color:
-                            effectiveCurrentPage === page
-                              ? "#ffffff"
-                              : colors.textPrimary,
+                            currentPage === page ? "#ffffff" : colors.textPrimary,
                         }}
                         onMouseEnter={(e) => {
-                          if (effectiveCurrentPage !== page) {
+                          if (currentPage !== page) {
                             e.currentTarget.style.backgroundColor =
                               colors.backgroundSecondary;
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (effectiveCurrentPage !== page) {
+                          if (currentPage !== page) {
                             e.currentTarget.style.backgroundColor =
                               colors.cardBackground;
                           }
@@ -934,15 +672,15 @@ export function CustomersTableWithFilters({
 
             <button
               onClick={() =>
-                onPageChange && onPageChange(Math.min(totalPages, effectiveCurrentPage + 1))
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }
-              disabled={effectiveCurrentPage === totalPages}
+              disabled={currentPage === totalPages}
               className="p-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               style={{
                 color: colors.textSecondary,
               }}
               onMouseEnter={(e) => {
-                if (effectiveCurrentPage !== totalPages) {
+                if (currentPage !== totalPages) {
                   e.currentTarget.style.backgroundColor =
                     colors.backgroundSecondary;
                 }
@@ -958,103 +696,6 @@ export function CustomersTableWithFilters({
             </button>
           </div>
         </div>
-      )}
-
-      {/* Filter Panel */}
-      {openColumnFilter && (
-        <FilterPanel
-          tableId={TABLE_ID}
-          column={openColumnFilter}
-          columnLabel={
-            localVisibleColumns.find((c) => c.key === openColumnFilter)
-              ?.label || openColumnFilter
-          }
-          onClose={() => dispatch(setOpenColumnFilter(null))}
-        />
-      )}
-
-      {/* Call History Modal */}
-      {isCallHistoryModalOpen && selectedCustomer && (
-        <PurchaseHistoryModal
-          isOpen={isCallHistoryModalOpen}
-          onClose={() => setIsCallHistoryModalOpen(false)}
-          customerName={selectedCustomer.fullName}
-          phoneNumber={""}
-          purchaseHistory={[
-            {
-              id: 1,
-              date: "1403/10/15",
-              invoiceNumber: "1400",
-              productName: "فرش 1200 شانه طرح خرید",
-              quantity: 1,
-              unitPrice: 10000000,
-              totalPrice: 10000000,
-              paymentStatus: "پرداخت شده",
-              orderStatus: "تحویل شده",
-            },
-            {
-              id: 2,
-              date: "1403/09/20",
-              invoiceNumber: "1325",
-              productName: "موکت 700 شانه کد 2054",
-              quantity: 2,
-              unitPrice: 5500000,
-              totalPrice: 11000000,
-              paymentStatus: "پرداخت شده",
-              orderStatus: "تحویل شده",
-            },
-            {
-              id: 3,
-              date: "1403/08/10",
-              invoiceNumber: "1256",
-              productName: "فرش 1000 شانه طرح کلاسیک",
-              quantity: 1,
-              unitPrice: 8500000,
-              totalPrice: 8500000,
-              paymentStatus: "پرداخت شده",
-              orderStatus: "تحویل شده",
-            },
-            {
-              id: 4,
-              date: "1403/07/05",
-              invoiceNumber: "1189",
-              productName: "زیر انداز 500 شانه",
-              quantity: 3,
-              unitPrice: 2000000,
-              totalPrice: 6000000,
-              paymentStatus: "پرداخت شده",
-              orderStatus: "تحویل شده",
-            },
-            {
-              id: 5,
-              date: "1403/06/25",
-              invoiceNumber: "1145",
-              productName: "فرش ماشینی 1500 شانه",
-              quantity: 1,
-              unitPrice: 12000000,
-              totalPrice: 12000000,
-              paymentStatus: "در انتظار",
-              orderStatus: "در حال ارسال",
-            },
-          ]}
-        />
-      )}
-
-      {/* Customer Sales Modal */}
-      {isSalesModalOpen && selectedCustomer && (
-        <CustomerSalesModal
-          customer={{
-            id: selectedCustomer.id,
-            name: selectedCustomer.fullName,
-            phone: "",
-            location: selectedCustomer.place || "",
-            status: selectedCustomer.isActive ? "فعال" : "غیرفعال",
-            purchaseCount: String(selectedCustomer.salesCount),
-          }}
-          salesData={salesData}
-          loading={salesLoading}
-          onClose={() => setIsSalesModalOpen(false)}
-        />
       )}
     </div>
   );

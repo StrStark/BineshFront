@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Users,
   TrendingUp,
@@ -22,242 +22,15 @@ import {
 } from "../components/CategorySettingsModal";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { ThemedButton } from "../components/ThemedButton";
+import { customerAPI } from "../api/customerAPI";
 
 interface Customer {
   id: string;
-  name: string;
-  phone: string;
-  email: string;
-  totalCalls: number;
-  lastCall: string;
-  satisfaction: number;
-  province?: string;
-  city?: string;
-  neighborhood?: string;
+  fullName: string;
+  isActive: boolean;
+  salesCount: number;
+  place: string;
 }
-
-// تولید داده‌های تصادفی برای مشتریان
-const generateCustomers = (): Customer[] => {
-  const firstNames = [
-    "علی",
-    "سارا",
-    "محمد",
-    "فاطمه",
-    "حسین",
-    "زهرا",
-    "رضا",
-    "مریم",
-    "احمد",
-    "نرگس",
-    "مهدی",
-    "الهام",
-    "امیر",
-    "نازنین",
-    "حامد",
-    "سمیرا",
-    "کامران",
-    "لیلا",
-    "بهزاد",
-    "شیرین",
-    "مسعود",
-    "پریسا",
-    "جو��د",
-    "مینا",
-    "فرهاد",
-    "سمانه",
-    "سعید",
-    "نیلوفر",
-    "داود",
-    "مهسا",
-  ];
-  const lastNames = [
-    "محمدی",
-    "احمدی",
-    "رضایی",
-    "کریمی",
-    "قاسمی",
-    "حسینی",
-    "نوری",
-    "موسوی",
-    "صادقی",
-    "اکبری",
-    "جعفری",
-    "میرزایی",
-    "علیپور",
-    "خانی",
-    "زارعی",
-    "ملکی",
-    "باقری",
-    "یوسفی",
-    "فتحی",
-    "عباسی",
-    "طاهری",
-    "رحیمی",
-    "کاظمی",
-    "حیدری",
-    "اسدی",
-    "فروغی",
-    "نصیری",
-    "شریفی",
-    "امینی",
-    "رستمی",
-  ];
-
-  // English equivalents for email
-  const emailFirstNames = [
-    "ali",
-    "sara",
-    "mohammad",
-    "fatemeh",
-    "hossein",
-    "zahra",
-    "reza",
-    "maryam",
-    "ahmad",
-    "narges",
-    "mahdi",
-    "elham",
-    "amir",
-    "nazanin",
-    "hamed",
-    "samira",
-    "kamran",
-    "leila",
-    "behzad",
-    "shirin",
-    "masoud",
-    "parisa",
-    "javad",
-    "mina",
-    "farhad",
-    "samaneh",
-    "saeed",
-    "niloofar",
-    "davood",
-    "mahsa",
-  ];
-  const emailLastNames = [
-    "mohammadi",
-    "ahmadi",
-    "rezaei",
-    "karimi",
-    "ghasemi",
-    "hosseini",
-    "noori",
-    "mousavi",
-    "sadeghi",
-    "akbari",
-    "jafari",
-    "mirzaei",
-    "alipour",
-    "khani",
-    "zarei",
-    "maleki",
-    "bagheri",
-    "yousefi",
-    "fathi",
-    "abbasi",
-    "taheri",
-    "rahimi",
-    "kazemi",
-    "heidari",
-    "asadi",
-    "foroughi",
-    "nasiri",
-    "sharifi",
-    "amini",
-    "rostami",
-  ];
-
-  // اطلاعات جغرافیایی
-  const provinces = [
-    "تهران",
-    "اصفهان",
-    "خراسان رضوی",
-    "فارس",
-    "خوزستان",
-    "آذربایجان شرقی",
-    "مازندران",
-    "گیلان",
-  ];
-  const citiesByProvince: Record<string, string[]> = {
-    تهران: ["تهران", "کرج", "ورامین", "شهریار", "اسلامشهر"],
-    اصفهان: ["اصفهان", "کاشان", "نجف‌آباد", "خمینی‌شهر", "شاهین‌شهر"],
-    "خراسان رضوی": ["مشهد", "نیشابور", "سبزوار", "کاشمر", "تربت حیدریه"],
-    فارس: ["شیراز", "مرودشت", "جهرم", "فسا", "کازرون"],
-    خوزستان: ["اهواز", "آبادان", "دزفول", "خرمشهر", "بهبهان"],
-    "آذربایجان شرقی": ["تبریز", "مراغه", "مرند", "میانه", "بناب"],
-    مازندران: ["ساری", "بابل", "آمل", "قائم‌شهر", "نوشهر"],
-    گیلان: ["رشت", "بندر انزلی", "لاهیجان", "لنگرود", "آستارا"],
-  };
-  const neighborhoods = [
-    "میدان آزادی",
-    "خیابان ولیعصر",
-    "میدان انقلاب",
-    "خیابان آزادی",
-    "میدان فردوسی",
-    "خیابان شریعتی",
-    "پارک ملت",
-    "خیابان سعادت‌آباد",
-    "میدان ونک",
-    "خیابان نواب",
-    "خیابان انقلاب",
-    "میدان تجریش",
-  ];
-
-  const customers: Customer[] = [];
-
-  for (let i = 1; i <= 120; i++) {
-    const firstNameIndex = Math.floor(Math.random() * firstNames.length);
-    const lastNameIndex = Math.floor(Math.random() * lastNames.length);
-    const firstName = firstNames[firstNameIndex];
-    const lastName = lastNames[lastNameIndex];
-    const emailFirstName = emailFirstNames[firstNameIndex];
-    const emailLastName = emailLastNames[lastNameIndex];
-    const totalCalls = Math.floor(Math.random() * 100) + 1;
-    const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, "0");
-    const month = String(Math.floor(Math.random() * 3) + 8).padStart(2, "0");
-    const satisfaction = (Math.random() * 2 + 3).toFixed(1); // بین 3 تا 5
-    const phonePrefix = [
-      "0912",
-      "0913",
-      "0914",
-      "0915",
-      "0916",
-      "0917",
-      "0918",
-      "0919",
-      "0921",
-      "0922",
-    ][Math.floor(Math.random() * 10)];
-    const phoneNumber =
-      phonePrefix +
-      String(Math.floor(Math.random() * 10000000)).padStart(7, "0");
-
-    const province = provinces[Math.floor(Math.random() * provinces.length)];
-    const cities = citiesByProvince[province];
-    const city = cities[Math.floor(Math.random() * cities.length)];
-    const neighborhood =
-      neighborhoods[Math.floor(Math.random() * neighborhoods.length)];
-
-    customers.push({
-      id: String(i),
-      name: `${firstName} ${lastName}`,
-      phone: phoneNumber,
-      email: `${emailFirstName}.${emailLastName}${i}@example.com`,
-      totalCalls: totalCalls,
-      lastCall: `1403/${month}/${day}`,
-      satisfaction: parseFloat(satisfaction),
-      province: province,
-      city: city,
-      neighborhood: neighborhood,
-    });
-  }
-
-  return customers;
-};
-
-const mockCustomers: Customer[] = generateCustomers();
 
 export function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -266,7 +39,7 @@ export function CustomersPage() {
   const [editingCustomerId, setEditingCustomerId] = useState<string | null>(
     null,
   );
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([
     {
@@ -289,15 +62,12 @@ export function CustomersPage() {
     },
   ]);
   const [customColumns, setCustomColumns] = useState<ColumnConfig[]>([
-    { key: "name", label: "نام مشتری", visible: true },
-    { key: "phone", label: "شماره تماس", visible: true },
-    { key: "email", label: "ایمیل", visible: true },
-    { key: "province", label: "استان", visible: true },
-    { key: "city", label: "شهر", visible: true },
-    { key: "neighborhood", label: "محله", visible: true },
-    { key: "totalCalls", label: "تعداد تماس‌ها", visible: true },
-    { key: "lastCall", label: "تاریخ آخرین خرید", visible: true },
+    { key: "fullName", label: "نام مشتری", visible: true },
+    { key: "isActive", label: "وضعیت", visible: true },
+    { key: "salesCount", label: "تعداد فروش‌ها", visible: true },
+    { key: "place", label: "محل", visible: true },
     { key: "history", label: "تاریخچه خریدها", visible: true },
+    { key: "actions", label: "عملیات", visible: true },
   ]);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -321,6 +91,119 @@ export function CustomersPage() {
     null,
   );
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  // API state for cards
+  const [cardsLoading, setCardsLoading] = useState(true);
+  const [arpuData, setArpuData] = useState({ value: 0, growth: 0 });
+  const [crrData, setCrrData] = useState({ value: 0, growth: 0 });
+
+  // API state for table
+  const [tableLoading, setTableLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Filter states
+  const [selectedCustomerType, setSelectedCustomerType] = useState<string>(
+    "Bedehkaran",
+  );
+  const [selectedProductType, setSelectedProductType] = useState<string>("");
+
+  // Customer Type options with Persian labels
+  const customerTypeOptions = [
+    { value: "", label: "همه مشتریان" },
+    { value: "Bedehkaran", label: "بدهکاران" },
+    { value: "Bestankar", label: "بستانکار" },
+    { value: "Personnel", label: "پرسنل" },
+    { value: "Ranandeh", label: "راننده" },
+    { value: "Bazaryab", label: "بازاریاب" },
+    { value: "Sherka", label: "شرکا" },
+    { value: "MoshtarianKhanegi", label: "مشتریان خانگی" },
+    { value: "JariSherkathaVaAshkhas", label: "جاری شرکت‌ها و اشخاص" },
+    { value: "TarahVaEditor", label: "طراح و ادیتور" },
+  ];
+
+  // Product Type options with Persian labels
+  const productTypeOptions = [
+    { value: "", label: "همه محصولات" },
+    { value: "Carpet", label: "فرش" },
+    { value: "RawMaterials", label: "مواد خام" },
+    { value: "Rug", label: "گلیم" },
+  ];
+
+  // Fetch table data from API
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      setTableLoading(true);
+      try {
+        const response = await customerAPI.getCustomers({
+          dateFilter: {
+            startTime: "2000-02-13T12:04:22.098Z",
+            endTime: "2026-02-13T12:04:22.098Z",
+            timeFrameUnit: 1,
+          },
+          prodctCategory: {
+            productCategory: selectedProductType,
+          },
+          custoemrCategory: {
+            customerCategory: selectedCustomerType,
+          },
+          paggination: {
+            pageNumber: currentPage,
+            pageSize: pageSize,
+          },
+        });
+
+        if (response.code === 200 && response.status === "success") {
+          setCustomers(response.body.items);
+          setTotalCount(response.body.totalCount);
+        }
+      } catch (err) {
+        console.error("Failed to fetch customers:", err);
+      } finally {
+        setTableLoading(false);
+      }
+    };
+
+    fetchCustomers();
+  }, [currentPage, pageSize, selectedCustomerType, selectedProductType]);
+
+  // Fetch cards data from API
+  useEffect(() => {
+    const fetchCardsData = async () => {
+      setCardsLoading(true);
+      try {
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setFullYear(startDate.getFullYear() - 1);
+
+        const response = await customerAPI.getCustomersCards({
+          dateFilter: {
+            startTime: startDate.toISOString(),
+            endTime: endDate.toISOString(),
+            timeFrameUnit: 1,
+          },
+          prodctCategory: {
+            productCategory: "",
+          },
+          custoemrCategory: {
+            customerCategory: "string",
+          },
+        });
+
+        if (response.code === 200 && response.status === "success") {
+          setArpuData(response.body.arpu);
+          setCrrData(response.body.crr);
+        }
+      } catch (err) {
+        console.error("Failed to fetch cards data:", err);
+      } finally {
+        setCardsLoading(false);
+      }
+    };
+
+    fetchCardsData();
+  }, []);
 
   // Get active filters from Redux store
   const { activeFilters } = useAppSelector((state) => state.filters);
@@ -355,11 +238,8 @@ export function CustomersPage() {
   };
 
   // Apply search query filter
-  const searchFilteredCustomers = customers.filter(
-    (customer) =>
-      customer.name.includes(searchQuery) ||
-      customer.phone.includes(searchQuery) ||
-      customer.email.includes(searchQuery),
+  const searchFilteredCustomers = customers.filter((customer) =>
+    customer.fullName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Apply Redux filters
@@ -404,27 +284,15 @@ export function CustomersPage() {
       handleSaveEdit(e);
     } else {
       // افزودن مشتری جدید
-      const today = new Date();
-      const year = 1403;
-      const month = String(today.getMonth() + 1).padStart(2, "0");
-      const day = String(today.getDate()).padStart(2, "0");
-
       const newCustomer: Customer = {
-        id: String(Date.now()), // استفاده از timestamp برای ID یکتا
-        name: `${formData.firstName} ${formData.lastName}`,
-        phone: formData.phone,
-        email: formData.email,
-        totalCalls: 0,
-        lastCall: `${year}/${month}/${day}`,
-        satisfaction: 4.0,
-        province: formData.province,
-        city: formData.city,
-        neighborhood: formData.neighborhood,
+        id: String(Date.now()),
+        fullName: `${formData.firstName} ${formData.lastName}`,
+        salesCount: 0,
+        isActive: true,
+        place: `${formData.province}، ${formData.city}، ${formData.neighborhood}`,
       };
 
-      setCustomers([newCustomer, ...customers]); // اضافه کردن به ابتدای لیست
-
-      console.log("New customer added:", newCustomer);
+      setCustomers([newCustomer, ...customers]);
       setIsModalOpen(false);
 
       // ریست کردن فرم
@@ -446,15 +314,17 @@ export function CustomersPage() {
   const handleEdit = (customerId: string) => {
     const customer = customers.find((c) => c.id === customerId);
     if (customer) {
+      const nameParts = customer.fullName.split(" ");
+      const placeParts = customer.place.split("، ");
       setFormData({
-        firstName: customer.name.split(" ")[0],
-        lastName: customer.name.split(" ")[1],
-        phone: customer.phone,
-        email: customer.email,
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        phone: "",
+        email: "",
         company: "",
-        province: customer.province || "",
-        city: customer.city || "",
-        neighborhood: customer.neighborhood || "",
+        province: placeParts[0] || "",
+        city: placeParts[1] || "",
+        neighborhood: placeParts[2] || "",
       });
       setEditingCustomerId(customerId);
       setIsEditMode(true);
@@ -469,12 +339,8 @@ export function CustomersPage() {
         if (customer.id === editingCustomerId) {
           return {
             ...customer,
-            name: `${formData.firstName} ${formData.lastName}`,
-            phone: formData.phone,
-            email: formData.email,
-            province: formData.province,
-            city: formData.city,
-            neighborhood: formData.neighborhood,
+            fullName: `${formData.firstName} ${formData.lastName}`,
+            place: `${formData.province}، ${formData.city}، ${formData.neighborhood}`,
           };
         }
         return customer;
@@ -552,7 +418,7 @@ export function CustomersPage() {
           const label = col.customLabel || col.label;
           switch (col.key) {
             case "name":
-              row[label] = c.name;
+              row[label] = c.fullName;
               break;
             case "phone":
               row[label] = c.phone;
@@ -561,22 +427,19 @@ export function CustomersPage() {
               row[label] = c.email;
               break;
             case "province":
-              row[label] = c.province || "-";
+              row[label] = c.place.split("، ")[0];
               break;
             case "city":
-              row[label] = c.city || "-";
+              row[label] = c.place.split("، ")[1];
               break;
             case "neighborhood":
-              row[label] = c.neighborhood || "-";
+              row[label] = c.place.split("، ")[2];
               break;
             case "totalCalls":
-              row[label] = c.totalCalls;
+              row[label] = c.salesCount;
               break;
             case "lastCall":
               row[label] = c.lastCall;
-              break;
-            case "satisfaction":
-              row[label] = c.satisfaction;
               break;
             default:
               // For custom columns, add placeholder
@@ -687,17 +550,27 @@ export function CustomersPage() {
           <div className="flex items-center justify-between mb-2">
             <Award className="w-5 h-5 text-[#ffd700]" />
             <span className="text-xs" style={{ color: colors.textSecondary }}>
-              میانگین رضایت
+              نرخ حفظ مشتری (CRR)
             </span>
           </div>
           <p
             className="text-2xl font-bold"
             style={{ color: colors.textPrimary }}
           >
-            4.2
+            {cardsLoading ? "..." : `${crrData.value.toFixed(1)}٪`}
           </p>
-          <p className="text-xs mt-1" style={{ color: colors.success }}>
-            +0.3 نسبت به ماه قبل
+          <p
+            className="text-xs mt-1"
+            style={{
+              color:
+                crrData.growth >= 0 ? colors.success : colors.error,
+            }}
+          >
+            {cardsLoading
+              ? "..."
+              : `${crrData.growth >= 0 ? "+" : ""}${(crrData.growth * 100).toFixed(
+                  0,
+                )}٪ نسبت به دوره قبل`}
           </p>
         </div>
 
@@ -711,17 +584,31 @@ export function CustomersPage() {
           <div className="flex items-center justify-between mb-2">
             <UserPlus className="w-5 h-5 text-[#9c27b0]" />
             <span className="text-xs" style={{ color: colors.textSecondary }}>
-              مشتریان جدید
+              متوسط درآمد هر مشتری (ARPU)
             </span>
           </div>
           <p
             className="text-2xl font-bold"
             style={{ color: colors.textPrimary }}
           >
-            89
+            {cardsLoading
+              ? "..."
+              : `${(arpuData.value / 1000000).toLocaleString("fa-IR", {
+                  maximumFractionDigits: 0,
+                })}`}
           </p>
-          <p className="text-xs mt-1" style={{ color: colors.error }}>
-            -3% نسبت به ماه قبل
+          <p
+            className="text-xs mt-1"
+            style={{
+              color:
+                arpuData.growth >= 0 ? colors.success : colors.error,
+            }}
+          >
+            {cardsLoading
+              ? "..."
+              : `${arpuData.growth >= 0 ? "+" : ""}${(arpuData.growth * 100).toFixed(
+                  0,
+                )}٪ نسبت به دوره قبل`}
           </p>
         </div>
       </div>
@@ -768,7 +655,7 @@ export function CustomersPage() {
               }}
             >
               <X className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            </button>a
           )}
         </div>
       </div> */}
@@ -780,6 +667,18 @@ export function CustomersPage() {
         setCustomColumns={setCustomColumns}
         handleEdit={handleEdit}
         handleDelete={handleDelete}
+        loading={tableLoading}
+        totalCount={totalCount}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        selectedCustomerType={selectedCustomerType}
+        selectedProductType={selectedProductType}
+        onCustomerTypeChange={setSelectedCustomerType}
+        onProductTypeChange={setSelectedProductType}
+        customerTypeOptions={customerTypeOptions}
+        productTypeOptions={productTypeOptions}
       />
 
       {/* Category Settings Modal */}
@@ -1130,29 +1029,22 @@ export function CustomersPage() {
                             className="font-semibold mb-1"
                             style={{ color: colors.textPrimary }}
                           >
-                            {customer.name}
+                            {customer.fullName}
                           </h3>
                           <div
                             className="space-y-1 text-xs"
                             style={{ color: colors.textSecondary }}
                           >
-                            <p dir="ltr" className="text-right">
-                              📞 {customer.phone}
-                            </p>
-                            <p dir="ltr" className="text-right">
-                              ✉️ {customer.email}
-                            </p>
-                            {customer.province && customer.city && (
+                            {customer.place && (
                               <p>
-                                📍 {customer.province}، {customer.city}
-                                {customer.neighborhood
-                                  ? `، ${customer.neighborhood}`
-                                  : ""}
+                                📍 {customer.place}
                               </p>
                             )}
-                            <p>🔢 تعداد تماس‌ها: {customer.totalCalls}</p>
-                            <p>⭐ رضایت: {customer.satisfaction.toFixed(1)}</p>
-                            <p>📅 آخرین تماس: {customer.lastCall}</p>
+                            <p>🔢 تعداد فروش‌ها: {customer.salesCount}</p>
+                            <p>
+                              <span className="opacity-60">وضعیت:</span>{" "}
+                              {customer.isActive ? "فعال" : "غیر فعال"}
+                            </p>
                           </div>
                         </div>
                         <ThemedButton
@@ -1249,47 +1141,30 @@ export function CustomersPage() {
                   className="font-semibold mb-3 text-base"
                   style={{ color: colors.textPrimary }}
                 >
-                  {customerToDelete.name}
+                  {customerToDelete.fullName}
                 </h3>
                 <div
                   className="grid grid-cols-2 gap-3 text-xs"
                   style={{ color: colors.textSecondary }}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="opacity-60">📞</span>
-                    <span dir="ltr">{customerToDelete.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
                     <span className="opacity-60">🔢</span>
-                    <span>{customerToDelete.totalCalls} تماس</span>
+                    <span>{customerToDelete.salesCount} فروش</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="opacity-60">⭐</span>
+                    <span className="opacity-60">📊</span>
                     <span>
-                      رضایت: {customerToDelete.satisfaction.toFixed(1)}
+                      {customerToDelete.isActive ? "فعال" : "غیر فعال"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="opacity-60">📅</span>
-                    <span>{customerToDelete.lastCall}</span>
-                  </div>
-                  {customerToDelete.province && customerToDelete.city && (
+                  {customerToDelete.place && (
                     <div className="flex items-center gap-2 col-span-2">
                       <span className="opacity-60">📍</span>
                       <span>
-                        {customerToDelete.province}، {customerToDelete.city}
-                        {customerToDelete.neighborhood
-                          ? `، ${customerToDelete.neighborhood}`
-                          : ""}
+                        {customerToDelete.place}
                       </span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 col-span-2">
-                    <span className="opacity-60">✉️</span>
-                    <span dir="ltr" className="text-right">
-                      {customerToDelete.email}
-                    </span>
-                  </div>
                 </div>
               </div>
 

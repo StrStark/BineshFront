@@ -5,6 +5,7 @@ import { useCurrentColors } from "../../contexts/ThemeColorsContext";
 export interface PieChartDataItem {
   name: string;
   value: number;
+  color?: string;
 }
 
 export interface PieChartProps {

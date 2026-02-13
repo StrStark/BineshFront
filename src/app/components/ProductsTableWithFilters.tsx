@@ -22,7 +22,7 @@ import { CustomColumnCell } from "./CustomColumnCell";
 import { SavedFiltersButton } from "./SavedFiltersButton";
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   code: string;
   category: string;
@@ -45,8 +45,16 @@ interface ProductsTableProps {
   products: Product[];
   customColumns?: ColumnConfig[];
   setCustomColumns?: (columns: ColumnConfig[]) => void;
-  handleEdit?: (productId: number) => void;
-  handleDelete?: (productId: number) => void;
+  handleEdit?: (productId: string) => void;
+  handleDelete?: (productId: string) => void;
+  handleViewDetails?: (productId: string) => void;
+  // Pagination props
+  currentPage?: number;
+  totalPages?: number;
+  rowsPerPage?: number;
+  onPageChange?: (page: number) => void;
+  onRowsPerPageChange?: (rows: number) => void;
+  loading?: boolean;
 }
 
 export function ProductsTableWithFilters({
@@ -55,6 +63,13 @@ export function ProductsTableWithFilters({
   setCustomColumns,
   handleEdit,
   handleDelete,
+  handleViewDetails,
+  currentPage: externalCurrentPage,
+  totalPages: externalTotalPages,
+  rowsPerPage: externalRowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
+  loading = false,
 }: ProductsTableProps) {
   const colors = useCurrentColors();
   const dispatch = useAppDispatch();
@@ -64,8 +79,31 @@ export function ProductsTableWithFilters({
   );
   const tableFilters = activeFilters[TABLE_ID] || [];
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  // Use external pagination if provided, otherwise use internal
+  const [internalCurrentPage, setInternalCurrentPage] = useState(1);
+  const [internalRowsPerPage, setInternalRowsPerPage] = useState(10);
+  
+  const currentPage = externalCurrentPage !== undefined ? externalCurrentPage : internalCurrentPage;
+  const rowsPerPage = externalRowsPerPage !== undefined ? externalRowsPerPage : internalRowsPerPage;
+  
+  const setCurrentPage = (page: number | ((prev: number) => number)) => {
+    const newPage = typeof page === 'function' ? page(currentPage) : page;
+    if (onPageChange) {
+      onPageChange(newPage);
+    } else {
+      setInternalCurrentPage(newPage);
+    }
+  };
+
+  const setRowsPerPage = (rows: number) => {
+    if (onRowsPerPageChange) {
+      onRowsPerPageChange(rows);
+    } else {
+      setInternalRowsPerPage(rows);
+      setInternalCurrentPage(1); // Reset to page 1 when changing rows per page
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [localVisibleColumns, setLocalVisibleColumns] = useState<
     ColumnConfig[]
@@ -223,7 +261,11 @@ export function ProductsTableWithFilters({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  console.log("View product details:", product.id);
+                  if (handleViewDetails) {
+                    handleViewDetails(product.id);
+                  } else {
+                    console.log("View product details:", product.id);
+                  }
                 }}
                 className="p-2 rounded-lg transition-colors"
                 style={{ color: colors.primary }}
@@ -355,15 +397,27 @@ export function ProductsTableWithFilters({
   ]);
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredProducts.length / rowsPerPage);
+  // If external totalPages is provided, use it (for API pagination)
+  // Otherwise calculate based on filtered data (for client-side pagination)
+  const totalPages = externalTotalPages !== undefined 
+    ? externalTotalPages 
+    : Math.ceil(filteredProducts.length / rowsPerPage);
+  
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const currentPageData = filteredProducts.slice(startIndex, endIndex);
+  
+  // If using API pagination, show all products (already paginated by server)
+  // Otherwise slice for client-side pagination
+  const currentPageData = externalTotalPages !== undefined 
+    ? filteredProducts 
+    : filteredProducts.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters or search change
+  // Reset to page 1 when filters or search change (only for client-side pagination)
   useEffect(() => {
-    setCurrentPage(1);
-  }, [tableFilters, rowsPerPage, searchQuery]);
+    if (externalTotalPages === undefined) {
+      setCurrentPage(1);
+    }
+  }, [tableFilters, searchQuery, externalTotalPages]); // Removed rowsPerPage from dependencies!
 
   const getOperatorLabel = (operator: string) => {
     const labels: Record<string, string> = {

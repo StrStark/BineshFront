@@ -25,7 +25,7 @@ const mockNotifications: Notification[] = [
     id: 1,
     type: "promotion",
     category: "promotions",
-    title: " تخفیف ویژه پکیج پرمیوم",
+    title: "🎉 تخفیف ویژه پکیج پرمیوم",
     message: "با کد تخفیف QUALITY30 از ۳۰٪ تخفیف پکیج پرمیوم رهگیر بهره‌مند شوید",
     time: "۱ ساعت پیش",
     actionLabel: "دریافت کد تخفیف",
@@ -36,7 +36,7 @@ const mockNotifications: Notification[] = [
     id: 2,
     type: "success",
     category: "activity",
-    title: " عملکرد عالی کارشناس",
+    title: "✨ عملکرد عالی کارشناس",
     message: "کارشناس رضا احمدی امروز ۱۵ تماس با امتیاز بالای ۹۰ انجام داده است",
     time: "۲ ساعت پیش",
     actionLabel: "مشاهده جزئیات",
@@ -46,7 +46,7 @@ const mockNotifications: Notification[] = [
     id: 3,
     type: "warning",
     category: "warnings",
-    title: " کاهش کیفیت تماس‌ها",
+    title: "⚠️ کاهش کیفیت تماس‌ها",
     message: "میانگین کیفیت تماس‌ها در ۲ ساعت اخیر به زیر ۷۰ رسیده است",
     time: "۳ ساعت پیش",
     actionLabel: "بررسی گزارش",
@@ -56,7 +56,7 @@ const mockNotifications: Notification[] = [
     id: 4,
     type: "activity",
     category: "activity",
-    title: " تماس جدید ثبت شد",
+    title: "📞 تماس جدید ثبت شد",
     message: "تماس با مشتری آقای محمدی با موفقیت ضبط و ذخیره شد",
     time: "۴ ساعت پیش",
     actionLabel: "گوش دادن",
@@ -66,7 +66,7 @@ const mockNotifications: Notification[] = [
     id: 5,
     type: "promotion",
     category: "promotions",
-    title: " هدیه ویژه کاربران فعال",
+    title: "🎁 هدیه ویژه کاربران فعال",
     message: "به پاس استفاده مستمر شما، یک ماه اشتراک پرمیوم رایگان دریافت کنید",
     time: "۵ ساعت پیش",
     actionLabel: "فعال‌سازی",
@@ -77,7 +77,7 @@ const mockNotifications: Notification[] = [
     id: 6,
     type: "system",
     category: "system",
-    title: " به‌روزرسانی سیستم",
+    title: "🔄 به‌روزرسانی سیستم",
     message: "نسخه جدید رهگیر با قابلیت‌های جدید منتشر شد",
     time: "۱ روز پیش",
     actionLabel: "مشاهده تغییرات"
@@ -86,7 +86,7 @@ const mockNotifications: Notification[] = [
     id: 7,
     type: "success",
     category: "activity",
-    title: " رکورد جدید ثبت شد",
+    title: "🏆 رکورد جدید ثبت شد",
     message: "تیم شما امروز بیشترین تعداد تماس موفق ماه را ثبت کرد",
     time: "۲ روز پیش",
     actionLabel: "مشاهده آمار",
@@ -96,7 +96,7 @@ const mockNotifications: Notification[] = [
     id: 8,
     type: "warning",
     category: "warnings",
-    title: " تماس بدون ارزیابی",
+    title: "🚨 تماس بدون ارزیابی",
     message: "۱۲ تماس در انتظار ارزیابی کیفی هستند",
     time: "۳ روز پیش",
     actionLabel: "ارزیابی کنید",
@@ -106,7 +106,7 @@ const mockNotifications: Notification[] = [
     id: 9,
     type: "promotion",
     category: "promotions",
-    title: " پیشنهاد ویژه سازمانی",
+    title: "💎 پیشنهاد ویژه سازمانی",
     message: "برای سازمان‌های بالای ۵۰ نفر، تخفیف ویژه ۴۰٪ با کد ENTERPRISE40",
     time: "۴ روز پیش",
     actionLabel: "اطلاعات بیشتر",

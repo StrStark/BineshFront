@@ -376,6 +376,32 @@ export function AccountMappingSettings() {
             )}
           </div>
 
+          {/* Exclude */}
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="حذف..."
+              value={excludeQuery}
+              onChange={(e) => setExcludeQuery(e.target.value)}
+              className="w-full px-4 py-2 pr-10 rounded-lg text-sm"
+              style={{
+                backgroundColor: colors.backgroundSecondary,
+                color: colors.textPrimary,
+                border: `1px solid ${colors.border}`,
+              }}
+            />
+            <X
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4"
+              style={{ color: colors.textSecondary }}
+            />
+            {excludeQuery && (
+              <X
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 cursor-pointer"
+                style={{ color: colors.textSecondary }}
+                onClick={() => setExcludeQuery("")}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -556,6 +582,41 @@ export function AccountMappingSettings() {
         </div>
       )}
 
+      {/* Save Button */}
+      <div
+        className="sticky bottom-0 left-0 right-0 p-4 border-t"
+        style={{
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+        }}
+      >
+        <button
+          onClick={() => {
+            if (hasChanges) {
+              setSavedMappings(mappings);
+              setHasChanges(false);
+            }
+          }}
+          disabled={!hasChanges}
+          className="w-full px-6 py-3 rounded-xl text-sm font-medium transition-all inline-flex items-center justify-center gap-2"
+          style={{
+            backgroundColor: hasChanges ? colors.primary : colors.backgroundSecondary,
+            color: hasChanges ? "#ffffff" : colors.textSecondary,
+            border: `1px solid ${hasChanges ? colors.primary : colors.border}`,
+            opacity: hasChanges ? 1 : 0.6,
+            cursor: hasChanges ? "pointer" : "not-allowed",
+          }}
+        >
+          {hasChanges ? (
+            <>
+              <Save className="w-4 h-4" />
+              <span>اعمال تغییرات</span>
+            </>
+          ) : (
+            <span>تغییری وجود ندارد</span>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
