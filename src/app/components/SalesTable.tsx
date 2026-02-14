@@ -37,9 +37,22 @@ const defaultColumnsConfig: ColumnConfig[] = [
 interface SalesTableProps {
   data?: SaleItem[];
   defaultColumns?: ColumnConfig[];
+  totalRecords?: number;
+  currentPage?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
 }
 
-export function SalesTable({ data = [], defaultColumns = defaultColumnsConfig }: SalesTableProps) {
+export function SalesTable({ 
+  data = [], 
+  defaultColumns = defaultColumnsConfig,
+  totalRecords,
+  currentPage: externalCurrentPage,
+  pageSize: externalPageSize,
+  onPageChange,
+  onPageSizeChange
+}: SalesTableProps) {
   const colors = useCurrentColors();
   const dispatch = useAppDispatch();
   const TABLE_ID = "sales-table";
@@ -48,11 +61,17 @@ export function SalesTable({ data = [], defaultColumns = defaultColumnsConfig }:
   );
   const tableFilters = activeFilters[TABLE_ID] || [];
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  // Use external pagination if provided, otherwise use internal
+  const isServerSidePagination = totalRecords !== undefined && onPageChange !== undefined;
+  
+  const [internalCurrentPage, setInternalCurrentPage] = useState(1);
+  const [internalRowsPerPage, setInternalRowsPerPage] = useState(10);
   const [customColumns, setCustomColumns] = useState<ColumnConfig[]>(defaultColumns);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSaleForInvoice, setSelectedSaleForInvoice] = useState<SaleItem | null>(null);
+
+  const currentPage = isServerSidePagination ? (externalCurrentPage || 1) : internalCurrentPage;
+  const rowsPerPage = isServerSidePagination ? (externalPageSize || 10) : internalRowsPerPage;
 
   const allSales: SaleItem[] = data;
 
@@ -246,14 +265,40 @@ export function SalesTable({ data = [], defaultColumns = defaultColumnsConfig }:
     return result;
   }, [tableFilters, searchFilteredItems]);
 
-  const totalPages = Math.ceil(filteredSales.length / rowsPerPage);
+  // For server-side pagination, use the data as-is, otherwise slice it
+  const totalPages = isServerSidePagination 
+    ? Math.ceil((totalRecords || 0) / rowsPerPage)
+    : Math.ceil(filteredSales.length / rowsPerPage);
+  const totalCount = isServerSidePagination ? (totalRecords || 0) : filteredSales.length;
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const currentPageData = filteredSales.slice(startIndex, endIndex);
+  const currentPageData = isServerSidePagination ? filteredSales : filteredSales.slice(startIndex, endIndex);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [tableFilters, rowsPerPage, searchQuery]);
+    if (!isServerSidePagination) {
+      setInternalCurrentPage(1);
+    }
+  }, [tableFilters, rowsPerPage, searchQuery, isServerSidePagination]);
+
+  const handlePageChange = (page: number) => {
+    if (isServerSidePagination && onPageChange) {
+      onPageChange(page);
+    } else {
+      setInternalCurrentPage(page);
+    }
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    if (isServerSidePagination && onPageSizeChange) {
+      onPageSizeChange(size);
+      if (onPageChange) {
+        onPageChange(1); // Reset to first page
+      }
+    } else {
+      setInternalRowsPerPage(size);
+      setInternalCurrentPage(1);
+    }
+  };
 
   const handleFilterClick = (column: string) => {
     dispatch(setOpenColumnFilter(column));
@@ -528,7 +573,7 @@ export function SalesTable({ data = [], defaultColumns = defaultColumnsConfig }:
               </span>
               <select
                 value={rowsPerPage}
-                onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                 className="px-2 md:px-3 py-1 md:py-1.5 border rounded-lg text-xs md:text-sm focus:outline-none transition-colors"
                 style={{
                   backgroundColor: colors.cardBackground,
@@ -554,8 +599,8 @@ export function SalesTable({ data = [], defaultColumns = defaultColumnsConfig }:
               className="text-xs md:text-sm whitespace-nowrap md:hidden"
               style={{ color: colors.textSecondary }}
             >
-              {startIndex + 1} تا {Math.min(endIndex, filteredSales.length)} از{" "}
-              {filteredSales.length}
+              {startIndex + 1} تا {Math.min(endIndex, totalCount)} از{" "}
+              {totalCount}
             </span>
           </div>
 
@@ -564,13 +609,13 @@ export function SalesTable({ data = [], defaultColumns = defaultColumnsConfig }:
             style={{ color: colors.textSecondary }}
           >
             نمایش {startIndex + 1} تا{" "}
-            {Math.min(endIndex, filteredSales.length)} از{" "}
-            {filteredSales.length} مورد
+            {Math.min(endIndex, totalCount)} از{" "}
+            {totalCount} مورد
           </span>
 
           <div className="flex items-center gap-1.5 md:gap-2 justify-center md:justify-end">
             <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              onClick={() => handlePageChange((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
               className="p-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               style={{
@@ -616,7 +661,7 @@ export function SalesTable({ data = [], defaultColumns = defaultColumnsConfig }:
                         </span>
                       )}
                       <button
-                        onClick={() => setCurrentPage(page)}
+                        onClick={() => handlePageChange(page)}
                         className={`min-w-[32px] h-8 px-2 flex items-center justify-center rounded text-sm transition-colors`}
                         style={{
                           backgroundColor:
@@ -652,7 +697,7 @@ export function SalesTable({ data = [], defaultColumns = defaultColumnsConfig }:
 
             <button
               onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                handlePageChange((prev) => Math.min(totalPages, prev + 1))
               }
               disabled={currentPage === totalPages}
               className="p-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

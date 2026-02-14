@@ -7,53 +7,8 @@ import { ReportDownload, ReportSection } from "../components/ReportDownload";
 import { CashFlowChart } from "../components/CashFlowChart";
 import { ExpenseDistributionChart } from "../components/ExpenseDistributionChart";
 import { AccountsWidget } from "../components/AccountsWidget";
-import { useState, useMemo } from "react";
-
-// داده‌های تراز‌نامه
-const balanceSheetData = {
-  assets: [
-    {
-      title: 'دارایی‌های جاری',
-      items: [
-        { title: 'موجودی نقد و بانک', amount: '۱,۱۵۱,۵۱۱,۰۰۰' },
-        { title: 'حساب‌های دریافتنی', amount: '۸۵۰,۰۰۰,۰۰۰' },
-      ],
-    },
-    {
-      title: 'دارایی‌های غیرجاری',
-      items: [
-        { title: 'املاک و مستغلات', amount: '۵,۰۰۰,۰۰۰,۰۰۰' },
-        { title: 'تجهیزات', amount: '۲,۰۰۰,۰۰۰,۰۰۰' },
-      ],
-    },
-  ],
-  liabilities: [
-    {
-      title: 'بدهی‌های جاری',
-      items: [
-        { title: 'حساب‌های پرداختنی', amount: '۶۵۰,۰۰۰,۰۰۰' },
-        { title: 'وام‌های کوتاه‌مدت', amount: '۴۰۰,۰۰۰,۰۰۰' },
-      ],
-    },
-    {
-      title: 'بدهی‌های غیرجاری',
-      items: [
-        { title: 'وام‌های بلندمدت', amount: '۳,۰۰۰,۰۰۰,۰۰۰' },
-        { title: 'سایر بدهی‌ها', amount: '۵۰۰,۰۰۰,۰۰۰' },
-      ],
-    },
-  ],
-};
-
-// داده‌های سود و زیان
-const incomeStatementData = [
-  { title: 'فروش', amount: '۲۵,۰۰۰,۰۰۰', type: 'income' },
-  { title: 'بهای تمام شده', amount: '۸,۰۰۰,۰۰۰', type: 'expense' },
-  { title: 'سود ناخالص', amount: '۱۷,۰۰۰,۰۰۰', type: 'profit' },
-  { title: 'هزینه‌های عملیاتی', amount: '۴,۰۰۰,۰۰۰', type: 'expense' },
-  { title: 'سود عملیاتی', amount: '۱۳,۰۰۰,۰۰۰', type: 'profit' },
-  { title: 'سود خالص', amount: '۱۳,۰۰۰,۰۰۰', type: 'profit' },
-];
+import { useState, useMemo, useEffect } from "react";
+import { financialAPI, formatToPersianNumber } from "../api/financialAPI";
 
 export function FinancialPage() {
   const colors = useCurrentColors();
@@ -62,6 +17,69 @@ export function FinancialPage() {
     to: null,
   });
   const [showCalendar, setShowCalendar] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState([
+    { icon: Wallet, label: "فروش کل", value: "۰", unit: "تومان", color: colors.primary, growth: 0 },
+    { icon: TrendingUp, label: "حاشیه سود", value: "۰", unit: "تومان", color: colors.success, growth: 0 },
+    { icon: TrendingDown, label: "سود خالص", value: "۰", unit: "تومان", color: colors.error, growth: 0 },
+    { icon: CreditCard, label: "نقدینگی", value: "۰", unit: "تومان", color: colors.purple, growth: 0 },
+  ]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const response = await financialAPI.getFinancialSummary();
+        const stateCards = response.body.stateCards;
+
+        const newStats = [
+          { 
+            icon: Wallet, 
+            label: "فروش کل", 
+            value: formatToPersianNumber(stateCards.totalSale.value), 
+            unit: "تومان", 
+            color: colors.primary,
+            growth: stateCards.totalSale.growth
+          },
+          { 
+            icon: TrendingUp, 
+            label: "حاشیه سود", 
+            value: formatToPersianNumber(stateCards.profitMargine.value), 
+            unit: "تومان", 
+            color: colors.success,
+            growth: stateCards.profitMargine.growth
+          },
+          { 
+            icon: CreditCard, 
+            label: "سود خالص", 
+            value: formatToPersianNumber(stateCards.netProfit.value), 
+            unit: "تومان", 
+            color: colors.purple,
+            growth: stateCards.netProfit.growth
+          },
+          { 
+            icon: TrendingDown, 
+            label: "نقدینگی", 
+            value: formatToPersianNumber(stateCards.liquidity.value), 
+            unit: "تومان", 
+            color: colors.error,
+            growth: stateCards.liquidity.growth
+          },
+        ];
+
+        setStats(newStats);
+        setError(null);
+      } catch (err: any) {
+        console.error('Error fetching financial stats:', err);
+        setError(err.message || 'خطا در دریافت آمار مالی');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [colors.primary, colors.success, colors.error, colors.purple]);
 
   const formatDateRange = () => {
     if (!dateRange.from || !dateRange.to) return "انتخاب بازه زمانی";
@@ -72,76 +90,20 @@ export function FinancialPage() {
     return `${fromDate.toLocaleDateString("fa-IR")} - ${toDate.toLocaleDateString("fa-IR")}`;
   };
 
-  const stats = [
-    { icon: Wallet, label: "موجودی نقدی", value: "۸۵,۰۰۰,۰۰۰", unit: "تومان", color: colors.primary },
-    { icon: TrendingUp, label: "درآمد ماه جاری", value: "۲۵,۰۰۰,۰۰۰", unit: "تومان", color: colors.success },
-    { icon: TrendingDown, label: "هزینه ماه جاری", value: "۱۲,۰۰۰,۰۰۰", unit: "تومان", color: colors.error },
-    { icon: CreditCard, label: "سود ماه جاری", value: "۱۳,۰۰۰,۰۰۰", unit: "تومان", color: colors.purple },
-  ];
-
   // آماده‌سازی داده‌ها برای گزارش
   const reportSections: ReportSection[] = useMemo(() => {
     return [
       {
         title: "آمار کلی مالی",
-        data: [
-          { 
-            "شاخص": "موجودی نقدی", 
-            "مقدار": "۸۵,۰۰۰,۰۰۰ تومان",
-            "درصد": "-" 
-          },
-          { 
-            "شاخص": "درآمد ماه جاری", 
-            "مقدار": "۲۵,۰۰۰,۰۰۰ تومان",
-            "درصد": "-"
-          },
-          { 
-            "شاخص": "هزینه ماه جاری", 
-            "مقدار": "۱۲,۰۰۰,۰۰۰ تومان",
-            "درصد": "-"
-          },
-          { 
-            "شاخص": "سود ماه جاری", 
-            "مقدار": "۱۳,۰۰۰,۰۰۰ تومان",
-            "درصد": "+108%"
-          },
-        ],
-        headers: ["شاخص", "مقدار", "درصد"]
-      },
-      {
-        title: "تراز‌نامه - دارایی‌ها",
-        data: balanceSheetData.assets.flatMap(section => 
-          section.items.map(item => ({
-            "بخش": section.title,
-            "عنوان": item.title,
-            "مبلغ": item.amount + " تومان",
-          }))
-        ),
-        headers: ["بخش", "عنوان", "مبلغ"]
-      },
-      {
-        title: "تراز‌نامه - بدهی‌ها",
-        data: balanceSheetData.liabilities.flatMap(section => 
-          section.items.map(item => ({
-            "بخش": section.title,
-            "عنوان": item.title,
-            "مبلغ": item.amount + " تومان",
-          }))
-        ),
-        headers: ["بخش", "عنوان", "مبلغ"]
-      },
-      {
-        title: "سود و زیان جامع",
-        data: incomeStatementData.map(item => ({
-          "شرح": item.title,
-          "مبلغ": item.amount + " تومان",
-          "نوع": item.type === 'income' ? 'درآمد' : 
-                item.type === 'expense' ? 'هزینه' : 'سود',
+        data: stats.map(stat => ({
+          "شاخص": stat.label,
+          "مقدار": `${stat.value} ${stat.unit}`,
+          "درصد رشد": `${stat.growth >= 0 ? '+' : ''}${formatToPersianNumber(stat.growth)}%`
         })),
-        headers: ["شرح", "مبلغ", "نوع"]
+        headers: ["شاخص", "مقدار", "درصد رشد"]
       }
     ];
-  }, [dateRange]);
+  }, [stats]);
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -175,49 +137,68 @@ export function FinancialPage() {
         </div> */}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={index}
-              className="rounded-xl p-6 border"
-              style={{
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-              }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: `${stat.color}22` }}
+      {/* Stats Cards */}
+      {loading ? (
+        <div className="text-center py-8" style={{ color: colors.textSecondary }}>
+          در حال بارگذاری آمار...
+        </div>
+      ) : error ? (
+        <div className="text-center py-8" style={{ color: colors.error }}>
+          {error}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            const isPositiveGrowth = stat.growth >= 0;
+            return (
+              <div
+                key={index}
+                className="rounded-xl p-6 border"
+                style={{
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
+                }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: `${stat.color}22` }}
+                  >
+                    <Icon className="w-6 h-6" style={{ color: stat.color }} />
+                  </div>
+                </div>
+                <p className="text-xs mb-2" style={{ color: colors.textSecondary }}>
+                  {stat.label}
+                </p>
+                <p className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
+                  {stat.value}
+                </p>
+                <p className="text-xs mb-2" style={{ color: colors.textSecondary }}>
+                  {stat.unit}
+                </p>
+                <div 
+                  className="flex items-center gap-1 text-xs"
+                  style={{ color: isPositiveGrowth ? colors.success : colors.error }}
                 >
-                  <Icon className="w-6 h-6" style={{ color: stat.color }} />
+                  <TrendingUp className={`w-3 h-3 ${!isPositiveGrowth ? 'rotate-180' : ''}`} />
+                  <span>{isPositiveGrowth ? '+' : ''}{formatToPersianNumber(stat.growth)}% نسبت به دوره قبل</span>
                 </div>
               </div>
-              <p className="text-xs mb-2" style={{ color: colors.textSecondary }}>
-                {stat.label}
-              </p>
-              <p className="text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
-                {stat.value}
-              </p>
-              <p className="text-xs" style={{ color: colors.textSecondary }}>
-                {stat.unit}
-              </p>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Cash Flow & Accounts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <CashFlowChart />
         </div>
         <div>
           <AccountsWidget />
         </div>
-      </div>
+      </div> */}
 
       {/* Expense Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

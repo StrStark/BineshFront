@@ -227,7 +227,7 @@ export function WarehousePage() {
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
           <button
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-white transition-all hover:opacity-90 whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-3 rounded-lg text-white transition-all hover:opacity-90 whitespace-nowrap"
             style={{ backgroundColor: colors.primary }}
             onClick={() => setShowCalendar(true)}
           >
@@ -236,7 +236,7 @@ export function WarehousePage() {
           </button>
           <ReportDownload sections={reportSections} fileName="گزارش-انبار" />
           <button
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-white transition-all hover:opacity-90 whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-3 rounded-lg text-white transition-all hover:opacity-90 whitespace-nowrap"
             style={{ backgroundColor: colors.primary }}
           >
             <Plus className="w-5 h-5" />

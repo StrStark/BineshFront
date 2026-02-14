@@ -46,6 +46,8 @@ interface GetCustomersCardsResponse {
   body: {
     arpu: CardData;
     crr: CardData;
+    totalCustomers: number;
+    activeCustomers: number;
   };
 }
 

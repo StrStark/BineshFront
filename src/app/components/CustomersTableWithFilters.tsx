@@ -456,18 +456,54 @@ export function CustomersTableWithFilters({
     return labels[operator] || operator;
   };
 
-  // ==================== CLIENT-SIDE PAGINATION ====================
+  // Generate page numbers for pagination UI (same as ProductsTableWithFilters)
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    
+    if (totalPages <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (effectiveCurrentPage <= 3) {
+        // Near start: 1 2 3 4 ... last
+        pages.push(2, 3, 4, '...', totalPages);
+      } else if (effectiveCurrentPage >= totalPages - 2) {
+        // Near end: 1 ... last-3 last-2 last-1 last
+        pages.push('...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        // Middle: 1 ... current-1 current current+1 ... last
+        pages.push('...', effectiveCurrentPage - 1, effectiveCurrentPage, effectiveCurrentPage + 1, '...', totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
+  // ==================== PAGINATION LOGIC ====================
+  // Detect if using external (server-side) or internal (client-side) pagination
+  const isExternalPagination = currentPage !== undefined && totalCount !== undefined;
+  
   const effectiveCurrentPage = currentPage || 1;
   const effectivePageSize = pageSize || rowsPerPage;
-  const effectiveTotalCount = totalCount || filteredCustomers.length;
+  const effectiveTotalCount = isExternalPagination ? totalCount : filteredCustomers.length;
   const totalPages = Math.ceil(effectiveTotalCount / effectivePageSize);
 
   const startIndex = (effectiveCurrentPage - 1) * effectivePageSize;
-  const endIndex = startIndex + effectivePageSize;
+  const endIndex = Math.min(startIndex + effectivePageSize, effectiveTotalCount);
 
+  // For external pagination: use customers as-is (already sliced by server)
+  // For internal pagination: slice the filtered data
   const paginatedCustomers = useMemo(() => {
-    return filteredCustomers.slice(startIndex, endIndex);
-  }, [filteredCustomers, startIndex, endIndex]);
+    if (isExternalPagination) {
+      return customers; // Server already sent the correct page
+    }
+    return filteredCustomers.slice(startIndex, startIndex + effectivePageSize);
+  }, [isExternalPagination, customers, filteredCustomers, startIndex, effectivePageSize]);
 
   return (
     <div
@@ -491,23 +527,6 @@ export function CustomersTableWithFilters({
           مشتریان
         </h2>
         <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
-          {/* Filter Dropdowns */}
-          {customerTypeOptions && onCustomerTypeChange && (
-            <FilterDropdown
-              label="نوع مشتری"
-              value={selectedCustomerType || ""}
-              options={customerTypeOptions}
-              onChange={onCustomerTypeChange}
-            />
-          )}
-          {productTypeOptions && onProductTypeChange && (
-            <FilterDropdown
-              label="نوع محصول"
-              value={selectedProductType || ""}
-              options={productTypeOptions}
-              onChange={onProductTypeChange}
-            />
-          )}
           <SavedFiltersButton tableId="customers-table" />
           <ColumnCustomizer
             tableId="customers-table"
@@ -782,7 +801,7 @@ export function CustomersTableWithFilters({
       </div>
 
       {/* Pagination */}
-      {filteredCustomers.length > 0 && (
+      {effectiveTotalCount > 0 && (
         <div
           className="p-3 md:p-4 border-t flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-0"
           dir="rtl"
@@ -828,8 +847,7 @@ export function CustomersTableWithFilters({
               className="text-xs md:text-sm whitespace-nowrap md:hidden"
               style={{ color: colors.textSecondary }}
             >
-              {startIndex + 1} تا {Math.min(endIndex, filteredCustomers.length)}{" "}
-              از {filteredCustomers.length}
+              {startIndex + 1} تا {endIndex} از {effectiveTotalCount}
             </span>
           </div>
 
@@ -837,9 +855,7 @@ export function CustomersTableWithFilters({
             className="text-xs md:text-sm whitespace-nowrap hidden md:inline"
             style={{ color: colors.textSecondary }}
           >
-            نمایش {startIndex + 1} تا{" "}
-            {Math.min(endIndex, filteredCustomers.length)} از{" "}
-            {filteredCustomers.length} مورد
+            نمایش {startIndex + 1} تا {endIndex} از {effectiveTotalCount} مورد
           </span>
 
           {/* Page navigation */}
@@ -871,65 +887,52 @@ export function CustomersTableWithFilters({
 
             {/* Page numbers */}
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter((page) => {
+              {getPageNumbers().map((page, index) => {
+                if (page === '...') {
                   return (
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= effectiveCurrentPage - 1 && page <= effectiveCurrentPage + 1)
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="px-2 text-sm"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      ...
+                    </span>
                   );
-                })
-                .map((page, index, array) => {
-                  const prevPage = array[index - 1];
-                  const showEllipsis = prevPage && page - prevPage > 1;
+                }
 
-                  return (
-                    <div key={page} className="flex items-center gap-1">
-                      {showEllipsis && (
-                        <span
-                          className="px-2"
-                          style={{ color: colors.textSecondary }}
-                        >
-                          ...
-                        </span>
-                      )}
-                      <button
-                        onClick={() => onPageChange && onPageChange(page)}
-                        className={`min-w-[32px] h-8 px-2 flex items-center justify-center rounded text-sm transition-colors`}
-                        style={{
-                          backgroundColor:
-                            effectiveCurrentPage === page
-                              ? colors.primary
-                              : colors.cardBackground,
-                          borderWidth: "1px",
-                          borderStyle: "solid",
-                          borderColor:
-                            effectiveCurrentPage === page
-                              ? colors.primary
-                              : colors.border,
-                          color:
-                            effectiveCurrentPage === page
-                              ? "#ffffff"
-                              : colors.textPrimary,
-                        }}
-                        onMouseEnter={(e) => {
-                          if (effectiveCurrentPage !== page) {
-                            e.currentTarget.style.backgroundColor =
-                              colors.backgroundSecondary;
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (effectiveCurrentPage !== page) {
-                            e.currentTarget.style.backgroundColor =
-                              colors.cardBackground;
-                          }
-                        }}
-                      >
-                        {page}
-                      </button>
-                    </div>
-                  );
-                })}
+                const pageNumber = page as number;
+                const isActive = pageNumber === effectiveCurrentPage;
+
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => {
+                      console.log(`🔄 صفحه تغییر کرد: ${pageNumber} | API در حال فراخوانی با pageNumber: ${pageNumber}`);
+                      onPageChange && onPageChange(pageNumber);
+                    }}
+                    className="min-w-[32px] h-8 px-2 flex items-center justify-center rounded text-sm transition-colors"
+                    style={{
+                      backgroundColor: isActive ? colors.primary : colors.cardBackground,
+                      borderWidth: "1px",
+                      borderStyle: "solid",
+                      borderColor: isActive ? colors.primary : colors.border,
+                      color: isActive ? "#ffffff" : colors.textPrimary,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = colors.cardBackground;
+                      }
+                    }}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
             </div>
 
             <button

@@ -18,6 +18,7 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
   const [chartData, setChartData] = useState<Array<{ name: string; value: number; color: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [totalSales, setTotalSales] = useState(0);
+  const [salesCards, setSalesCards] = useState<any>(null);
 
   // تاریخ پیش‌فرض
   const defaultFrom = new Date("2020-02-13T09:03:37.211Z");
@@ -57,6 +58,9 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
 
         if (response.code === 200 && response.status === "success") {
           const soldItems = response.body.soldItems;
+          
+          // ذخیره salesCards از API
+          setSalesCards(response.body.salesCards);
           
           // محاسبه مجموع کل فروش
           const total = soldItems.reduce((sum: number, item: any) => sum + item.value, 0);
@@ -128,41 +132,62 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
   const totalValue = chartData.reduce((sum, item) => sum + item.value, 0);
   const centerValue = totalSales.toLocaleString("fa-IR");
 
-  // Stats cards data
-  const statsCards = [
-    {
-      icon: ShoppingCart,
-      label: "مبلغ بازگشت کالا",
-      value: "14,000,000",
-      unit: "تومان",
-      trend: -5,
-      color: colors.error,
-    },
-    {
-      icon: DollarSign,
-      label: "فروش خالص",
-      value: centerValue,
-      unit: "تومان",
-      trend: 50,
-      color: colors.success,
-    },
-    {
-      icon: Package,
-      label: "فروش بیل‌های تکی",
-      value: "60,000,000",
-      unit: "تومان",
-      trend: -50,
-      color: colors.warning,
-    },
-    {
-      icon: Tag,
-      label: "فروش محصولات تخفیف دار",
-      value: "40,000,000",
-      unit: "تومان",
-      trend: -50,
-      color: colors.primary,
-    },
-  ];
+  // Stats cards data - ساخت dynamic بر اساس API
+  const statsCards = (() => {
+    const cards = [];
+    
+    if (salesCards) {
+      // کل فروش
+      if (salesCards.totalSales) {
+        cards.push({
+          icon: DollarSign,
+          label: "کل فروش",
+          value: salesCards.totalSales.value.toLocaleString("fa-IR"),
+          unit: "تومان",
+          trend: salesCards.totalSales.growth || 0,
+          color: colors.success,
+        });
+      }
+      
+      // کل برگشتی
+      if (salesCards.returnTotal) {
+        cards.push({
+          icon: ShoppingCart,
+          label: "کل برگشتی",
+          value: salesCards.returnTotal.value.toLocaleString("fa-IR"),
+          unit: "تومان",
+          trend: salesCards.returnTotal.growth || 0,
+          color: colors.error,
+        });
+      }
+      
+      // فروش محصولات تخفیف‌دار
+      if (salesCards.offSales) {
+        cards.push({
+          icon: Tag,
+          label: "فروش محصولات تخفیف‌دار",
+          value: salesCards.offSales.value.toLocaleString("fa-IR"),
+          unit: "تومان",
+          trend: salesCards.offSales.growth || 0,
+          color: colors.primary,
+        });
+      }
+      
+      // فروش مدل‌های جدید
+      if (salesCards.newModelsSales) {
+        cards.push({
+          icon: Package,
+          label: "فروش مدل‌های جدید",
+          value: salesCards.newModelsSales.value.toLocaleString("fa-IR"),
+          unit: "تومان",
+          trend: salesCards.newModelsSales.growth || 0,
+          color: colors.warning,
+        });
+      }
+    }
+    
+    return cards;
+  })();
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -266,7 +291,7 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
           </div>
 
           {/* Donut Chart */}
-          <div className="relative" style={{ height: "280px" }}>
+          <div className="relative" style={{ height: "350px" }}>
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.primary }}></div>
@@ -279,8 +304,8 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
+                      innerRadius={80}
+                      outerRadius={120}
                       paddingAngle={2}
                       dataKey="value"
                     >
@@ -294,10 +319,10 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
                 
                 {/* Center value */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <p className="font-bold text-[15px]" style={{ color: colors.textPrimary }}>
+                  <p className="font-bold text-[18px]" style={{ color: colors.textPrimary }}>
                     {centerValue}
                   </p>
-                  <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+                  <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
                     تومان
                   </p>
                 </div>

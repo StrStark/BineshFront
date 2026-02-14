@@ -58,6 +58,7 @@ export function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("Carpet");
+  const [totalCount, setTotalCount] = useState(0);
 
   // Pagination state (managed by parent)
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,7 +72,7 @@ export function ProductsPage() {
   const [eventsPage, setEventsPage] = useState(1);
   const [eventsPageSize, setEventsPageSize] = useState(10);
 
-  // Fetch products from API once with large pageSize
+  // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -81,8 +82,8 @@ export function ProductsPage() {
             productCategory: selectedCategory,
           },
           paggination: {
-            pageNumber: 1,
-            pageSize: 1000, // Get many products at once
+            pageNumber: currentPage,
+            pageSize: pageSize,
           },
         });
 
@@ -97,6 +98,7 @@ export function ProductsPage() {
             sales: item.totalSale.toLocaleString("fa-IR"),
           }));
           setAllProducts(mappedProducts);
+          setTotalCount(response.body.totalCount);
         }
       } catch (err) {
         console.error("Error fetching products:", err);
@@ -112,13 +114,14 @@ export function ProductsPage() {
             sales: "۲,۴۰۰,۰۰۰,۰۰۰"
           },
         ]);
+        setTotalCount(1);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [selectedCategory]); // Only refetch when category changes
+  }, [selectedCategory, currentPage, pageSize]); // Refetch when category, page, or pageSize changes
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -286,10 +289,10 @@ export function ProductsPage() {
           <ReportDownload sections={reportSections} fileName="گزارش-محصولات" />
           <ThemedButton
             onClick={() => console.log("Add product")}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg flex-1 sm:flex-initial"
-            icon={<Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
+            className="flex items-center gap-2 px-4 py-3 rounded-lg flex-1 sm:flex-initial"
+            icon={<Plus className="w-5 h-5" />}
           >
-            <span className="text-xs sm:text-sm">افزودن محصول جدید</span>
+            <span>افزودن محصول جدید</span>
           </ThemedButton>
         </div>
       </div>
@@ -393,9 +396,10 @@ export function ProductsPage() {
         handleDelete={handleDelete}
         handleViewDetails={handleViewDetails}
         currentPage={currentPage}
-        rowsPerPage={pageSize}
+        pageSize={pageSize}
+        totalCount={totalCount}
         onPageChange={handlePageChange}
-        onRowsPerPageChange={handleRowsPerPageChange}
+        onPageSizeChange={handleRowsPerPageChange}
         loading={loading}
       />
 

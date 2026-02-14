@@ -52,6 +52,40 @@ interface CustomerCategorizedSalesResponse {
   };
 }
 
+interface Pagination {
+  pageNumber: number;
+  pageSize: number;
+}
+
+interface SalesRecordsRequest {
+  dateFilter: DateFilter;
+  categoryDto?: CategoryDto;
+  provience?: ProvinceDto;
+  paggination: Pagination;
+}
+
+interface SalesRecord {
+  factorNume: number;
+  productDesc: string;
+  productCategory: string;
+  deliverdQuantity: number;
+  customerName: string;
+  price: number;
+  date: string;
+}
+
+interface SalesRecordsResponse {
+  code: number;
+  status: string;
+  message: string;
+  body: {
+    items: SalesRecord[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+  };
+}
+
 export const salesAPI = {
   async getSalesSummary(request: SalesSummaryRequest): Promise<SalesSummaryResponse> {
     const token = getCookie("authToken");
@@ -78,6 +112,27 @@ export const salesAPI = {
     const token = getCookie("authToken");
 
     const response = await fetch(`${API_BASE_URL}/SalesApi/GetCustomercategorizedSales`, {
+      method: "POST",
+      headers: {
+        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+        "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  },
+
+  async getSalesRecords(request: SalesRecordsRequest): Promise<SalesRecordsResponse> {
+    const token = getCookie("authToken");
+
+    const response = await fetch(`${API_BASE_URL}/SalesApi/GetSalesRecords`, {
       method: "POST",
       headers: {
         accept: "application/json;odata.metadata=minimal;odata.streaming=true",

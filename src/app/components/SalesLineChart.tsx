@@ -12,41 +12,72 @@ interface SalesLineChartProps {
   data: SalesDataPoint[];
   loading?: boolean;
   error?: string | null;
+  hideHeader?: boolean;
 }
 
-// Persian month names
-const persianMonths = [
-  "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
-  "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"
-];
+// Customer Type mapping to Persian
+const customerTypeMap: Record<number, string> = {
+  0: "هیچ",
+  1: "بدهکاران",
+  2: "بستانکار",
+  3: "پرسنل",
+  4: "راننده",
+  5: "بازاریاب",
+  6: "شرکا",
+  7: "مشتریان خانگی",
+  8: "جاری شرکت‌ها و اشخاص",
+  9: "طراح و ادیتور",
+};
 
-export function SalesLineChart({ data = [], loading = false, error = null }: SalesLineChartProps) {
+// Colors for different customer types
+const customerTypeColors: Record<number, string> = {
+  1: "#3b82f6",  // blue
+  2: "#10b981",  // green
+  3: "#f59e0b",  // amber
+  4: "#ef4444",  // red
+  5: "#8b5cf6",  // purple
+  6: "#ec4899",  // pink
+  7: "#06b6d4",  // cyan
+  8: "#f97316",  // orange
+  9: "#14b8a6",  // teal
+};
+
+// Persian date formatter
+const formatPersianDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  return `${year}/${month}`;
+};
+
+export function SalesLineChart({ data = [], loading = false, error = null, hideHeader = false }: SalesLineChartProps) {
   const colors = useCurrentColors();
 
-  // Transform API data to chart format
-  const chartData = data.map(item => {
-    const date = new Date(item.onDate);
-    const month = persianMonths[date.getMonth()];
-    const year = date.getFullYear();
+  // Transform API data to chart format - group by date and separate by type
+  const chartData = (() => {
+    const grouped: Record<string, any> = {};
     
-    return {
-      month: month,
-      sales: item.count,
-      orders: item.count, // Using count for both since API doesn't provide separate order count
-      fullDate: `${month} ${year}`,
-    };
-  }).sort((a, b) => {
-    // Sort by date
-    const dateA = new Date(data.find(d => {
-      const date = new Date(d.onDate);
-      return persianMonths[date.getMonth()] === a.month;
-    })?.onDate || 0);
-    const dateB = new Date(data.find(d => {
-      const date = new Date(d.onDate);
-      return persianMonths[date.getMonth()] === b.month;
-    })?.onDate || 0);
-    return dateA.getTime() - dateB.getTime();
-  });
+    data.forEach(item => {
+      const dateKey = item.onDate;
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {
+          date: formatPersianDate(item.onDate),
+          fullDate: new Date(item.onDate).toLocaleDateString("fa-IR"),
+          timestamp: new Date(item.onDate).getTime(),
+        };
+      }
+      
+      // Add count for this customer type
+      const typeName = `type_${item.type}`;
+      grouped[dateKey][typeName] = item.count;
+    });
+
+    // Convert to array and sort by date
+    return Object.values(grouped).sort((a, b) => a.timestamp - b.timestamp);
+  })();
+
+  // Get unique customer types from data
+  const customerTypes = Array.from(new Set(data.map(item => item.type))).sort((a, b) => a - b);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -61,9 +92,14 @@ export function SalesLineChart({ data = [], loading = false, error = null }: Sal
           <p className="font-semibold mb-2" style={{ color: colors.textPrimary }}>
             {payload[0].payload.fullDate}
           </p>
-          <p className="text-sm" style={{ color: colors.primary }}>
-            تعداد فروش: {payload[0].value.toLocaleString("fa-IR")}
-          </p>
+          {payload.map((entry: any, index: number) => {
+            const typeNumber = parseInt(entry.dataKey.replace('type_', ''));
+            return (
+              <p key={index} className="text-sm" style={{ color: entry.color }}>
+                {customerTypeMap[typeNumber]}: {entry.value.toLocaleString("fa-IR")}
+              </p>
+            );
+          })}
         </div>
       );
     }
@@ -71,21 +107,18 @@ export function SalesLineChart({ data = [], loading = false, error = null }: Sal
   };
 
   return (
-    <div
-      className="rounded-xl border p-[24px]"
-      style={{
-        backgroundColor: colors.cardBackground,
-        borderColor: colors.border,
-      }}
-    >
-      <div className="mb-6">
-        <h2 className="text-lg font-bold mb-1" style={{ color: colors.textPrimary }}>
-          روند فروش ماهانه
-        </h2>
-        <p className="text-sm" style={{ color: colors.textSecondary }}>
-          نمودار تعداد فروش در بازه زمانی انتخاب شده
-        </p>
-      </div>
+    <>
+      {/* Header - only show if hideHeader is false */}
+      {!hideHeader && (
+        <div className="mb-6">
+          <h2 className="text-lg font-bold mb-1" style={{ color: colors.textPrimary }}>
+            روند فروش ماهانه
+          </h2>
+          <p className="text-sm" style={{ color: colors.textSecondary }}>
+            نمودار تعداد فروش در بازه زمانی انتخاب شده
+          </p>
+        </div>
+      )}
 
       {/* Loading State */}
       {loading && (
@@ -137,11 +170,11 @@ export function SalesLineChart({ data = [], loading = false, error = null }: Sal
 
       {/* Chart */}
       {!loading && !error && chartData.length > 0 && (
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={400}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
             <XAxis
-              dataKey="month"
+              dataKey="date"
               stroke={colors.textSecondary}
               style={{ fontSize: "12px", fontFamily: "inherit" }}
             />
@@ -153,19 +186,28 @@ export function SalesLineChart({ data = [], loading = false, error = null }: Sal
             <Tooltip content={<CustomTooltip />} />
             <Legend
               wrapperStyle={{ fontFamily: "inherit" }}
-              formatter={(value) => (value === "sales" ? "تعداد فروش" : "تعداد سفارش")}
+              formatter={(value) => {
+                const typeNumber = parseInt(value.replace('type_', ''));
+                return customerTypeMap[typeNumber] || value;
+              }}
             />
-            <Line
-              type="monotone"
-              dataKey="sales"
-              stroke={colors.primary}
-              strokeWidth={3}
-              dot={{ fill: colors.primary, r: 5 }}
-              activeDot={{ r: 7 }}
-            />
+            {/* Create a Line for each customer type */}
+            {customerTypes.map((type) => (
+              <Line
+                key={type}
+                type="monotone"
+                dataKey={`type_${type}`}
+                name={`type_${type}`}
+                stroke={customerTypeColors[type] || colors.primary}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 6, fill: customerTypeColors[type] || colors.primary }}
+                connectNulls
+              />
+            ))}
           </LineChart>
         </ResponsiveContainer>
       )}
-    </div>
+    </>
   );
 }

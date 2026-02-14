@@ -367,7 +367,30 @@ export function PersianCalendar({ value, onConfirm, onCancel }: PersianCalendarP
     if (dateG > todayEnd) return;
 
     const clicked = { year, month, day };
-    setGlobalRange(clicked);
+    const clickedTs = getTs(clicked);
+    
+    // Sequential selection logic:
+    // 1st click: Set start date, clear end date
+    // 2nd click: Set end date
+    // 3rd click: Reset and start new selection
+    
+    if (!tempStart || (tempStart && tempEnd && getTs(tempStart) !== getTs(tempEnd))) {
+      // First click or resetting: set as start date
+      setTempStart(clicked);
+      setTempEnd(clicked);
+    } else if (tempStart && (!tempEnd || getTs(tempStart) === getTs(tempEnd))) {
+      // Second click: set as end date
+      const startTs = getTs(tempStart);
+      
+      if (clickedTs >= startTs) {
+        // Clicked date is after start, set as end
+        setTempEnd(clicked);
+      } else {
+        // Clicked date is before start, swap them
+        setTempEnd(tempStart);
+        setTempStart(clicked);
+      }
+    }
   };
 
   const isInRange = (year: number, month: number, day: number) => {
@@ -410,7 +433,10 @@ export function PersianCalendar({ value, onConfirm, onCancel }: PersianCalendarP
         newMonth = 1;
         newYear++;
       }
-      if (newYear < GLOBAL_MIN_YEAR || newYear > endYear) return;
+      // Don't allow start calendar to go beyond end calendar (must be at least 1 month behind)
+      if (newYear < GLOBAL_MIN_YEAR) return;
+      if (newYear > endYear) return;
+      if (newYear === endYear && newMonth >= endMonth) return; // Changed to >= to enforce 1 month gap
       setStartYear(newYear);
       setStartMonth(newMonth);
     } else {
@@ -423,7 +449,10 @@ export function PersianCalendar({ value, onConfirm, onCancel }: PersianCalendarP
         newMonth = 1;
         newYear++;
       }
-      if (newYear > GLOBAL_MAX_YEAR || newYear < startYear) return;
+      // Don't allow end calendar to go before start calendar (must be at least 1 month ahead)
+      if (newYear > GLOBAL_MAX_YEAR) return;
+      if (newYear < startYear) return;
+      if (newYear === startYear && newMonth <= startMonth) return; // Changed to <= to enforce 1 month gap
       setEndYear(newYear);
       setEndMonth(newMonth);
     }
@@ -512,20 +541,17 @@ export function PersianCalendar({ value, onConfirm, onCancel }: PersianCalendarP
 
   const handleYearMonthConfirm = (y: number, m: number) => {
     if (modalFor === "start") {
+      // Don't allow start to be in the same month or after end (must be at least 1 month behind)
+      if (endYear < y || (endYear === y && endMonth <= m)) {
+        return; // Block invalid selection
+      }
       setStartYear(y);
       setStartMonth(m);
-      if (endYear < y || (endYear === y && endMonth <= m)) {
-        let nm = m + 1;
-        let ny = y;
-        if (nm > 12) {
-          nm = 1;
-          ny++;
-        }
-        ny = Math.min(GLOBAL_MAX_YEAR, ny);
-        setEndMonth(nm);
-        setEndYear(ny);
-      }
     } else {
+      // Don't allow end to be in the same month or before start (must be at least 1 month ahead)
+      if (startYear > y || (startYear === y && startMonth >= m)) {
+        return; // Block invalid selection
+      }
       setEndYear(y);
       setEndMonth(m);
     }

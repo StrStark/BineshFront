@@ -23,6 +23,7 @@ import {
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { ThemedButton } from "../components/ThemedButton";
 import { customerAPI } from "../api/customerAPI";
+import { FilterDropdown } from "../components/FilterDropdown";
 
 interface Customer {
   id: string;
@@ -134,6 +135,7 @@ export function CustomersPage() {
   // Fetch table data from API
   useEffect(() => {
     const fetchCustomers = async () => {
+      console.log(`📡 API Request - صفحه: ${currentPage}, تعداد سطر: ${pageSize}, نوع مشتری: ${selectedCustomerType}`);
       setTableLoading(true);
       try {
         const response = await customerAPI.getCustomers({
@@ -155,11 +157,17 @@ export function CustomersPage() {
         });
 
         if (response.code === 200 && response.status === "success") {
+          console.log(`✅ API Response - دریافت ${response.body.items.length} مشتری | صفحه: ${response.body.pageNumber} | کل: ${response.body.totalCount}`);
           setCustomers(response.body.items);
           setTotalCount(response.body.totalCount);
+          // Sync currentPage with API response to ensure consistency
+          if (response.body.pageNumber !== currentPage) {
+            console.log(`⚠️ همگام‌سازی صفحه: ${currentPage} → ${response.body.pageNumber}`);
+            setCurrentPage(response.body.pageNumber);
+          }
         }
       } catch (err) {
-        console.error("Failed to fetch customers:", err);
+        console.error("❌ Failed to fetch customers:", err);
       } finally {
         setTableLoading(false);
       }
@@ -184,10 +192,10 @@ export function CustomersPage() {
             timeFrameUnit: 1,
           },
           prodctCategory: {
-            productCategory: "",
+            productCategory: selectedProductType,
           },
           custoemrCategory: {
-            customerCategory: "string",
+            customerCategory: selectedCustomerType,
           },
         });
 
@@ -203,7 +211,7 @@ export function CustomersPage() {
     };
 
     fetchCardsData();
-  }, []);
+  }, [selectedCustomerType, selectedProductType]);
 
   // Get active filters from Redux store
   const { activeFilters } = useAppSelector((state) => state.filters);
@@ -469,24 +477,29 @@ export function CustomersPage() {
             مشاهده و مدیریت اطلاعات مشتریان
           </p>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-wrap">
           {deletedCustomers.length > 0 && (
             <ThemedButton
               variant="secondary"
               onClick={() => setIsDeletedCustomersModalOpen(true)}
-              icon={<Trash2 className="w-4 h-4" />}
+              icon={<Trash2 className="w-5 h-5" />}
             >
               حذف شده‌ها ({deletedCustomers.length})
             </ThemedButton>
           )}
+          <FilterDropdown
+            label="نوع مشتری"
+            value={selectedCustomerType || ""}
+            options={customerTypeOptions}
+            onChange={setSelectedCustomerType}
+          />
+          <FilterDropdown
+            label="نوع محصول"
+            value={selectedProductType || ""}
+            options={productTypeOptions}
+            onChange={setSelectedProductType}
+          />
           <ReportDownload sections={reportSections} fileName="گزارش-مشتریان" />
-          <ThemedButton
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg flex-1 sm:flex-initial"
-            icon={<UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />}
-          >
-            <span className="text-xs sm:text-sm">افزودن مشتری جدید</span>
-          </ThemedButton>
         </div>
       </div>
 
@@ -509,7 +522,7 @@ export function CustomersPage() {
             className="text-2xl font-bold"
             style={{ color: colors.textPrimary }}
           >
-            2,547
+            {tableLoading ? "..." : totalCount.toLocaleString("fa-IR")}
           </p>
           <p className="text-xs mt-1" style={{ color: colors.success }}>
             +12% نسبت به ماه قبل
@@ -533,10 +546,10 @@ export function CustomersPage() {
             className="text-2xl font-bold"
             style={{ color: colors.textPrimary }}
           >
-            1,923
+            {tableLoading ? "..." : totalCount.toLocaleString("fa-IR")}
           </p>
           <p className="text-xs mt-1" style={{ color: colors.success }}>
-            +8% نسبت به ماه قبل
+            +12% نسبت به ماه قبل
           </p>
         </div>
 
@@ -593,7 +606,7 @@ export function CustomersPage() {
           >
             {cardsLoading
               ? "..."
-              : `${(arpuData.value / 1000000).toLocaleString("fa-IR", {
+              : `${(arpuData.value).toLocaleString("fa-IR", {
                   maximumFractionDigits: 0,
                 })}`}
           </p>
@@ -662,7 +675,7 @@ export function CustomersPage() {
 
       {/* Customers Table */}
       <CustomersTableWithFilters
-        customers={filteredCustomers}
+        customers={customers}
         customColumns={customColumns}
         setCustomColumns={setCustomColumns}
         handleEdit={handleEdit}
@@ -1206,7 +1219,7 @@ export function CustomersPage() {
                   variant="danger"
                   onClick={confirmDelete}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-lg"
-                  icon={<Trash2 className="w-4 h-4" />}
+                  icon={<Trash2 className="w-5 h-5" />}
                 >
                   <span className="text-sm font-medium">حذف مشتری</span>
                 </ThemedButton>

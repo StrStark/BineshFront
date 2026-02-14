@@ -62,7 +62,7 @@ export function ThemedButton({
           e.currentTarget.style.backgroundColor = bg;
         }
       }}
-      className={`px-4 py-2.5 rounded-lg transition-all flex items-center gap-2 ${
+      className={`px-4 py-3 rounded-lg transition-all flex items-center gap-2 ${
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
       } ${className}`}
     >

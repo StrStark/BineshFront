@@ -31,10 +31,14 @@ interface ProductsResponse {
   message: string;
   body: {
     items: ProductItem[];
-    totalCount: number;
-    pageNumber: number;
-    pageSize: number;
   };
+}
+
+interface ProductEventsRequest {
+  listDto: {
+    productIdList: string[];
+  };
+  paggination: Pagination;
 }
 
 interface ProductEventItem {
@@ -48,7 +52,7 @@ interface ProductEventItem {
   desc: string | null;
 }
 
-interface ProductEventData {
+interface ProductEvents {
   productId: string;
   items: ProductEventItem[];
   buy: number;
@@ -56,19 +60,12 @@ interface ProductEventData {
   stock: number;
 }
 
-interface ProductEventsRequest {
-  listDto: {
-    productIdList: string[];
-  };
-  paggination: Pagination;
-}
-
 interface ProductEventsResponse {
   code: number;
   status: string;
   message: string;
   body: {
-    items: ProductEventData[];
+    items: ProductEvents[];
     totalCount: number;
     pageNumber: number;
     pageSize: number;
@@ -123,10 +120,9 @@ export type {
   ProductsRequest,
   ProductsResponse,
   ProductItem,
-  CategoryDto,
-  Pagination,
   ProductEventsRequest,
   ProductEventsResponse,
-  ProductEventData,
   ProductEventItem,
+  ProductEvents,
+  Pagination,
 };

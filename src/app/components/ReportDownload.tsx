@@ -304,20 +304,14 @@ export function ReportDownload({
       {/* Main Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 hover:shadow-md w-full lg:w-auto"
+        className="px-4 py-3 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity text-white"
         style={{
           backgroundColor: colors.primary,
-          color: "#ffffff",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = colors.primaryHover;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = colors.primary;
         }}
       >
-        <Download className="w-4 h-4" />
-        <span className="text-sm font-medium">گزارش‌گیری</span>
+        <Download className="w-5 h-5" />
+        <span className="hidden sm:inline">گزارش‌گیری</span>
+        <span className="sm:hidden">گزارش</span>
         <ChevronDown
           className={`w-4 h-4 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""

@@ -1,9 +1,12 @@
 import { useCurrentColors } from '../contexts/ThemeColorsContext';
 import { TrendingUp, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { financialAPI, formatToPersianNumber } from '../api/financialAPI';
 
 interface IncomeStatementItem {
   title: string;
   amount: string;
+  value: number;
   isNegative?: boolean;
   isBold?: boolean;
   isTotal?: boolean;
@@ -11,24 +14,200 @@ interface IncomeStatementItem {
 
 export function IncomeStatement() {
   const colors = useCurrentColors();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [items, setItems] = useState<IncomeStatementItem[]>([]);
+  const [totalIncome, setTotalIncome] = useState('۰');
+  const [totalExpense, setTotalExpense] = useState('۰');
+  const [netProfit, setNetProfit] = useState('۰');
 
-  const items: IncomeStatementItem[] = [
-    { title: 'فروش', amount: '۱,۱۵۱,۵۱۱,۰۰۰', isBold: false },
-    { title: 'بهای تمام شده', amount: '(۱,۱۵۱,۵۱۱,۰۰۰)', isNegative: true },
-    { title: 'سود (زیان) ناخالص', amount: '۱,۱۵۱,۵۱۱,۰۰۰', isBold: true, isTotal: true },
-    { title: 'درآمدهای عملیاتی', amount: '۱,۱۵۱,۵۱۱,۰۰۰' },
-    { title: 'هزینه‌های عملیاتی', amount: '(۱,۱۵۱,۵۱۱,۰۰۰)', isNegative: true },
-    { title: 'سود (زیان) عملیاتی', amount: '۱,۱۵۱,۵۱۱,۰۰۰', isBold: true, isTotal: true },
-    { title: 'درآمدهای غیر عملیاتی', amount: '۱,۱۵۱,۵۱۱,۰۰۰' },
-    { title: 'هزینه‌های غیر عملیاتی', amount: '(۱,۱۵۱,۵۱۱,۰۰۰)', isNegative: true },
-    { title: 'سود (زیان) قبل از کسر مالیات', amount: '۱,۱۵۱,۵۱۱,۰۰۰', isBold: true, isTotal: true },
-    { title: 'مالیات', amount: '(۱,۱۵۱,۵۱۱,۰۰۰)', isNegative: true },
-    { title: 'سود (زیان) خالص', amount: '۱,۱۵۱,۵۱۱,۰۰۰', isBold: true, isTotal: true },
-    { title: 'سود (زیان) انباشته ابتدای دوره', amount: '۱,۱۵۱,۵۱۱,۰۰۰' },
-    { title: 'سود سهام نقدی', amount: '(۱,۱۵۱,۵۱۱,۰۰۰)', isNegative: true },
-    { title: 'سود سهمی', amount: '(۱,۱۵۱,۵۱۱,۰۰۰)', isNegative: true },
-    { title: 'سود (زیان) انباشته', amount: '۱,۱۵۱,۵۱۱,۰۰۰', isBold: true, isTotal: true },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await financialAPI.getFinancialSummary();
+        const profitLoss = response.body.profitLossSheet;
+        const balanceSheet = response.body.balanceSheet;
+
+        // Build items array based on API structure
+        const newItems: IncomeStatementItem[] = [];
+
+        // Get revenue and expense items from balance sheet
+        const revenueSection = balanceSheet.items.mainItems.find(item => item.title === 'درآمد');
+        const costSection = balanceSheet.items.mainItems.find(item => item.title === 'قیمت تمام شده');
+        const expenseSection = balanceSheet.items.mainItems.find(item => item.title === 'هزینه');
+
+        // Add revenue items
+        if (revenueSection) {
+          revenueSection.detailedItems.forEach(item => {
+            newItems.push({
+              title: item.title,
+              amount: formatToPersianNumber(Math.abs(item.value)),
+              value: item.value,
+              isNegative: false,
+              isBold: false,
+              isTotal: false,
+            });
+          });
+        }
+
+        // Add cost items
+        if (costSection) {
+          costSection.detailedItems.forEach(item => {
+            newItems.push({
+              title: item.title,
+              amount: formatToPersianNumber(Math.abs(item.value)),
+              value: item.value,
+              isNegative: true,
+              isBold: false,
+              isTotal: false,
+            });
+          });
+        }
+
+        // Add gross profit/loss
+        if (profitLoss.grossProfitLoss.value.value !== 0) {
+          newItems.push({
+            title: profitLoss.grossProfitLoss.value.title,
+            amount: formatToPersianNumber(Math.abs(profitLoss.grossProfitLoss.value.value)),
+            value: profitLoss.grossProfitLoss.value.value,
+            isNegative: profitLoss.grossProfitLoss.value.value < 0,
+            isBold: true,
+            isTotal: true,
+          });
+        }
+
+        // Add expense items
+        if (expenseSection) {
+          expenseSection.detailedItems.forEach(item => {
+            newItems.push({
+              title: item.title,
+              amount: formatToPersianNumber(Math.abs(item.value)),
+              value: item.value,
+              isNegative: true,
+              isBold: false,
+              isTotal: false,
+            });
+          });
+        }
+
+        // Add operational profit/loss
+        if (profitLoss.operationalProfitLoss.value.value !== 0) {
+          newItems.push({
+            title: profitLoss.operationalProfitLoss.value.title,
+            amount: formatToPersianNumber(Math.abs(profitLoss.operationalProfitLoss.value.value)),
+            value: profitLoss.operationalProfitLoss.value.value,
+            isNegative: profitLoss.operationalProfitLoss.value.value < 0,
+            isBold: true,
+            isTotal: true,
+          });
+        }
+
+        // Add profit/loss before tax
+        if (profitLoss.profitLossBeforTax.value.value !== 0) {
+          newItems.push({
+            title: profitLoss.profitLossBeforTax.value.title,
+            amount: formatToPersianNumber(Math.abs(profitLoss.profitLossBeforTax.value.value)),
+            value: profitLoss.profitLossBeforTax.value.value,
+            isNegative: profitLoss.profitLossBeforTax.value.value < 0,
+            isBold: true,
+            isTotal: true,
+          });
+        }
+
+        // Add net profit/loss
+        if (profitLoss.netProfitLoss.value.value !== 0) {
+          newItems.push({
+            title: profitLoss.netProfitLoss.value.title,
+            amount: formatToPersianNumber(Math.abs(profitLoss.netProfitLoss.value.value)),
+            value: profitLoss.netProfitLoss.value.value,
+            isNegative: profitLoss.netProfitLoss.value.value < 0,
+            isBold: true,
+            isTotal: true,
+          });
+        }
+
+        // Add accumulated profit/loss
+        if (profitLoss.accumilatedProfitLoss.value.value !== 0) {
+          newItems.push({
+            title: profitLoss.accumilatedProfitLoss.value.title,
+            amount: formatToPersianNumber(Math.abs(profitLoss.accumilatedProfitLoss.value.value)),
+            value: profitLoss.accumilatedProfitLoss.value.value,
+            isNegative: profitLoss.accumilatedProfitLoss.value.value < 0,
+            isBold: true,
+            isTotal: true,
+          });
+        }
+
+        setItems(newItems);
+
+        // Calculate totals for summary
+        let incomeTotal = 0;
+        let expenseTotal = 0;
+
+        if (revenueSection) {
+          revenueSection.detailedItems.forEach(item => {
+            incomeTotal += Math.abs(item.value);
+          });
+        }
+
+        if (costSection) {
+          costSection.detailedItems.forEach(item => {
+            expenseTotal += Math.abs(item.value);
+          });
+        }
+
+        if (expenseSection) {
+          expenseSection.detailedItems.forEach(item => {
+            expenseTotal += Math.abs(item.value);
+          });
+        }
+
+        setTotalIncome(formatToPersianNumber(incomeTotal));
+        setTotalExpense(formatToPersianNumber(expenseTotal));
+        setNetProfit(formatToPersianNumber(profitLoss.netProfitLoss.value.value));
+
+        setError(null);
+      } catch (err: any) {
+        console.error('Error fetching profit/loss data:', err);
+        setError(err.message || 'خطا در دریافت اطلاعات سود و زیان');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div
+        className="rounded-xl border overflow-hidden p-6"
+        style={{
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+        }}
+        dir="rtl"
+      >
+        <p style={{ color: colors.textSecondary }}>در حال بارگذاری...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="rounded-xl border overflow-hidden p-6"
+        style={{
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+        }}
+        dir="rtl"
+      >
+        <p style={{ color: colors.error }}>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -97,7 +276,9 @@ export function IncomeStatement() {
                     : colors.textPrimary,
                 }}
               >
+                {item.isNegative && '('}
                 {item.amount} تومان
+                {item.isNegative && ')'}
               </span>
             </div>
           ))}
@@ -119,7 +300,7 @@ export function IncomeStatement() {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" style={{ color: colors.success }} />
                   <span className="font-bold text-lg" style={{ color: colors.success }}>
-                    ۱۵,۰۰۰,۰۰۰ تومان
+                    {totalIncome} تومان
                   </span>
                 </div>
               </div>
@@ -130,7 +311,7 @@ export function IncomeStatement() {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 rotate-180" style={{ color: colors.error }} />
                   <span className="font-bold text-lg" style={{ color: colors.error }}>
-                    ۸,۵۰۰,۰۰۰ تومان
+                    {totalExpense} تومان
                   </span>
                 </div>
               </div>
@@ -141,7 +322,7 @@ export function IncomeStatement() {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" style={{ color: colors.primary }} />
                   <span className="font-bold text-lg" style={{ color: colors.primary }}>
-                    ۶,۵۰۰,۰۰۰ تومان
+                    {netProfit} تومان
                   </span>
                 </div>
               </div>
@@ -154,7 +335,7 @@ export function IncomeStatement() {
               <p className="text-xs" style={{ color: colors.textSecondary }}>
                 دوره مالی:{' '}
                 <span className="font-bold" style={{ color: colors.textPrimary }}>
-                  از ۰۱/۰۱/۱۴۰۳ تا ۳۰/۰۹/۱۴۰۳
+                  سال جاری
                 </span>
               </p>
             </div>

@@ -48,12 +48,11 @@ interface ProductsTableProps {
   handleEdit?: (productId: string) => void;
   handleDelete?: (productId: string) => void;
   handleViewDetails?: (productId: string) => void;
-  // Pagination props
   currentPage?: number;
-  totalPages?: number;
-  rowsPerPage?: number;
+  pageSize?: number;
+  totalCount?: number;
   onPageChange?: (page: number) => void;
-  onRowsPerPageChange?: (rows: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   loading?: boolean;
 }
 
@@ -65,10 +64,10 @@ export function ProductsTableWithFilters({
   handleDelete,
   handleViewDetails,
   currentPage: externalCurrentPage,
-  totalPages: externalTotalPages,
-  rowsPerPage: externalRowsPerPage,
-  onPageChange,
-  onRowsPerPageChange,
+  pageSize: externalPageSize,
+  totalCount: externalTotalCount,
+  onPageChange: externalOnPageChange,
+  onPageSizeChange: externalOnPageSizeChange,
   loading = false,
 }: ProductsTableProps) {
   const colors = useCurrentColors();
@@ -79,30 +78,13 @@ export function ProductsTableWithFilters({
   );
   const tableFilters = activeFilters[TABLE_ID] || [];
 
-  // Use external pagination if provided, otherwise use internal
+  // Pagination state - use external if provided, otherwise manage internally
   const [internalCurrentPage, setInternalCurrentPage] = useState(1);
   const [internalRowsPerPage, setInternalRowsPerPage] = useState(10);
   
-  const currentPage = externalCurrentPage !== undefined ? externalCurrentPage : internalCurrentPage;
-  const rowsPerPage = externalRowsPerPage !== undefined ? externalRowsPerPage : internalRowsPerPage;
-  
-  const setCurrentPage = (page: number | ((prev: number) => number)) => {
-    const newPage = typeof page === 'function' ? page(currentPage) : page;
-    if (onPageChange) {
-      onPageChange(newPage);
-    } else {
-      setInternalCurrentPage(newPage);
-    }
-  };
-
-  const setRowsPerPage = (rows: number) => {
-    if (onRowsPerPageChange) {
-      onRowsPerPageChange(rows);
-    } else {
-      setInternalRowsPerPage(rows);
-      setInternalCurrentPage(1); // Reset to page 1 when changing rows per page
-    }
-  };
+  const currentPage = externalCurrentPage ?? internalCurrentPage;
+  const rowsPerPage = externalPageSize ?? internalRowsPerPage;
+  const isExternalPagination = externalCurrentPage !== undefined && externalTotalCount !== undefined;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [localVisibleColumns, setLocalVisibleColumns] = useState<
@@ -323,7 +305,7 @@ export function ProductsTableWithFilters({
   const filteredProducts = useMemo(() => {
     let result = products;
 
-    // Search bar filter (connected now)
+    // Search bar filter
     if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter((product) =>
@@ -393,31 +375,73 @@ export function ProductsTableWithFilters({
     selectedTags,
     localVisibleColumns,
     customColumnData,
-    searchQuery, // ← search is now connected
+    searchQuery,
   ]);
 
-  // Pagination calculations
-  // If external totalPages is provided, use it (for API pagination)
-  // Otherwise calculate based on filtered data (for client-side pagination)
-  const totalPages = externalTotalPages !== undefined 
-    ? externalTotalPages 
-    : Math.ceil(filteredProducts.length / rowsPerPage);
-  
+  // Calculate pagination values
+  const totalItems = isExternalPagination ? externalTotalCount : filteredProducts.length;
+  const totalPages = Math.ceil(totalItems / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, totalItems);
   
-  // If using API pagination, show all products (already paginated by server)
-  // Otherwise slice for client-side pagination
-  const currentPageData = externalTotalPages !== undefined 
-    ? filteredProducts 
-    : filteredProducts.slice(startIndex, endIndex);
+  // Get current page data - only slice if internal pagination
+  const currentPageData = isExternalPagination ? products : filteredProducts.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters or search change (only for client-side pagination)
+  // Reset to page 1 when filters or search change (internal pagination only)
   useEffect(() => {
-    if (externalTotalPages === undefined) {
-      setCurrentPage(1);
+    if (!isExternalPagination) {
+      setInternalCurrentPage(1);
     }
-  }, [tableFilters, searchQuery, externalTotalPages]); // Removed rowsPerPage from dependencies!
+  }, [tableFilters, searchQuery, selectedTags, isExternalPagination]);
+
+  // Handle page change - use external handler if provided
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      if (externalOnPageChange) {
+        externalOnPageChange(newPage);
+      } else {
+        setInternalCurrentPage(newPage);
+      }
+    }
+  };
+
+  // Handle rows per page change - use external handler if provided
+  const handleRowsPerPageChange = (newRowsPerPage: number) => {
+    if (externalOnPageSizeChange) {
+      externalOnPageSizeChange(newRowsPerPage);
+    } else {
+      setInternalRowsPerPage(newRowsPerPage);
+      setInternalCurrentPage(1); // Reset to first page
+    }
+  };
+
+  // Generate page numbers for pagination UI
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    
+    if (totalPages <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (currentPage <= 3) {
+        // Near start: 1 2 3 4 ... last
+        pages.push(2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // Near end: 1 ... last-3 last-2 last-1 last
+        pages.push('...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        // Middle: 1 ... current-1 current current+1 ... last
+        pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    
+    return pages;
+  };
 
   const getOperatorLabel = (operator: string) => {
     const labels: Record<string, string> = {
@@ -463,7 +487,7 @@ export function ProductsTableWithFilters({
         </div>
       </div>
 
-      {/* Search Bar (fully working now) */}
+      {/* Search Bar */}
       <div
         className="rounded-lg p-4 "
         style={{
@@ -696,40 +720,53 @@ export function ProductsTableWithFilters({
             </tr>
           </thead>
           <tbody>
-            {currentPageData.map((product) => (
-              <tr
-                key={product.id}
-                className="border-b transition-colors"
-                style={{
-                  borderColor: colors.border,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    colors.backgroundSecondary;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
-              >
-                {activeColumns.map((column) => renderCell(product, column))}
+            {loading ? (
+              <tr>
+                <td
+                  colSpan={activeColumns.length}
+                  className="p-8 text-center"
+                  style={{ color: colors.textSecondary }}
+                >
+                  در حال بارگذاری...
+                </td>
               </tr>
-            ))}
+            ) : currentPageData.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={activeColumns.length}
+                  className="p-8 text-center"
+                  style={{ color: colors.textSecondary }}
+                  dir="rtl"
+                >
+                  هیچ محصولی با این فیلترها یافت نشد
+                </td>
+              </tr>
+            ) : (
+              currentPageData.map((product) => (
+                <tr
+                  key={product.id}
+                  className="border-b transition-colors"
+                  style={{
+                    borderColor: colors.border,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      colors.backgroundSecondary;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  {activeColumns.map((column) => renderCell(product, column))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
-
-        {filteredProducts.length === 0 && (
-          <div
-            className="p-8 text-center"
-            style={{ color: colors.textSecondary }}
-            dir="rtl"
-          >
-            هیچ محصولی با این فیلترها یافت نشد
-          </div>
-        )}
       </div>
 
       {/* Pagination */}
-      {filteredProducts.length > 0 && (
+      {!loading && filteredProducts.length > 0 && (
         <div
           className="p-3 md:p-4 border-t flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-0"
           dir="rtl"
@@ -748,7 +785,7 @@ export function ProductsTableWithFilters({
               </span>
               <select
                 value={rowsPerPage}
-                onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                onChange={(e) => handleRowsPerPageChange(Number(e.target.value))}
                 className="px-2 md:px-3 py-1 md:py-1.5 border rounded-lg text-xs md:text-sm focus:outline-none transition-colors"
                 style={{
                   backgroundColor: colors.cardBackground,
@@ -775,8 +812,7 @@ export function ProductsTableWithFilters({
               className="text-xs md:text-sm whitespace-nowrap md:hidden"
               style={{ color: colors.textSecondary }}
             >
-              {startIndex + 1} تا {Math.min(endIndex, filteredProducts.length)}{" "}
-              از {filteredProducts.length}
+              {startIndex + 1} تا {endIndex} از {totalItems}
             </span>
           </div>
 
@@ -784,15 +820,14 @@ export function ProductsTableWithFilters({
             className="text-xs md:text-sm whitespace-nowrap hidden md:inline"
             style={{ color: colors.textSecondary }}
           >
-            نمایش {startIndex + 1} تا{" "}
-            {Math.min(endIndex, filteredProducts.length)} از{" "}
-            {filteredProducts.length} مورد
+            نمایش {startIndex + 1} تا {endIndex} از {totalItems} مورد
           </span>
 
           {/* Page navigation */}
           <div className="flex items-center gap-1.5 md:gap-2 justify-center md:justify-end">
+            {/* Previous button */}
             <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className="p-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               style={{
@@ -800,87 +835,66 @@ export function ProductsTableWithFilters({
               }}
               onMouseEnter={(e) => {
                 if (currentPage !== 1) {
-                  e.currentTarget.style.backgroundColor =
-                    colors.backgroundSecondary;
+                  e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
                 }
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <ChevronRight
-                className="w-5 h-5"
-                style={{ color: colors.textSecondary }}
-              />
+              <ChevronRight className="w-5 h-5" />
             </button>
 
             {/* Page numbers */}
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter((page) => {
+              {getPageNumbers().map((page, index) => {
+                if (page === '...') {
                   return (
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="px-2 text-sm"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      ...
+                    </span>
                   );
-                })
-                .map((page, index, array) => {
-                  const prevPage = array[index - 1];
-                  const showEllipsis = prevPage && page - prevPage > 1;
+                }
 
-                  return (
-                    <div key={page} className="flex items-center gap-1">
-                      {showEllipsis && (
-                        <span
-                          className="px-2"
-                          style={{ color: colors.textSecondary }}
-                        >
-                          ...
-                        </span>
-                      )}
-                      <button
-                        onClick={() => setCurrentPage(page)}
-                        className={`min-w-[32px] h-8 px-2 flex items-center justify-center rounded text-sm transition-colors`}
-                        style={{
-                          backgroundColor:
-                            currentPage === page
-                              ? colors.primary
-                              : colors.cardBackground,
-                          borderWidth: "1px",
-                          borderStyle: "solid",
-                          borderColor:
-                            currentPage === page
-                              ? colors.primary
-                              : colors.border,
-                          color:
-                            currentPage === page
-                              ? "#ffffff"
-                              : colors.textPrimary,
-                        }}
-                        onMouseEnter={(e) => {
-                          if (currentPage !== page) {
-                            e.currentTarget.style.backgroundColor =
-                              colors.backgroundSecondary;
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (currentPage !== page) {
-                            e.currentTarget.style.backgroundColor =
-                              colors.cardBackground;
-                          }
-                        }}
-                      >
-                        {page}
-                      </button>
-                    </div>
-                  );
-                })}
+                const pageNumber = page as number;
+                const isActive = pageNumber === currentPage;
+
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => handlePageChange(pageNumber)}
+                    className="min-w-[32px] h-8 px-2 flex items-center justify-center rounded text-sm transition-colors"
+                    style={{
+                      backgroundColor: isActive ? colors.primary : colors.cardBackground,
+                      borderWidth: "1px",
+                      borderStyle: "solid",
+                      borderColor: isActive ? colors.primary : colors.border,
+                      color: isActive ? "#ffffff" : colors.textPrimary,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = colors.cardBackground;
+                      }
+                    }}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
             </div>
 
+            {/* Next button */}
             <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-              }
+              onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
               className="p-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               style={{
@@ -888,18 +902,14 @@ export function ProductsTableWithFilters({
               }}
               onMouseEnter={(e) => {
                 if (currentPage !== totalPages) {
-                  e.currentTarget.style.backgroundColor =
-                    colors.backgroundSecondary;
+                  e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
                 }
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <ChevronLeft
-                className="w-5 h-5"
-                style={{ color: colors.textSecondary }}
-              />
+              <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
         </div>
