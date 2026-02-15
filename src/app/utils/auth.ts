@@ -1,6 +1,7 @@
 // Auth API and Cookie Management
 
 const API_BASE_URL = 'https://panel.bineshafzar.ir/api';
+const AUTH_BEARER_TOKEN = "vlkjhgfdcszfghjkl";
 
 export interface SignInResponse {
   code: number;
@@ -52,16 +53,19 @@ export const authApi = {
       method: 'POST',
       headers: {
         'accept': 'application/json;odata.metadata=minimal;odata.streaming=true',
+        'Authorization': `Bearer ${AUTH_BEARER_TOKEN}`,
         'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
       },
       body: JSON.stringify({ phoneNumber }),
     });
 
-    if (!response.ok) {
-      throw new Error('خطا در ارسال کد تایید');
+    const data = await response.json();
+
+    if (!response.ok || data.code !== 200) {
+      throw new Error(data.message || 'خطا در ارسال کد تایید');
     }
 
-    return response.json();
+    return data;
   },
 
   verifyOtp: async (
@@ -71,17 +75,15 @@ export const authApi = {
     location: string = 'Iran',
     application: string = 'Binesh Panel'
   ): Promise<ConfirmSignInResponse> => {
-    // Format phone number with +98 prefix if needed
-    const formattedPhone = phoneNumber.startsWith('+98') ? phoneNumber : '+98' + phoneNumber.substring(1);
-    
     const response = await fetch(`${API_BASE_URL}/Auth/ConfirmSignInPhone`, {
       method: 'POST',
       headers: {
         'accept': 'application/json;odata.metadata=minimal;odata.streaming=true',
+        'Authorization': `Bearer ${AUTH_BEARER_TOKEN}`,
         'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
       },
       body: JSON.stringify({
-        phoneNumber: formattedPhone,
+        phoneNumber,
         token,
         deviceInfo,
         location,
@@ -89,15 +91,15 @@ export const authApi = {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error('کد تایید نادرست است');
-    }
-
     const data: ConfirmSignInResponse = await response.json();
+
+    if (!response.ok || data.code !== 200) {
+      throw new Error(data.message || 'کد تایید نادرست است');
+    }
     
-    // Save tokens to cookies
-    if (data.body && data.body.accessToken && data.body.refreshToken) {
-      setCookie('accessToken', data.body.accessToken, 7);
+    // Save tokens to cookies - using "authToken" as the key since other APIs use it
+    if (data.body && data.body.accessToken) {
+      setCookie('authToken', data.body.accessToken, 7);
       setCookie('refreshToken', data.body.refreshToken, 30);
       setCookie('userId', data.body.userId, 30);
       setCookie('userSessionId', data.body.userSessionId, 30);
@@ -117,6 +119,7 @@ export const authApi = {
       method: 'POST',
       headers: {
         'accept': 'application/json;odata.metadata=minimal;odata.streaming=true',
+        'Authorization': `Bearer ${AUTH_BEARER_TOKEN}`,
         'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
       },
       body: JSON.stringify({
@@ -128,15 +131,15 @@ export const authApi = {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error('کد تایید نادرست است');
-    }
-
     const data: ConfirmSignInResponse = await response.json();
+
+    if (!response.ok || data.code !== 200) {
+      throw new Error(data.message || 'کد تایید نادرست است');
+    }
     
-    // Save tokens to cookies
-    if (data.body && data.body.accessToken && data.body.refreshToken) {
-      setCookie('accessToken', data.body.accessToken, 7);
+    // Save tokens to cookies - using "authToken" as the key since other APIs use it
+    if (data.body && data.body.accessToken) {
+      setCookie('authToken', data.body.accessToken, 7);
       setCookie('refreshToken', data.body.refreshToken, 30);
       setCookie('userId', data.body.userId, 30);
       setCookie('userSessionId', data.body.userSessionId, 30);
@@ -146,18 +149,18 @@ export const authApi = {
   },
 
   logout: () => {
-    deleteCookie('accessToken');
+    deleteCookie('authToken');
     deleteCookie('refreshToken');
     deleteCookie('userId');
     deleteCookie('userSessionId');
   },
 
   isAuthenticated: (): boolean => {
-    const accessToken = getCookie('accessToken');
-    return !!accessToken;
+    const authToken = getCookie('authToken');
+    return !!authToken;
   },
 
   getAccessToken: (): string | null => {
-    return getCookie('accessToken');
+    return getCookie('authToken');
   },
 };

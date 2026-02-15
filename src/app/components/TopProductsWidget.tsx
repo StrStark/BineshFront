@@ -149,13 +149,13 @@ export function TopProductsWidget({ dateRange }: TopProductsWidgetProps) {
                   </span>
                 </div>
                 <div
-                  className="h-1.5 rounded-full mt-2"
+                  className="h-1.5 rounded-full mt-2 overflow-hidden"
                   style={{ backgroundColor: colors.backgroundSecondary }}
                 >
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
-                      width: `${products.length > 0 ? (product.count / products[0].count) * 100 : 0}%`,
+                      width: `${products.length > 0 ? (product.totalAmount / products[0].totalAmount) * 100 : 0}%`,
                       backgroundColor: colors.primary,
                     }}
                   />
