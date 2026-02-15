@@ -69,7 +69,7 @@ export function CustomersPage() {
     { key: "salesCount", label: "تعداد فروش‌ها", visible: true },
     { key: "place", label: "محل", visible: true },
     { key: "history", label: "تاریخچه خریدها", visible: true },
-    { key: "actions", label: "جزییات", visible: true },
+    { key: "actions", label: "عملیات", visible: true },
   ]);
   const [formData, setFormData] = useState({
     firstName: "",

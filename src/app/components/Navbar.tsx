@@ -811,12 +811,15 @@ export function Navbar() {
                 >
                   <div className="py-1">
                     <button className="w-full px-4 py-2.5 text-right text-sm bg-[#f7f9fb] dark:bg-[#252b3d] text-[#0085ff] cursor-default whitespace-nowrap">
-                      پنل هوشمند مدیریت داده بینش
+                      پنل مدیریت داده 
                     </button>
 
-                    <button className="w-full px-4 py-2.5 text-right text-sm text-[#1c1c1c] dark:text-white hover:bg-[#f7f9fb] dark:hover:bg-[#252b3d] transition-colors whitespace-nowrap">
-                      پنل هوشمند مدیریت تماس رهگیر
+                    <a href="https://rahgir.bineshafzar.ir">
+                      <button className="w-full px-4 py-2.5 text-right text-sm text-[#1c1c1c] dark:text-white hover:bg-[#f7f9fb] dark:hover:bg-[#252b3d] transition-colors whitespace-nowrap">
+                      پنل مدیریت تماس 
                     </button>
+                    </a>
+                   
                   </div>
                 </div>
               )}

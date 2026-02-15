@@ -18,11 +18,11 @@ interface ReportDownloadProps {
   onDownloadExcel?: () => void;
 }
 
-export function ReportDownload({ 
-  sections, 
-  fileName = "report", 
-  onDownloadPDF, 
-  onDownloadExcel 
+export function ReportDownload({
+  sections,
+  fileName = "report",
+  onDownloadPDF,
+  onDownloadExcel
 }: ReportDownloadProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -35,7 +35,6 @@ export function ReportDownload({
         setIsOpen(false);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -48,7 +47,7 @@ export function ReportDownload({
       onDownloadPDF();
       return;
     }
-    
+   
     if (!sections || sections.length === 0) {
       alert('داده‌ای برای گزارش‌گیری وجود ندارد.');
       return;
@@ -60,13 +59,18 @@ export function ReportDownload({
       const persianDate = `${now.toLocaleDateString('fa-IR')}`;
       const persianTime = `${now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}`;
 
-      // Create temporary container
+      // Landscape dimensions (A4 landscape)
+      const LANDSCAPE_WIDTH_PX = 1123;   // 297mm × ~3.78 px/mm
+      const LANDSCAPE_IMG_WIDTH_MM = 297;
+      const LANDSCAPE_PAGE_HEIGHT_MM = 210;
+
+      // Create temporary container (wider for landscape)
       const container = document.createElement('div');
       container.style.cssText = `
         position: absolute;
         left: -9999px;
         top: 0;
-        width: 794px;
+        width: ${LANDSCAPE_WIDTH_PX}px;
         padding: 40px;
         background-color: rgb(255, 255, 255);
         font-family: Vazirmatn, Tahoma, Arial, sans-serif;
@@ -92,10 +96,10 @@ export function ReportDownload({
           </div>
           <div style="text-align: right;">
             <div style="font-size: 32px; font-weight: bold; color: rgb(255, 255, 255); margin-bottom: 8px;">
-              رهگیر
+              بینش
             </div>
             <div style="font-size: 16px; color: rgb(100, 181, 246);">
-              مرکز تماس رهگیر
+              پنل مدیریت داده بینش
             </div>
           </div>
         </div>
@@ -145,7 +149,7 @@ export function ReportDownload({
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
         const headers = section.headers || Object.keys(section.data[0] || {});
-        
+       
         headers.forEach(header => {
           const th = document.createElement('th');
           th.style.cssText = `
@@ -170,7 +174,7 @@ export function ReportDownload({
           tr.style.cssText = `
             background-color: ${rowIndex % 2 === 0 ? 'rgb(255, 255, 255)' : 'rgb(247, 249, 251)'};
           `;
-          
+         
           headers.forEach(header => {
             const td = document.createElement('td');
             td.style.cssText = `
@@ -184,7 +188,7 @@ export function ReportDownload({
             td.textContent = value !== undefined && value !== null ? String(value) : '-';
             tr.appendChild(td);
           });
-          
+         
           tbody.appendChild(tr);
         });
         table.appendChild(tbody);
@@ -203,7 +207,7 @@ export function ReportDownload({
         color: rgb(139, 146, 168);
       `;
       footer.innerHTML = `
-        <div style="margin-bottom: 8px;">سیستم مدیریت کیفیت مراکز تماس رهگیر</div>
+        <div style="margin-bottom: 8px;">سیستم هوشمند مدیریت داده بینش</div>
         <div>تاریخ و زمان تولید گزارش: ${persianDate} - ${persianTime}</div>
       `;
       container.appendChild(footer);
@@ -211,16 +215,15 @@ export function ReportDownload({
       // Wait a bit for fonts to load
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Render to canvas
+      // Render to canvas (landscape width)
       const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
-        width: 794,
-        windowWidth: 794,
+        width: LANDSCAPE_WIDTH_PX,
+        windowWidth: LANDSCAPE_WIDTH_PX,
         onclone: (clonedDoc) => {
-          // Ensure all styles are computed in the cloned document
           const clonedContainer = clonedDoc.querySelector('div');
           if (clonedContainer) {
             clonedContainer.style.backgroundColor = 'rgb(255, 255, 255)';
@@ -231,25 +234,26 @@ export function ReportDownload({
       // Remove container
       document.body.removeChild(container);
 
-      // Create PDF
+      // Create PDF in LANDSCAPE
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
-        orientation: 'portrait',
+        orientation: 'landscape',
         unit: 'mm',
         format: 'a4',
       });
 
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
+      const imgWidth = LANDSCAPE_IMG_WIDTH_MM;
+      const pageHeight = LANDSCAPE_PAGE_HEIGHT_MM;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
       let heightLeft = imgHeight;
       let position = 0;
 
-      // Add first page
+      // First page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
-      // Add additional pages if needed
+      // Additional pages if needed
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
@@ -271,27 +275,20 @@ export function ReportDownload({
       onDownloadExcel();
       return;
     }
-
     if (!sections || sections.length === 0) {
       alert('داده‌ای برای گزارش‌گیری وجود ندارد.');
       return;
     }
-
     try {
       const workbook = XLSX.utils.book_new();
-      
+     
       sections.forEach((section, index) => {
         if (!section.data || section.data.length === 0) return;
-
-        // Create worksheet from data
         const worksheet = XLSX.utils.json_to_sheet(section.data);
-        
-        // Add worksheet to workbook with a valid sheet name
-        const sheetName = section.title.substring(0, 31); // Excel sheet names must be <= 31 chars
+        const sheetName = section.title.substring(0, 31);
         XLSX.utils.book_append_sheet(workbook, worksheet, sheetName || `Sheet${index + 1}`);
       });
-      
-      // Save file
+     
       XLSX.writeFile(workbook, `${fileName}.xlsx`);
     } catch (error) {
       console.error('Error generating Excel:', error);
@@ -321,7 +318,7 @@ export function ReportDownload({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div 
+        <div
           className="absolute left-0 mt-2 rounded-lg shadow-xl border overflow-hidden z-50 min-w-[180px] animate-fadeIn"
           style={{
             backgroundColor: colors.cardBackground,
@@ -367,7 +364,7 @@ export function ReportDownload({
             <FileText className="w-4 h-4" style={{ color: colors.error }} />
             <div className="flex-1">
               <p className="text-sm font-medium">دانلود PDF</p>
-              <p className="text-xs" style={{ color: colors.textSecondary }}>فرمت .pdf</p>
+              <p className="text-xs" style={{ color: colors.textSecondary }}>فرمت .pdf (افقی)</p>
             </div>
           </button>
         </div>

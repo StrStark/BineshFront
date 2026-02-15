@@ -274,13 +274,7 @@ export function SalesPage() {
             <span>{formatDateRange()}</span>
           </button>
           <ReportDownload sections={reportSections} fileName="گزارش-فروش" />
-          <button
-            className="flex items-center gap-2 px-4 py-3 rounded-lg text-white transition-all hover:opacity-90 whitespace-nowrap"
-            style={{ backgroundColor: colors.primary }}
-          >
-            <Plus className="w-5 h-5" />
-            <span>ثبت فروش جدید</span>
-          </button>
+          
         </div>
       </div>
 
