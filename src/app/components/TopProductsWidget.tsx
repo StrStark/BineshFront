@@ -1,16 +1,63 @@
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
-import { TrendingUp, Award } from "lucide-react";
+import { TrendingUp, TrendingDown, Award } from "lucide-react";
+import { useState, useEffect } from "react";
+import { salesAPI } from "../api/salesAPI";
 
-const topProducts = [
-  { name: "فرش ۴۰۰*۳ شانه پرستیژ", sales: 45, revenue: 18500000, growth: 12 },
-  { name: "مبل راحتی 7 نفره چستر", sales: 38, revenue: 15200000, growth: 8 },
-  { name: "تابلو فرش دستباف ۱۰۰*۱۵۰", sales: 32, revenue: 12800000, growth: -3 },
-  { name: "موکت ۷۰۰*۵ شانه تراکم ۲۵۰۰", sales: 28, revenue: 11200000, growth: 15 },
-  { name: "فرش ماشینی ۱۲۰۰*۹ شانه", sales: 25, revenue: 10000000, growth: 5 },
-];
+interface DateRange {
+  from: Date | null;
+  to: Date | null;
+}
 
-export function TopProductsWidget() {
+interface TopProductsWidgetProps {
+  dateRange?: DateRange;
+}
+
+export function TopProductsWidget({ dateRange }: TopProductsWidgetProps) {
   const colors = useCurrentColors();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // تاریخ پیش‌فرض
+  const defaultFrom = new Date("2020-02-13T09:03:37.211Z");
+  const defaultTo = new Date("2026-02-13T09:03:37.211Z");
+
+  useEffect(() => {
+    const fetchTopProducts = async () => {
+      const from = dateRange?.from || defaultFrom;
+      const to = dateRange?.to || defaultTo;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await salesAPI.getTopSellingProducts({
+          dateFilter: {
+            startTime: from.toISOString(),
+            endTime: to.toISOString(),
+            timeFrameUnit: 1,
+          },
+          categoryDto: {
+            productCategory: "string",
+          },
+          provience: {
+            provinece: "string",
+          },
+        });
+
+        if (response.code === 200 && response.body?.items) {
+          setProducts(response.body.items);
+        }
+      } catch (err) {
+        console.error("Error fetching top products:", err);
+        setError("خطا در بارگذاری داده‌ها");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTopProducts();
+  }, [dateRange]);
 
   return (
     <div
@@ -37,61 +84,87 @@ export function TopProductsWidget() {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {topProducts.map((product, index) => (
-          <div key={index} className="flex items-start gap-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm"
-              style={{
-                backgroundColor: index === 0 ? colors.primary + "33" : colors.backgroundSecondary,
-                color: index === 0 ? colors.primary : colors.textSecondary,
-              }}
-            >
-              {(index + 1).toLocaleString("fa-IR")}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-sm truncate" style={{ color: colors.textPrimary }}>
-                  {product.name}
-                </h3>
-                <div className="flex items-center gap-1 flex-shrink-0 mr-2">
-                  <TrendingUp
-                    className="w-3 h-3"
-                    style={{ color: product.growth > 0 ? colors.success : colors.error }}
-                  />
-                  <span
-                    className="text-xs font-semibold"
-                    style={{ color: product.growth > 0 ? colors.success : colors.error }}
-                  >
-                    {product.growth > 0 ? "+" : ""}
-                    {product.growth.toLocaleString("fa-IR")}%
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <div 
+            className="animate-spin rounded-full h-8 w-8 border-b-2" 
+            style={{ borderColor: colors.primary }}
+          ></div>
+        </div>
+      ) : error ? (
+        <div className="text-center py-8" style={{ color: colors.error }}>
+          {error}
+        </div>
+      ) : products.length === 0 ? (
+        <div className="text-center py-8" style={{ color: colors.textSecondary }}>
+          داده‌ای یافت نشد
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {products.map((product, index) => (
+            <div key={product.rank} className="flex items-start gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm"
+                style={{
+                  backgroundColor: index === 0 ? colors.primary + "33" : colors.backgroundSecondary,
+                  color: index === 0 ? colors.primary : colors.textSecondary,
+                }}
+              >
+                {product.rank.toLocaleString("fa-IR")}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-sm truncate" style={{ color: colors.textPrimary }}>
+                    {product.productName}
+                  </h3>
+                  <div className="flex items-center gap-1 flex-shrink-0 mr-2">
+                    {product.growth > 0 ? (
+                      <TrendingUp className="w-3 h-3" style={{ color: colors.success }} />
+                    ) : product.growth < 0 ? (
+                      <TrendingDown className="w-3 h-3" style={{ color: colors.error }} />
+                    ) : (
+                      <TrendingUp className="w-3 h-3" style={{ color: colors.textSecondary }} />
+                    )}
+                    <span
+                      className="text-xs font-semibold"
+                      style={{ 
+                        color: product.growth > 0 
+                          ? colors.success 
+                          : product.growth < 0 
+                          ? colors.error 
+                          : colors.textSecondary 
+                      }}
+                    >
+                      {product.growth > 0 ? "+" : ""}
+                      {product.growth.toLocaleString("fa-IR")}%
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span style={{ color: colors.textSecondary }}>
+                    {product.count.toLocaleString("fa-IR")} فروش
+                  </span>
+                  <span className="font-semibold" style={{ color: colors.textPrimary }}>
+                    {(product.totalAmount / 1000000).toLocaleString("fa-IR")} میلیون تومان
                   </span>
                 </div>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span style={{ color: colors.textSecondary }}>
-                  {product.sales.toLocaleString("fa-IR")} فروش
-                </span>
-                <span className="font-semibold" style={{ color: colors.textPrimary }}>
-                  {(product.revenue / 1000000).toLocaleString("fa-IR")} میلیون تومان
-                </span>
-              </div>
-              <div
-                className="h-1.5 rounded-full mt-2"
-                style={{ backgroundColor: colors.backgroundSecondary }}
-              >
                 <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${(product.sales / topProducts[0].sales) * 100}%`,
-                    backgroundColor: colors.primary,
-                  }}
-                />
+                  className="h-1.5 rounded-full mt-2"
+                  style={{ backgroundColor: colors.backgroundSecondary }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${products.length > 0 ? (product.count / products[0].count) * 100 : 0}%`,
+                      backgroundColor: colors.primary,
+                    }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

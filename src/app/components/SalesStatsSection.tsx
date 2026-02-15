@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recha
 import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Tag } from "lucide-react";
 import { useState, useEffect } from "react";
 import { salesAPI } from "../api/salesAPI";
+import { TopProductsWidget } from "./TopProductsWidget";
 
 interface DateRange {
   from: Date | null;
@@ -220,8 +221,8 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" dir="rtl">
       {/* Left side - Stats Cards (2/3 width) */}
-      <div className="lg:col-span-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="lg:col-span-1">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
           {statsCards.map((stat, index) => {
             const Icon = stat.icon;
             const isPositive = stat.trend > 0;
@@ -238,7 +239,7 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center"
+                    className="w-12 h-16 rounded-lg flex items-center justify-center"
                     style={{ backgroundColor: `${stat.color}22` }}
                   >
                     <Icon className="w-6 h-6" style={{ color: stat.color }} />
@@ -273,7 +274,7 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
           })}
         </div>
       </div>
-
+      <TopProductsWidget dateRange={dateRange} />
       {/* Right side - Donut Chart (1/3 width) */}
       <div className="lg:col-span-1">
         <div

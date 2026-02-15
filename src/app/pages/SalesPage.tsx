@@ -279,8 +279,7 @@ export function SalesPage() {
       </div>
 
       {/* Stats Section with Donut Chart - حالا با API واقعی */}
-      <SalesStatsSection dateRange={dateRange} />
-
+      <SalesStatsSection dateRange={dateRange} /> 
       {/* Sales Line Chart with TimeFrame Selector */}
       <div
         className="rounded-xl border p-6"

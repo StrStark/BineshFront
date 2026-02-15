@@ -87,6 +87,23 @@ interface SalesRecordsResponse {
   };
 }
 
+interface TopSellingProduct {
+  rank: number;
+  productName: string;
+  count: number;
+  totalAmount: number;
+  growth: number;
+}
+
+interface TopSellingProductsResponse {
+  code: number;
+  status: string;
+  message: string;
+  body: {
+    items: TopSellingProduct[];
+  };
+}
+
 export const salesAPI = {
   async getSalesSummary(request: SalesSummaryRequest): Promise<SalesSummaryResponse> {
     const token = getCookie("authToken");
@@ -134,6 +151,27 @@ export const salesAPI = {
     const token = getCookie("authToken");
 
     const response = await fetch(`${API_BASE_URL}/SalesApi/GetSalesRecords`, {
+      method: "POST",
+      headers: {
+        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+        "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  },
+
+  async getTopSellingProducts(request: SalesSummaryRequest): Promise<TopSellingProductsResponse> {
+    const token = getCookie("authToken");
+
+    const response = await fetch(`${API_BASE_URL}/SalesApi/GetTopSellingProducts`, {
       method: "POST",
       headers: {
         accept: "application/json;odata.metadata=minimal;odata.streaming=true",
