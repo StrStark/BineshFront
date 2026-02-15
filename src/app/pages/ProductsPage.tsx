@@ -50,7 +50,7 @@ export function ProductsPage() {
     { key: "warehouse", label: "انبار", visible: true },
     { key: "price", label: "قیمت صرفه تخته فروش(تومان)", visible: true },
     { key: "sales", label: "فروش (کل تومان)", visible: true },
-    { key: "actions", label: "جزییات", visible: true },
+    { key: "actions", label: "عملیات", visible: true },
   ]);
 
   // API state
