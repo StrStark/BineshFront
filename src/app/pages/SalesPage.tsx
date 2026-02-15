@@ -67,6 +67,18 @@ export function SalesPage() {
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Fetch sales chart data
   useEffect(() => {
@@ -132,6 +144,7 @@ export function SalesPage() {
             pageNumber: currentPage,
             pageSize: pageSize,
           },
+          searchTerm: debouncedSearchTerm,
         });
 
         if (response.code === 200 && response.status === "success") {
@@ -143,11 +156,8 @@ export function SalesPage() {
             category: translateCategory(item.productCategory),
             quantity: item.deliverdQuantity,
             customer: item.customerName,
-            seller: "-", // Not provided in API
             amount: item.price,
             date: formatPersianDate(item.date),
-            paymentStatus: "پرداخت شده" as const, // Default - API doesn't provide this
-            orderStatus: "تکمیل شده" as const, // Default - API doesn't provide this
           }));
 
           setSalesRecords(transformedData);
@@ -164,7 +174,7 @@ export function SalesPage() {
     };
 
     fetchSalesRecords();
-  }, [dateRange, currentPage, pageSize]);
+  }, [dateRange, currentPage, pageSize, debouncedSearchTerm]);
 
   const formatDateRange = () => {
     if (!dateRange.from || !dateRange.to) return "انتخاب بازه زمانی";
@@ -200,8 +210,6 @@ export function SalesPage() {
     // محاسبه آمار کلی
     const totalSales = totalRecords;
     const totalAmount = filteredData.reduce((sum, item) => sum + item.amount, 0);
-    const completedSales = filteredData.filter(item => item.orderStatus === "تکمیل شده").length;
-    const paidSales = filteredData.filter(item => item.paymentStatus === "پرداخت شده").length;
 
     return [
       {
@@ -211,16 +219,6 @@ export function SalesPage() {
             "شاخص": "کل فروش", 
             "مقدار": totalSales.toLocaleString("fa-IR"),
             "درصد": "100%" 
-          },
-          { 
-            "شاخص": "سفارشات تکمیل شده", 
-            "مقدار": completedSales.toLocaleString("fa-IR"),
-            "درصد": totalSales > 0 ? `${Math.round((completedSales / totalSales) * 100)}%` : "0%"
-          },
-          { 
-            "شاخص": "پرداخت شده", 
-            "مقدار": paidSales.toLocaleString("fa-IR"),
-            "درصد": totalSales > 0 ? `${Math.round((paidSales / totalSales) * 100)}%` : "0%"
           },
           { 
             "شاخص": "مجموع فروش", 
@@ -238,11 +236,8 @@ export function SalesPage() {
           "دسته‌بندی": sale.category,
           "تعداد": sale.quantity.toLocaleString("fa-IR"),
           "مشتری": sale.customer,
-          "فروشنده": sale.seller,
           "مبلغ": sale.amount.toLocaleString("fa-IR") + " تومان",
           "تاریخ": sale.date,
-          "وضعیت پرداخت": sale.paymentStatus,
-          "وضعیت سفارش": sale.orderStatus,
         })),
         headers: [
           "شماره فاکتور",
@@ -250,11 +245,8 @@ export function SalesPage() {
           "دسته‌بندی",
           "تعداد",
           "مشتری",
-          "فروشنده",
           "مبلغ",
           "تاریخ",
-          "وضعیت پرداخت",
-          "وضعیت سفارش"
         ]
       }
     ];
@@ -433,6 +425,8 @@ export function SalesPage() {
           pageSize={pageSize}
           onPageChange={setCurrentPage}
           onPageSizeChange={setPageSize}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
         />
       )}
 

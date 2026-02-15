@@ -35,6 +35,7 @@ interface Customer {
 
 export function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingCustomerId, setEditingCustomerId] = useState<string | null>(
@@ -68,7 +69,7 @@ export function CustomersPage() {
     { key: "salesCount", label: "تعداد فروش‌ها", visible: true },
     { key: "place", label: "محل", visible: true },
     { key: "history", label: "تاریخچه خریدها", visible: true },
-    { key: "actions", label: "عملیات", visible: true },
+    { key: "actions", label: "جزییات", visible: true },
   ]);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -132,10 +133,26 @@ export function CustomersPage() {
     { value: "Rug", label: "گلیم" },
   ];
 
+  // Debounce search term with 500ms delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    if (debouncedSearchTerm) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchTerm]);
+
   // Fetch table data from API
   useEffect(() => {
     const fetchCustomers = async () => {
-      console.log(`📡 API Request - صفحه: ${currentPage}, تعداد سطر: ${pageSize}, نوع مشتری: ${selectedCustomerType}`);
+      console.log(`📡 API Request - صفحه: ${currentPage}, تعداد سطر: ${pageSize}, نوع مشتری: ${selectedCustomerType}, جستجو: ${debouncedSearchTerm}`);
       setTableLoading(true);
       try {
         const response = await customerAPI.getCustomers({
@@ -154,6 +171,7 @@ export function CustomersPage() {
             pageNumber: currentPage,
             pageSize: pageSize,
           },
+          searchTerm: debouncedSearchTerm,
         });
 
         if (response.code === 200 && response.status === "success") {
@@ -174,7 +192,7 @@ export function CustomersPage() {
     };
 
     fetchCustomers();
-  }, [currentPage, pageSize, selectedCustomerType, selectedProductType]);
+  }, [currentPage, pageSize, selectedCustomerType, selectedProductType, debouncedSearchTerm]);
 
   // Fetch cards data from API
   useEffect(() => {
@@ -692,6 +710,8 @@ export function CustomersPage() {
         onProductTypeChange={setSelectedProductType}
         customerTypeOptions={customerTypeOptions}
         productTypeOptions={productTypeOptions}
+        searchTerm={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
       {/* Category Settings Modal */}

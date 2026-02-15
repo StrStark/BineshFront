@@ -63,6 +63,8 @@ interface CustomersTableProps {
   onProductTypeChange?: (type: string) => void;
   customerTypeOptions?: Array<{ value: string; label: string }>;
   productTypeOptions?: Array<{ value: string; label: string }>;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
 }
 
 export function CustomersTableWithFilters({
@@ -83,6 +85,8 @@ export function CustomersTableWithFilters({
   onProductTypeChange,
   customerTypeOptions,
   productTypeOptions,
+  searchTerm,
+  onSearchChange,
 }: CustomersTableProps) {
   const dispatch = useAppDispatch();
   const TABLE_ID = "customers-table";
@@ -93,7 +97,11 @@ export function CustomersTableWithFilters({
   const colors = useCurrentColors();
 
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [internalSearchQuery, setInternalSearchQuery] = useState("");
+
+  // Use external search if provided, otherwise use internal
+  const searchQuery = searchTerm !== undefined ? searchTerm : internalSearchQuery;
+  const setSearchQuery = onSearchChange || setInternalSearchQuery;
 
   // Sync local rowsPerPage with controlled prop from parent
   useEffect(() => {
@@ -367,8 +375,8 @@ export function CustomersTableWithFilters({
   const filteredCustomers = useMemo(() => {
     let result = customers;
 
-    // Search bar filter (now connected)
-    if (searchQuery.trim() !== "") {
+    // Search bar filter - only if using internal search (no external search prop)
+    if (!onSearchChange && searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter((customer) =>
         customer.fullName.toLowerCase().includes(query)

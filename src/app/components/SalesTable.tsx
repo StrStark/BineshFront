@@ -4,11 +4,6 @@ import {
   ChevronRight,
   Filter as FilterIcon,
   X,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Package,
-  TrendingUp,
   Printer,
 } from "lucide-react";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
@@ -26,11 +21,8 @@ const defaultColumnsConfig: ColumnConfig[] = [
   { key: "category", label: "دسته", visible: true },
   { key: "quantity", label: "تعداد", visible: true },
   { key: "customer", label: "مشتری", visible: true },
-  { key: "seller", label: "فروشنده", visible: true },
   { key: "amount", label: "مبلغ", visible: true },
   { key: "date", label: "تاریخ", visible: true },
-  { key: "paymentStatus", label: "وضعیت پرداخت", visible: true },
-  { key: "orderStatus", label: "وضعیت سفارش", visible: true },
   { key: "actions", label: "عملیات", visible: true },
 ];
 
@@ -42,6 +34,8 @@ interface SalesTableProps {
   pageSize?: number;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
 }
 
 export function SalesTable({ 
@@ -51,7 +45,9 @@ export function SalesTable({
   currentPage: externalCurrentPage,
   pageSize: externalPageSize,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange,
+  searchTerm,
+  onSearchChange
 }: SalesTableProps) {
   const colors = useCurrentColors();
   const dispatch = useAppDispatch();
@@ -67,7 +63,6 @@ export function SalesTable({
   const [internalCurrentPage, setInternalCurrentPage] = useState(1);
   const [internalRowsPerPage, setInternalRowsPerPage] = useState(10);
   const [customColumns, setCustomColumns] = useState<ColumnConfig[]>(defaultColumns);
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedSaleForInvoice, setSelectedSaleForInvoice] = useState<SaleItem | null>(null);
 
   const currentPage = isServerSidePagination ? (externalCurrentPage || 1) : internalCurrentPage;
@@ -129,16 +124,6 @@ export function SalesTable({
             {item.customer}
           </td>
         );
-      case "seller":
-        return (
-          <td
-            key={column.key}
-            className="p-3 text-sm"
-            style={{ color: colors.textSecondary }}
-          >
-            {item.seller}
-          </td>
-        );
       case "amount":
         return (
           <td
@@ -157,48 +142,6 @@ export function SalesTable({
             style={{ color: colors.textSecondary }}
           >
             {item.date}
-          </td>
-        );
-      case "paymentStatus":
-        const paymentConfig = {
-          "پرداخت شده": { color: colors.success, icon: CheckCircle },
-          "در انتظار": { color: colors.warning, icon: Clock },
-          "لغو شده": { color: colors.error, icon: XCircle },
-        };
-        const paymentStatus = paymentConfig[item.paymentStatus];
-        const PaymentIcon = paymentStatus.icon;
-        return (
-          <td key={column.key} className="p-3">
-            <div className="flex items-center gap-2">
-              <PaymentIcon className="w-4 h-4" style={{ color: paymentStatus.color }} />
-              <span
-                className="text-sm"
-                style={{ color: paymentStatus.color }}
-              >
-                {item.paymentStatus}
-              </span>
-            </div>
-          </td>
-        );
-      case "orderStatus":
-        const orderConfig = {
-          "تکمیل شده": { color: colors.success, icon: CheckCircle },
-          "در حال پردازش": { color: colors.warning, icon: Clock },
-          "لغو شده": { color: colors.error, icon: XCircle },
-        };
-        const orderStatus = orderConfig[item.orderStatus];
-        const OrderIcon = orderStatus.icon;
-        return (
-          <td key={column.key} className="p-3">
-            <div className="flex items-center gap-2">
-              <OrderIcon className="w-4 h-4" style={{ color: orderStatus.color }} />
-              <span
-                className="text-sm"
-                style={{ color: orderStatus.color }}
-              >
-                {item.orderStatus}
-              </span>
-            </div>
           </td>
         );
       case "actions":
@@ -225,12 +168,12 @@ export function SalesTable({
   const searchFilteredItems = useMemo(() => {
     return allSales.filter(
       (item) =>
-        item.invoiceNumber.includes(searchQuery) ||
-        item.productName.includes(searchQuery) ||
-        item.customer.includes(searchQuery) ||
-        item.category.includes(searchQuery)
+        item.invoiceNumber.includes(searchTerm || "") ||
+        item.productName.includes(searchTerm || "") ||
+        item.customer.includes(searchTerm || "") ||
+        item.category.includes(searchTerm || "")
     );
-  }, [searchQuery, allSales]);
+  }, [searchTerm, allSales]);
 
   const filteredSales = useMemo(() => {
     let result = searchFilteredItems;
@@ -278,7 +221,7 @@ export function SalesTable({
     if (!isServerSidePagination) {
       setInternalCurrentPage(1);
     }
-  }, [tableFilters, rowsPerPage, searchQuery, isServerSidePagination]);
+  }, [tableFilters, rowsPerPage, searchTerm, isServerSidePagination]);
 
   const handlePageChange = (page: number) => {
     if (isServerSidePagination && onPageChange) {
@@ -371,13 +314,13 @@ export function SalesTable({
             className="bg-transparent flex-1 outline-none text-sm placeholder:opacity-60"
             style={{ color: colors.textPrimary }}
             dir="rtl"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => onSearchChange?.(e.target.value)}
           />
-          {searchQuery && (
+          {searchTerm && (
             <button
               type="button"
-              onClick={() => setSearchQuery("")}
+              onClick={() => onSearchChange?.("")}
               className="transition-colors flex-shrink-0"
               style={{ color: colors.textSecondary }}
               onMouseEnter={(e) => {

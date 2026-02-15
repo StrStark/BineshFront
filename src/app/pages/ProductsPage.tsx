@@ -43,7 +43,6 @@ const getCategoryName = (categoryNumber: number): string => {
 
 export function ProductsPage() {
   const colors = useCurrentColors();
-  const [searchQuery, setSearchQuery] = useState("");
   const [customColumns, setCustomColumns] = useState<ColumnConfig[]>([
     { key: "name", label: "نام محصول", visible: true },
     { key: "code", label: "کد تولید", visible: true },
@@ -51,7 +50,7 @@ export function ProductsPage() {
     { key: "warehouse", label: "انبار", visible: true },
     { key: "price", label: "قیمت صرفه تخته فروش(تومان)", visible: true },
     { key: "sales", label: "فروش (کل تومان)", visible: true },
-    { key: "actions", label: "عملیات", visible: true },
+    { key: "actions", label: "جزییات", visible: true },
   ]);
 
   // API state
@@ -63,6 +62,20 @@ export function ProductsPage() {
   // Pagination state (managed by parent)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Product Events Modal state
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false);
@@ -85,6 +98,7 @@ export function ProductsPage() {
             pageNumber: currentPage,
             pageSize: pageSize,
           },
+          searchTerm: debouncedSearchTerm,
         });
 
         if (response.code === 200 && response.status === "success") {
@@ -121,7 +135,7 @@ export function ProductsPage() {
     };
 
     fetchProducts();
-  }, [selectedCategory, currentPage, pageSize]); // Refetch when category, page, or pageSize changes
+  }, [selectedCategory, currentPage, pageSize, debouncedSearchTerm]); // Refetch when category, page, or pageSize changes
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -136,7 +150,7 @@ export function ProductsPage() {
     { 
       icon: Package, 
       label: "کل محصولات", 
-      value: loading ? "..." : allProducts.length.toLocaleString("fa-IR"), 
+      value: loading ? "..." : totalCount.toLocaleString("fa-IR"), 
       unit: "عدد",
       growth: "رشد نسبت به سال قبل: ٪۵۰+",
       color: colors.primary 
@@ -163,12 +177,12 @@ export function ProductsPage() {
   const filteredProducts = useMemo(() => {
     return allProducts.filter(
       (product) =>
-        product.name.includes(searchQuery) ||
-        product.code.includes(searchQuery) ||
-        product.category.includes(searchQuery) ||
-        product.warehouse.includes(searchQuery)
+        product.name.includes(debouncedSearchTerm) ||
+        product.code.includes(debouncedSearchTerm) ||
+        product.category.includes(debouncedSearchTerm) ||
+        product.warehouse.includes(debouncedSearchTerm)
     );
-  }, [searchQuery, allProducts]);
+  }, [debouncedSearchTerm, allProducts]);
 
   const handleEdit = (productId: string) => {
     console.log("Edit product:", productId);
@@ -237,7 +251,7 @@ export function ProductsPage() {
     },
     {
       title: "لیست محصولات",
-      data: filteredProducts.map(p => {
+      data: allProducts.map(p => {
         const row: Record<string, any> = {};
         visibleProductColumns.forEach(col => {
           const label = col.customLabel || col.label;
@@ -341,55 +355,11 @@ export function ProductsPage() {
       </div>
 
       {/* Search Bar */}
-      {/* <div
-        className="rounded-lg p-4 border"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderColor: colors.border,
-        }}
-      >
-        <div
-          className="flex items-center gap-3 rounded-lg px-4 py-2.5 sm:py-3 border"
-          style={{
-            backgroundColor: colors.backgroundSecondary,
-            borderColor: colors.border,
-          }}
-        >
-          <Search
-            className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
-            style={{ color: colors.textSecondary }}
-          />
-          <input
-            type="text"
-            placeholder="جستجو در محصولات (نام، کد، دسته‌بندی، انبار)"
-            className="bg-transparent flex-1 outline-none text-xs sm:text-sm placeholder:opacity-60"
-            style={{ color: colors.textPrimary }}
-            dir="rtl"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="transition-colors flex-shrink-0"
-              style={{ color: colors.textSecondary }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = colors.textPrimary;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = colors.textSecondary;
-              }}
-            >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          )}
-        </div>
-      </div> */}
+      
 
       {/* Products Table */}
       <ProductsTableWithFilters
-        products={filteredProducts}
+        products={allProducts}
         customColumns={customColumns}
         setCustomColumns={setCustomColumns}
         handleEdit={handleEdit}
@@ -401,6 +371,8 @@ export function ProductsPage() {
         onPageChange={handlePageChange}
         onPageSizeChange={handleRowsPerPageChange}
         loading={loading}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
       />
 
       {/* Product Events Modal */}

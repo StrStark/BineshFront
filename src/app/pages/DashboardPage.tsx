@@ -34,6 +34,7 @@ import { RevenueChartWidget } from "../components/widgets/RevenueChartWidget";
 import { TopSellersWidget } from "../components/widgets/TopSellersWidget";
 import { RecentSalesWidget } from "../components/widgets/RecentSalesWidget";
 import { OrdersStatusWidget } from "../components/widgets/OrdersStatusWidget";
+import { SalesTrendWidget } from "../components/widgets/SalesTrendWidget";
 import { StatCardSkeleton, ChartSkeleton } from "../components/SkeletonLoader";
 
 const quickActions = [
@@ -110,6 +111,7 @@ const availableWidgetsConfig: WidgetConfig[] = [
   { id: "pending-orders", title: "سفارشات", icon: Package, description: "وضعیت سفارشات", component: OrdersStatusWidget, category: "binesh" },
   { id: "recent-sales", title: "فروش‌های اخیر", icon: ShoppingBag, description: "آخرین فروش‌ها", component: RecentSalesWidget, category: "binesh" },
   { id: "exhibition-visits", title: "بازدید نمایشگاه", icon: Users, description: "آمار بازدیدکنندگان", component: ExhibitionVisitsWidget, category: "binesh" },
+  { id: "sales-trend", title: "نوسان فروش", icon: TrendingUp, description: "نمودار نوسان فروش", component: SalesTrendWidget, category: "binesh" },
   { id: "calendar", title: "تقویم", icon: Calendar, description: "نمایش تقویم", component: CalendarWidget, category: "general" },
   { id: "todo-list", title: "لیست وظایف", icon: ListTodo, description: "نمایش لیست وظایف", component: TodoListWidget, category: "general" },
 ];

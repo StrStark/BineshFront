@@ -62,6 +62,7 @@ interface SalesRecordsRequest {
   categoryDto?: CategoryDto;
   provience?: ProvinceDto;
   paggination: Pagination;
+  searchTerm?: string;
 }
 
 interface SalesRecord {

@@ -14,6 +14,7 @@ interface Pagination {
 interface ProductsRequest {
   categoryDto: CategoryDto;
   paggination: Pagination;
+  searchTerm?: string;
 }
 
 interface ProductItem {

@@ -32,6 +32,7 @@ interface GetCustomersRequest {
   prodctCategory: ProductCategory;
   custoemrCategory: CustomerCategory;
   paggination: Pagination;
+  searchTerm?: string;
 }
 
 interface CardData {

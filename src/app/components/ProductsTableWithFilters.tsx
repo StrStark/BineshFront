@@ -38,7 +38,7 @@ const defaultColumns: ColumnConfig[] = [
   { key: "warehouse", label: "انبار", visible: true },
   { key: "price", label: "قیمت صرفه تخته فروش(تومان)", visible: true },
   { key: "sales", label: "فروش (کل تومان)", visible: true },
-  { key: "actions", label: "عملیات", visible: true },
+  { key: "actions", label: "جزییات", visible: true },
 ];
 
 interface ProductsTableProps {
@@ -54,6 +54,8 @@ interface ProductsTableProps {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   loading?: boolean;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
 }
 
 export function ProductsTableWithFilters({
@@ -69,6 +71,8 @@ export function ProductsTableWithFilters({
   onPageChange: externalOnPageChange,
   onPageSizeChange: externalOnPageSizeChange,
   loading = false,
+  searchTerm,
+  onSearchChange,
 }: ProductsTableProps) {
   const colors = useCurrentColors();
   const dispatch = useAppDispatch();
@@ -86,7 +90,6 @@ export function ProductsTableWithFilters({
   const rowsPerPage = externalPageSize ?? internalRowsPerPage;
   const isExternalPagination = externalCurrentPage !== undefined && externalTotalCount !== undefined;
 
-  const [searchQuery, setSearchQuery] = useState("");
   const [localVisibleColumns, setLocalVisibleColumns] = useState<
     ColumnConfig[]
   >(customColumns || defaultColumns);
@@ -261,38 +264,6 @@ export function ProductsTableWithFilters({
               >
                 <Eye className="w-4 h-4" />
               </button>
-              {handleEdit && (
-                <button
-                  onClick={() => handleEdit(product.id)}
-                  className="p-2 rounded-lg transition-colors"
-                  style={{ color: colors.warning }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = `${colors.warning}15`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                  title="ویرایش"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-              )}
-              {handleDelete && (
-                <button
-                  onClick={() => handleDelete(product.id)}
-                  className="p-2 rounded-lg transition-colors"
-                  style={{ color: colors.error }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = `${colors.error}15`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                  title="حذف"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
             </div>
           </td>
         );
@@ -305,9 +276,9 @@ export function ProductsTableWithFilters({
   const filteredProducts = useMemo(() => {
     let result = products;
 
-    // Search bar filter
-    if (searchQuery.trim() !== "") {
-      const query = searchQuery.toLowerCase().trim();
+    // Search bar filter - only if using internal search (no external search prop)
+    if (!onSearchChange && searchTerm && searchTerm.trim() !== "") {
+      const query = searchTerm.toLowerCase().trim();
       result = result.filter((product) =>
         product.name.toLowerCase().includes(query) ||
         product.code.toLowerCase().includes(query) ||
@@ -375,7 +346,8 @@ export function ProductsTableWithFilters({
     selectedTags,
     localVisibleColumns,
     customColumnData,
-    searchQuery,
+    searchTerm,
+    onSearchChange,
   ]);
 
   // Calculate pagination values
@@ -392,7 +364,7 @@ export function ProductsTableWithFilters({
     if (!isExternalPagination) {
       setInternalCurrentPage(1);
     }
-  }, [tableFilters, searchQuery, selectedTags, isExternalPagination]);
+  }, [tableFilters, searchTerm, selectedTags, isExternalPagination]);
 
   // Handle page change - use external handler if provided
   const handlePageChange = (newPage: number) => {
@@ -512,13 +484,13 @@ export function ProductsTableWithFilters({
             className="bg-transparent flex-1 outline-none text-xs sm:text-sm placeholder:opacity-60"
             style={{ color: colors.textPrimary }}
             dir="rtl"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => onSearchChange?.(e.target.value)}
           />
-          {searchQuery && (
+          {searchTerm && (
             <button
               type="button"
-              onClick={() => setSearchQuery("")}
+              onClick={() => onSearchChange?.("")}
               className="transition-colors flex-shrink-0"
               style={{ color: colors.textSecondary }}
               onMouseEnter={(e) => {

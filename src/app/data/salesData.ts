@@ -1,15 +1,15 @@
 export interface SaleItem {
-  id: number;
+  id: number | string;
   invoiceNumber: string;
   productName: string;
   category: string;
   quantity: number;
   customer: string;
-  seller: string;
   amount: number;
   date: string;
-  paymentStatus: "پرداخت شده" | "در انتظار" | "لغو شده";
-  orderStatus: "تکمیل شده" | "در حال پردازش" | "لغو شده";
+  seller?: string;
+  paymentStatus?: "پرداخت شده" | "در انتظار" | "لغو شده";
+  orderStatus?: "تکمیل شده" | "در حال پردازش" | "لغو شده";
 }
 
 export const allSalesData: SaleItem[] = [
