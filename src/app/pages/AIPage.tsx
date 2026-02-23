@@ -24,6 +24,17 @@ import {
 } from "../components/ProjectCreationPanel";
 import { chatAPI, ChatConversation } from "../api/chatAPI";
 import { getCookie } from "../utils/auth";
+import { AITableRenderer } from "../components/AITableRenderer";
+import { AIBarChart } from "../components/AIBarChart";
+import { AIPieChart } from "../components/AIPieChart";
+import { AIDonutChart } from "../components/AIDonutChart";
+import { AILineChart } from "../components/AILineChart";
+
+interface ToolCall {
+  toolCallId: string;
+  functionName: string;
+  argumentsJson: string;
+}
 
 interface Message {
   id: number;
@@ -31,6 +42,7 @@ interface Message {
   sender: "user" | "ai";
   timestamp: Date;
   isStreaming?: boolean;
+  toolCall?: ToolCall;
 }
 
 type TabType = "limitations" | "capabilities" | "examples";
@@ -251,6 +263,33 @@ export function AIPage() {
                     error,
                   );
                 });
+              return;
+            }
+
+            // Handle Component event (render_table, etc.)
+            if (data.type === "Component" || data.Type === "Component") {
+              const payload = data.payload || data.Payload;
+              
+              if (payload && payload.component) {
+                console.log("Component received:", payload.component, payload.args);
+                
+                const newId = Date.now();
+                const componentMessage: Message = {
+                  id: newId,
+                  text: "", // Will be filled by following Token messages
+                  sender: "ai",
+                  timestamp: new Date(),
+                  isStreaming: true,
+                  toolCall: {
+                    toolCallId: `component_${newId}`,
+                    functionName: payload.component,
+                    argumentsJson: JSON.stringify(payload.args),
+                  },
+                };
+
+                setMessages((prev) => [...prev, componentMessage]);
+                streamingMessageIdRef.current = newId;
+              }
               return;
             }
 
@@ -578,25 +617,36 @@ export function AIPage() {
 
       if (response.code === 200 && response.body) {
         // Convert API messages to our Message format
-        const loadedMessages: Message[] = response.body.map(
-          (msg, index) => ({
-            id: Date.now() + index,
-            text: msg.content,
-            sender: msg.role === "user" ? "user" : "ai",
-            timestamp: new Date(),
-            isStreaming: false,
-          }),
-        );
+        const loadedMessages: Message[] = response.body
+          .filter((msg: any) => msg.role !== "tool") // Skip tool messages
+          .map((msg: any, index: number) => {
+            const message: Message = {
+              id: Date.now() + index,
+              text: msg.content || "",
+              sender: msg.role === "user" ? "user" : "ai",
+              timestamp: new Date(msg.createdAt || Date.now()),
+              isStreaming: false,
+            };
+
+            // Parse toolCall if exists
+            if (msg.toolCall) {
+              message.toolCall = {
+                toolCallId: msg.toolCall.toolCallId,
+                functionName: msg.toolCall.functionName,
+                argumentsJson: msg.toolCall.argumentsJson,
+              };
+            }
+
+            return message;
+          });
 
         setMessages(loadedMessages);
       } else {
         console.error("Failed to load conversation messages");
-        // Show error in UI
         setMessages([]);
       }
     } catch (error: any) {
       console.error("Failed to load conversation:", error);
-      // Show error in UI
       setMessages([]);
     } finally {
       setIsLoadingMessages(false);
@@ -970,7 +1020,13 @@ export function AIPage() {
                   className={`flex ${message.sender === "user" ? "justify-start" : "justify-end"} animate-fadeIn`}
                 >
                   <div
-                    className="max-w-[85%] sm:max-w-[70%] rounded-lg p-3 sm:p-4"
+                    className={`rounded-lg p-3 sm:p-4 space-y-3 ${
+                      message.sender === "user"
+                        ? "max-w-[85%] sm:max-w-[70%]"
+                        : message.toolCall
+                        ? "w-full"
+                        : "max-w-[85%] sm:max-w-[70%]"
+                    }`}
                     style={{
                       backgroundColor:
                         message.sender === "user"
@@ -989,12 +1045,44 @@ export function AIPage() {
                           : colors.border,
                     }}
                   >
-                    <p
-                      className="text-xs sm:text-sm"
-                      dir="auto"
-                    >
-                      {message.text}
-                    </p>
+                    {/* Render component based on toolCall functionName */}
+                    {message.toolCall && (() => {
+                      try {
+                        const parsedData = JSON.parse(message.toolCall.argumentsJson);
+                        
+                        switch (message.toolCall.functionName) {
+                          case "render_table":
+                            return <AITableRenderer data={parsedData} />;
+                          case "render_bar_chart":
+                            return <AIBarChart data={parsedData} />;
+                          case "render_pie_chart":
+                            return <AIPieChart data={parsedData} />;
+                          case "render_donut_chart":
+                            return <AIDonutChart data={parsedData} />;
+                          case "render_line_chart":
+                            return <AILineChart data={parsedData} />;
+                          default:
+                            return null;
+                        }
+                      } catch (error) {
+                        console.error("Error rendering component:", error);
+                        return (
+                          <div className="text-xs text-red-500">
+                            خطا در نمایش کامپوننت
+                          </div>
+                        );
+                      }
+                    })()}
+                    
+                    {/* Render text if it exists (explanation after component) */}
+                    {message.text && (
+                      <p
+                        className="text-xs sm:text-sm"
+                        dir="auto"
+                      >
+                        {message.text}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1133,7 +1221,7 @@ export function AIPage() {
 
       {/* Sidebar - Right side (now on left in visual order because it is second child in RTL) */}
       <div
-        className="w-72 flex-shrink-0 flex flex-col border-r h-full overflow-y-auto hidden md:flex transition-colors duration-200"
+        className="w-72 flex-shrink-0 flex flex-col border-r fixed right-0 top-[64px] bottom-0 overflow-y-auto hidden md:flex transition-colors duration-200"
         style={{
           backgroundColor: colors.cardBackground,
           borderColor: colors.border,
