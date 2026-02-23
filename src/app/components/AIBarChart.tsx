@@ -33,8 +33,17 @@ export function AIBarChart({ data }: AIBarChartProps) {
     );
   }
 
-  // Support both 'yKeys' and 'bars' property names
-  const yKeys = data.yKeys || data.bars || [];
+  // Auto-detect xKey from first data item if not provided
+  const xKey = data.xKey || Object.keys(data.data[0])[0] || "name";
+
+  // Support both 'yKeys' and 'bars' property names, or auto-detect from data
+  let yKeys = data.yKeys || data.bars;
+  
+  if (!yKeys || !Array.isArray(yKeys) || yKeys.length === 0) {
+    // Auto-detect yKeys from the first data item (exclude the xKey)
+    const allKeys = Object.keys(data.data[0]);
+    yKeys = allKeys.filter(key => key !== xKey);
+  }
   
   // Validate yKeys
   if (!Array.isArray(yKeys) || yKeys.length === 0) {
@@ -44,9 +53,6 @@ export function AIBarChart({ data }: AIBarChartProps) {
       </div>
     );
   }
-
-  // Auto-detect xKey from first data item if not provided
-  const xKey = data.xKey || Object.keys(data.data[0])[0] || "name";
 
   // Generate colors for each bar
   const barColors = [
