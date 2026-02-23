@@ -7,10 +7,10 @@ import { useTheme } from "../contexts/ThemeContext";
 import { authApi } from "../utils/auth";
 
 interface LoginPageProps {
-  setIsLoggedIn: (value: boolean) => void;
+  onLoginSuccess: () => void;
 }
 
-export function LoginPage({ setIsLoggedIn }: LoginPageProps) {
+export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -141,7 +141,7 @@ export function LoginPage({ setIsLoggedIn }: LoginPageProps) {
       const response = await authApi.confirmSignIn(formattedPhone, otpCode);
       
       if (response.code === 200) {
-        setIsLoggedIn(true);
+        onLoginSuccess();
       } else {
         // Show API error message
         setError(response.message || "کد تایید نامعتبر است");

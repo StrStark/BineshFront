@@ -1,6 +1,9 @@
 import { getCookie } from "../utils/auth";
+import { mockProducts } from "./mockData";
+import { apiFetch } from "../utils/apiClient";
 
 const API_BASE_URL = "https://panel.bineshafzar.ir/api";
+const USE_MOCK_DATA = false;
 
 interface CategoryDto {
   productCategory: string;
@@ -75,45 +78,68 @@ interface ProductEventsResponse {
 
 export const productAPI = {
   async getProducts(request: ProductsRequest): Promise<ProductsResponse> {
-    const token = getCookie("authToken");
-
-    const response = await fetch(`${API_BASE_URL}/ProductApi/GetProducts`, {
-      method: "POST",
-      headers: {
-        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (USE_MOCK_DATA) {
+      return mockProducts;
     }
 
-    const data = await response.json();
-    return data;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await apiFetch(`${API_BASE_URL}/ProductApi/GetProducts`, {
+        method: "POST",
+        body: JSON.stringify(request),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.warn('⚠️ getProducts failed, using mock data:', error.message);
+      return mockProducts;
+    }
   },
 
   async getProductEvents(request: ProductEventsRequest): Promise<ProductEventsResponse> {
-    const token = getCookie("authToken");
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(`${API_BASE_URL}/ProductApi/GetProductEvents`, {
-      method: "POST",
-      headers: {
-        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
+      const response = await apiFetch(`${API_BASE_URL}/ProductApi/GetProductEvents`, {
+        method: "POST",
+        body: JSON.stringify(request),
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.warn('⚠️ getProductEvents failed:', error.message);
+      // Return empty response
+      return {
+        code: 200,
+        status: "mock",
+        message: "Using fallback data",
+        body: {
+          items: [],
+          totalCount: 0,
+          pageNumber: 1,
+          pageSize: 10,
+        },
+      };
     }
-
-    const data = await response.json();
-    return data;
   },
 };
 

@@ -24,6 +24,17 @@ export interface ConfirmSignInResponse {
   };
 }
 
+export interface RefreshTokenResponse {
+  code: number;
+  status: string;
+  message: string;
+  body: {
+    accessToken: string;
+    refreshToken: string;
+    expires: string;
+  };
+}
+
 // Cookie management functions
 export const setCookie = (name: string, value: string, days: number = 7) => {
   const expires = new Date();
@@ -162,5 +173,47 @@ export const authApi = {
 
   getAccessToken: (): string | null => {
     return getCookie('authToken');
+  },
+
+  getRefreshToken: (): string | null => {
+    return getCookie('refreshToken');
+  },
+
+  refreshAccessToken: async (): Promise<RefreshTokenResponse> => {
+    try {
+      const refreshToken = getCookie('refreshToken');
+      
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/Auth/Refresh`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json;odata.metadata=minimal;odata.streaming=true',
+          'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const data: RefreshTokenResponse = await response.json();
+
+      if (!response.ok || data.code !== 200) {
+        throw new Error(data.message || 'خطا در تمدید توکن');
+      }
+
+      // Save new tokens to cookies
+      if (data.body && data.body.accessToken) {
+        setCookie('authToken', data.body.accessToken, 7);
+        setCookie('refreshToken', data.body.refreshToken, 30);
+      }
+
+      return data;
+    } catch (error: any) {
+      console.error('Refresh token error:', error);
+      // If refresh fails, logout the user
+      authApi.logout();
+      throw error;
+    }
   },
 };

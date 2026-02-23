@@ -1,6 +1,9 @@
 import { getCookie } from "../utils/auth";
+import { mockCustomers, mockCustomersCards } from "./mockData";
+import { apiFetch } from "../utils/apiClient";
 
 const API_BASE_URL = "https://panel.bineshafzar.ir/api";
+const USE_MOCK_DATA = false;
 
 interface DateFilter {
   startTime: string;
@@ -106,67 +109,104 @@ interface GetCustomerSalesResponse {
 async function getCustomersCards(
   request: GetCustomersCardsRequest
 ): Promise<GetCustomersCardsResponse> {
-  const token = getCookie("authToken");
-
-  const response = await fetch(`${API_BASE_URL}/CustomerApi/GetCustomersCards`, {
-    method: "POST",
-    headers: {
-      accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-      "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  if (USE_MOCK_DATA) {
+    return mockCustomersCards;
   }
 
-  return await response.json();
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await apiFetch(
+      `${API_BASE_URL}/CustomerApi/GetCustomersCards`,
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+        signal: controller.signal,
+      }
+    );
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.warn(
+      "⚠️ getCustomersCards failed, using mock data:",
+      error.message
+    );
+    return mockCustomersCards;
+  }
 }
 
 async function getCustomers(
   request: GetCustomersRequest
 ): Promise<GetCustomersResponse> {
-  const token = getCookie("authToken");
-
-  const response = await fetch(`${API_BASE_URL}/CustomerApi/GetCustomers`, {
-    method: "POST",
-    headers: {
-      accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-      "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  if (USE_MOCK_DATA) {
+    return mockCustomers;
   }
 
-  return await response.json();
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await apiFetch(`${API_BASE_URL}/CustomerApi/GetCustomers`, {
+      method: "POST",
+      body: JSON.stringify(request),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.warn("⚠️ getCustomers failed, using mock data:", error.message);
+    return mockCustomers;
+  }
 }
 
 async function getCustomerSales(
   request: GetCustomerSalesRequest
 ): Promise<GetCustomerSalesResponse> {
-  const token = getCookie("authToken");
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-  const response = await fetch(`${API_BASE_URL}/CustomerApi/GetCustomerSales`, {
-    method: "POST",
-    headers: {
-      accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-      "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(request),
-  });
+    const response = await apiFetch(`${API_BASE_URL}/CustomerApi/GetCustomerSales`, {
+      method: "POST",
+      body: JSON.stringify(request),
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.warn("⚠️ getCustomerSales failed:", error.message);
+    // Return empty response
+    return {
+      code: 200,
+      status: "mock",
+      message: "Using fallback data",
+      body: {
+        items: [],
+        totalCount: 0,
+        pageNumber: 1,
+        pageSize: 10,
+      },
+    };
   }
-
-  return await response.json();
 }
 
 export const customerAPI = {

@@ -1,4 +1,4 @@
-import { ShoppingCart, TrendingUp, DollarSign, Package, Plus, Globe, Sparkles, ArrowLeft, Calendar, ChevronDown } from "lucide-react";
+import { ShoppingCart, TrendingUp, DollarSign, Package, Plus, Globe, Sparkles, ArrowLeft, Calendar, ChevronDown, ShoppingBag } from "lucide-react";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { SalesStatsSection } from "../components/SalesStatsSection";
 import { SalesTable } from "../components/SalesTable";
@@ -11,6 +11,8 @@ import { TopSellersChart } from "../components/TopSellersChart";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { SaleItem } from "../data/salesData";
 import { salesAPI } from "../api/salesAPI";
+import { useApiError } from "../hooks/useApiError";
+import { ErrorDisplay } from "../components/ErrorDisplay";
 
 // Helper function to translate product category
 const translateCategory = (category: string): string => {
@@ -58,12 +60,12 @@ export function SalesPage() {
   // Sales chart data state
   const [salesChartData, setSalesChartData] = useState<any[]>([]);
   const [salesChartLoading, setSalesChartLoading] = useState(true);
-  const [salesChartError, setSalesChartError] = useState<string | null>(null);
+  const chartError = useApiError();
 
   // Sales records state
   const [salesRecords, setSalesRecords] = useState<SaleItem[]>([]);
   const [salesLoading, setSalesLoading] = useState(true);
-  const [salesError, setSalesError] = useState<string | null>(null);
+  const tableError = useApiError();
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -86,7 +88,7 @@ export function SalesPage() {
       if (!dateRange.from || !dateRange.to) return;
 
       setSalesChartLoading(true);
-      setSalesChartError(null);
+      chartError.clearError();
 
       try {
         const response = await salesAPI.getCustomerCategorizedSales({
@@ -106,11 +108,11 @@ export function SalesPage() {
         if (response.code === 200 && response.status === "success") {
           setSalesChartData(response.body.sales);
         } else {
-          setSalesChartError("خطا در دریافت داده‌های نمودار");
+          chartError.handleError({ message: "خطا در دریافت داده‌های نمودار", code: response.code });
         }
       } catch (err) {
         console.error("Error fetching sales chart data:", err);
-        setSalesChartError("خطا در دریافت داده‌های نمودار");
+        chartError.handleError(err);
       } finally {
         setSalesChartLoading(false);
       }
@@ -125,7 +127,7 @@ export function SalesPage() {
       if (!dateRange.from || !dateRange.to) return;
 
       setSalesLoading(true);
-      setSalesError(null);
+      tableError.clearError();
 
       try {
         const response = await salesAPI.getSalesRecords({
@@ -163,11 +165,11 @@ export function SalesPage() {
           setSalesRecords(transformedData);
           setTotalRecords(response.body.totalCount);
         } else {
-          setSalesError("خطا در دریافت داده‌های فروش");
+          tableError.handleError({ message: "خطا در دریافت داده‌های فروش", code: response.code });
         }
       } catch (err) {
         console.error("Error fetching sales records:", err);
-        setSalesError("خطا در دریافت داده‌های فروش");
+        tableError.handleError(err);
       } finally {
         setSalesLoading(false);
       }
@@ -362,7 +364,7 @@ export function SalesPage() {
         <SalesLineChart 
           data={salesChartData} 
           loading={salesChartLoading} 
-          error={salesChartError}
+          error={chartError.error}
           hideHeader={true}
         />
       </div>
@@ -398,7 +400,13 @@ export function SalesPage() {
             </p>
           </div>
         </div>
-      ) : salesError ? (
+      ) : tableError.error ? (
+        <ErrorDisplay 
+          error={tableError.error} 
+          onRetry={() => window.location.reload()}
+          onDismiss={tableError.clearError}
+        />
+      ) : salesRecords.length === 0 ? (
         <div
           className="rounded-lg border p-12 flex items-center justify-center"
           style={{
@@ -406,13 +414,19 @@ export function SalesPage() {
             borderColor: colors.border,
           }}
         >
-          <p className="text-sm" style={{ color: colors.error }}>
-            {salesError}
-          </p>
+          <div className="flex flex-col items-center gap-3 text-center">
+            <ShoppingBag className="w-12 h-12 opacity-20" style={{ color: colors.textSecondary }} />
+            <p className="text-base font-semibold" style={{ color: colors.textPrimary }}>
+              هیچ داده فروشی یافت نشد
+            </p>
+            <p className="text-sm" style={{ color: colors.textSecondary }}>
+              در بازه زمانی انتخاب شده، فروشی ثبت نشده است
+            </p>
+          </div>
         </div>
       ) : (
         <SalesTable 
-          data={salesRecords}
+          sales={salesRecords}
           totalRecords={totalRecords}
           currentPage={currentPage}
           pageSize={pageSize}

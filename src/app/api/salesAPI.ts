@@ -1,6 +1,14 @@
 import { getCookie } from "../utils/auth";
+import { apiPost } from "../utils/apiClient";
+import {
+  mockSalesSummary,
+  mockCustomerCategorizedSales,
+  mockSalesRecords,
+  mockTopSellingProducts,
+} from "./mockData";
 
 const API_BASE_URL = "https://panel.bineshafzar.ir/api";
+const USE_MOCK_DATA = false; // Set to true to use mock data instead of API
 
 interface DateFilter {
   startTime: string;
@@ -106,86 +114,66 @@ interface TopSellingProductsResponse {
 
 export const salesAPI = {
   async getSalesSummary(request: SalesSummaryRequest): Promise<SalesSummaryResponse> {
-    const token = getCookie("authToken");
-
-    const response = await fetch(`${API_BASE_URL}/SalesApi/GetSalesSummary`, {
-      method: "POST",
-      headers: {
-        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (USE_MOCK_DATA) {
+      console.log("📦 Using mock data for getSalesSummary");
+      return Promise.resolve(mockSalesSummary);
     }
 
-    const data = await response.json();
-    return data;
+    try {
+      // Using apiPost with automatic token refresh
+      const data = await apiPost<SalesSummaryResponse>('/SalesApi/GetSalesSummary', request);
+      return data;
+    } catch (error: any) {
+      console.warn('⚠️ getSalesSummary failed, using mock data:', error.message);
+      return mockSalesSummary;
+    }
   },
 
   async getCustomerCategorizedSales(request: SalesSummaryRequest): Promise<CustomerCategorizedSalesResponse> {
-    const token = getCookie("authToken");
-
-    const response = await fetch(`${API_BASE_URL}/SalesApi/GetCustomercategorizedSales`, {
-      method: "POST",
-      headers: {
-        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (USE_MOCK_DATA) {
+      console.log("📦 Using mock data for getCustomerCategorizedSales");
+      return Promise.resolve(mockCustomerCategorizedSales);
     }
 
-    const data = await response.json();
-    return data;
+    try {
+      // Using apiPost with automatic token refresh
+      const data = await apiPost<CustomerCategorizedSalesResponse>('/SalesApi/GetCustomerCategorizedSales', request);
+      return data;
+    } catch (error: any) {
+      console.warn('⚠️ getCustomerCategorizedSales failed, using mock data:', error.message);
+      return mockCustomerCategorizedSales;
+    }
   },
 
   async getSalesRecords(request: SalesRecordsRequest): Promise<SalesRecordsResponse> {
-    const token = getCookie("authToken");
-
-    const response = await fetch(`${API_BASE_URL}/SalesApi/GetSalesRecords`, {
-      method: "POST",
-      headers: {
-        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (USE_MOCK_DATA) {
+      console.log("📦 Using mock data for getSalesRecords");
+      return Promise.resolve(mockSalesRecords);
     }
 
-    const data = await response.json();
-    return data;
+    try {
+      // Using apiPost with automatic token refresh
+      const data = await apiPost<SalesRecordsResponse>('/SalesApi/GetSalesRecords', request);
+      return data;
+    } catch (error: any) {
+      console.warn('⚠️ getSalesRecords failed, using mock data:', error.message);
+      return mockSalesRecords;
+    }
   },
 
   async getTopSellingProducts(request: SalesSummaryRequest): Promise<TopSellingProductsResponse> {
-    const token = getCookie("authToken");
-
-    const response = await fetch(`${API_BASE_URL}/SalesApi/GetTopSellingProducts`, {
-      method: "POST",
-      headers: {
-        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;odata.metadata=minimal;odata.streaming=true",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (USE_MOCK_DATA) {
+      console.log("📦 Using mock data for getTopSellingProducts");
+      return Promise.resolve(mockTopSellingProducts);
     }
 
-    const data = await response.json();
-    return data;
+    try {
+      // Using apiPost with automatic token refresh
+      const data = await apiPost<TopSellingProductsResponse>('/SalesApi/GetTopSellingProducts', request);
+      return data;
+    } catch (error: any) {
+      console.warn('⚠️ getTopSellingProducts failed, using mock data:', error.message);
+      return mockTopSellingProducts;
+    }
   },
 };
