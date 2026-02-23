@@ -24,6 +24,8 @@ import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { ThemedButton } from "../components/ThemedButton";
 import { customerAPI } from "../api/customerAPI";
 import { FilterDropdown } from "../components/FilterDropdown";
+import { useApiError } from "../hooks/useApiError";
+import { ErrorDisplay } from "../components/ErrorDisplay";
 
 interface Customer {
   id: string;

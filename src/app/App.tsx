@@ -29,9 +29,12 @@ import { useCurrentColors } from "./contexts/ThemeColorsContext";
 import { Navbar } from "./components/Navbar";
 import { Sidebar } from "./components/Sidebar";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { GlobalErrorHandler } from "./components/GlobalErrorHandler";
+import { ApiConnectionStatus } from "./components/ApiConnectionStatus";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import "./utils/apiDebugger"; // Initialize API debugger
 
 function MainContent() {
   const { activePage } = useNavigation();
@@ -78,6 +81,9 @@ function AppContent() {
     <div 
       className="min-h-screen flex flex-col transition-colors duration-300 bg-[#fafafa] dark:bg-[#0f1419]"
     >
+      {/* API Connection Status */}
+      <ApiConnectionStatus />
+      
       {/* Navigation Bar */}
       <Navbar />
 
@@ -93,10 +99,9 @@ function AppContent() {
 }
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
   return (
     <ErrorBoundary>
+      <GlobalErrorHandler />
       <Provider store={store}>
         <ThemeProvider>
           <AuthProvider>
@@ -109,7 +114,7 @@ export default function App() {
                         <NavigationProvider>
                           <SettingsTabProvider>
                             <DndProvider backend={HTML5Backend}>
-                              <AppRouter isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+                              <AppRouter />
                             </DndProvider>
                           </SettingsTabProvider>
                         </NavigationProvider>
@@ -126,12 +131,14 @@ export default function App() {
   );
 }
 
-function AppRouter({ isLoggedIn, setIsLoggedIn }: { isLoggedIn: boolean; setIsLoggedIn: (value: boolean) => void }) {
-  const { isAuthenticated } = useAuth();
+function AppRouter() {
+  const { isAuthenticated, login } = useAuth();
 
-  if (!isAuthenticated && !isLoggedIn) {
-    return <LoginPage setIsLoggedIn={setIsLoggedIn} />;
+  // If not authenticated, show login page
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={login} />;
   }
 
+  // If authenticated, show main app
   return <AppContent />;
 }

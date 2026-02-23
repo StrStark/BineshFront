@@ -1,4 +1,4 @@
-import { Info, GraduationCap, Settings, ArrowRight, Plus, Minus, X, LayoutDashboard, CheckCircle2, Phone, Check, Clock, Users, Star, Timer, PhoneOff, Hourglass, Zap, Trophy, Award, Table, Calendar, ListTodo, TrendingUp, DollarSign, ShoppingBag, Package } from "lucide-react";
+import { Info, GraduationCap, Settings, ArrowRight, Plus, Minus, X, LayoutDashboard, CheckCircle2, Phone, Check, Clock, Users, Star, Timer, PhoneOff, Hourglass, Zap, Trophy, Award, Table, Calendar, ListTodo, TrendingUp, DollarSign, ShoppingBag, Package, Sparkles, Trash2 } from "lucide-react";
 import { useNavigation } from "../contexts/NavigationContext";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { useSidebar } from "../contexts/SidebarContext";
@@ -36,6 +36,9 @@ import { RecentSalesWidget } from "../components/widgets/RecentSalesWidget";
 import { OrdersStatusWidget } from "../components/widgets/OrdersStatusWidget";
 import { SalesTrendWidget } from "../components/widgets/SalesTrendWidget";
 import { StatCardSkeleton, ChartSkeleton } from "../components/SkeletonLoader";
+// کامپوننت‌های ویجت سفارشی
+import { CustomWidgetBuilder, CustomWidgetData } from "../components/dashboard-widgets/CustomWidgetBuilder";
+import { CustomWidgetRenderer } from "../components/dashboard-widgets/CustomWidgetRenderer";
 
 const quickActions = [
   {
@@ -81,39 +84,39 @@ interface WidgetConfig {
   icon: React.ElementType;
   description: string;
   component: React.ComponentType;
-  category: "rahgir" | "binesh" | "general"; // دسته‌بندی ویجت‌ها
+  category: "ready" | "composite"; // دسته‌بندی ویجت‌ها
 }
 
 // ویجت‌های پنل رهگیر (مرکز تماس)
 const availableWidgetsConfig: WidgetConfig[] = [
-  { id: "total-calls", title: "مجموع تماس‌ها", icon: Phone, description: "نمایش نمودار تماس‌های هفتگی", component: TotalCallsWidget, category: "rahgir" },
-  { id: "success-rate", title: "نرخ موفقیت", icon: CheckCircle2, description: "درصد و آمار تماس‌های موفق", component: SuccessRateWidget, category: "rahgir" },
-  { id: "avg-time", title: "متوسط زمان", icon: Timer, description: "نمودار میانگین زمان تماس‌ها", component: AvgTimeWidget, category: "rahgir" },
-  { id: "active-agents", title: "کارشناسان فعال", icon: Users, description: "لیست کارشناسان آنلاین", component: ActiveAgentsWidget, category: "rahgir" },
-  { id: "satisfaction", title: "رضایت مشتری", icon: Star, description: "نمودار امتیاز رضایت", component: SatisfactionWidget, category: "rahgir" },
-  { id: "waiting-queue", title: "صف انتظار", icon: Clock, description: "نمایش صف انتظار فعلی", component: WaitingQueueWidget, category: "rahgir" },
-  { id: "recent-calls", title: "تماس‌های اخیر", icon: Table, description: "نمایش آخرین تماس‌ها", component: RecentCallsWidget, category: "rahgir" },
-  { id: "peak-hours", title: "ساعات پیک", icon: Clock, description: "نمایش ساعات پیک تماس‌ها", component: PeakHoursWidget, category: "rahgir" },
-  { id: "missed-calls", title: "تماس‌های از دست رفته", icon: PhoneOff, description: "تماس‌های بدون پاسخ این هفته", component: MissedCallsWidget, category: "rahgir" },
-  { id: "avg-wait-time", title: "میانگین زمان انتظار", icon: Hourglass, description: "متوسط زمان انتظار مشتریان", component: AvgWaitTimeWidget, category: "rahgir" },
-  { id: "first-call-resolution", title: "حل در اولین تماس", icon: Check, description: "نرخ حل مسئله در اولین تماس", component: FirstCallResolutionWidget, category: "rahgir" },
-  { id: "top-performers", title: "برترین کارشناسان", icon: Trophy, description: "رتبه‌بندی کارشناسان برتر", component: TopPerformersWidget, category: "rahgir" },
-  { id: "first-response-time", title: "زمان پاسخگویی", icon: Zap, description: "میانگین زمان پاسخگویی اول", component: FirstResponseTimeWidget, category: "rahgir" },
-  { id: "service-quality", title: "کیفیت خدمات", icon: Award, description: "امتیاز کلی کیفیت خدمات", component: ServiceQualityWidget, category: "rahgir" },
-  { id: "calls-table", title: "جدول تماس‌ها", icon: Phone, description: "نمایش جدول تماس‌ها", component: CallsTableWidget, category: "rahgir" },
-  { id: "agents-table", title: "جدول کارشناسان", icon: Users, description: "نمایش جدول کارشناسان", component: AgentsTableWidget, category: "rahgir" },
-  { id: "customers-table", title: "جدول مشتریان", icon: Users, description: "نمایش جدول مشتریان", component: CustomersTableWidget, category: "rahgir" },
-  { id: "total-sales", title: "فروش کل", icon: TrendingUp, description: "نمایش فروش کل", component: SalesOverviewWidget, category: "binesh" },
-  { id: "top-products", title: "محصولات برتر", icon: ShoppingBag, description: "نمایش محصولات برتر", component: TopSellersWidget, category: "binesh" },
-  { id: "inventory-status", title: "وضعیت انبار", icon: Package, description: "دسته‌بندی محصولات", component: ProductsCategoryWidget, category: "binesh" },
-  { id: "revenue", title: "درآمد", icon: DollarSign, description: "نمایش درآمد", component: RevenueChartWidget, category: "binesh" },
-  { id: "top-customers", title: "مشتریان", icon: Users, description: "آمار مشتریان", component: CustomersStatsWidget, category: "binesh" },
-  { id: "pending-orders", title: "سفارشات", icon: Package, description: "وضعیت سفارشات", component: OrdersStatusWidget, category: "binesh" },
-  { id: "recent-sales", title: "فروش‌های اخیر", icon: ShoppingBag, description: "آخرین فروش‌ها", component: RecentSalesWidget, category: "binesh" },
-  { id: "exhibition-visits", title: "بازدید نمایشگاه", icon: Users, description: "آمار بازدیدکنندگان", component: ExhibitionVisitsWidget, category: "binesh" },
-  { id: "sales-trend", title: "نوسان فروش", icon: TrendingUp, description: "نمودار نوسان فروش", component: SalesTrendWidget, category: "binesh" },
-  { id: "calendar", title: "تقویم", icon: Calendar, description: "نمایش تقویم", component: CalendarWidget, category: "general" },
-  { id: "todo-list", title: "لیست وظایف", icon: ListTodo, description: "نمایش لیست وظایف", component: TodoListWidget, category: "general" },
+  { id: "total-calls", title: "مجموع تماس‌ها", icon: Phone, description: "نمایش نمودار تماس‌های هفتگی", component: TotalCallsWidget, category: "ready" },
+  { id: "success-rate", title: "نرخ موفقیت", icon: CheckCircle2, description: "درصد و آمار تماس‌های موفق", component: SuccessRateWidget, category: "ready" },
+  { id: "avg-time", title: "متوسط زمان", icon: Timer, description: "نمودار میانگین زمان تماس‌ها", component: AvgTimeWidget, category: "ready" },
+  { id: "active-agents", title: "کارشناسان فعال", icon: Users, description: "لیست کارشناسان آنلاین", component: ActiveAgentsWidget, category: "ready" },
+  { id: "satisfaction", title: "رضایت مشتری", icon: Star, description: "نمودار امتیاز رضایت", component: SatisfactionWidget, category: "ready" },
+  { id: "waiting-queue", title: "صف انتظار", icon: Clock, description: "نمایش صف انتظار فعلی", component: WaitingQueueWidget, category: "ready" },
+  { id: "recent-calls", title: "تماس‌های اخیر", icon: Table, description: "نمایش آخرین تماس‌ها", component: RecentCallsWidget, category: "ready" },
+  { id: "peak-hours", title: "ساعات پیک", icon: Clock, description: "نمایش ساعات پیک تماس‌ها", component: PeakHoursWidget, category: "ready" },
+  { id: "missed-calls", title: "تماس‌های از دست رفته", icon: PhoneOff, description: "تماس‌های بدون پاسخ این هفته", component: MissedCallsWidget, category: "ready" },
+  { id: "avg-wait-time", title: "میانگین زمان انتظار", icon: Hourglass, description: "متوسط زمان انتظار مشتریان", component: AvgWaitTimeWidget, category: "ready" },
+  { id: "first-call-resolution", title: "حل در اولین تماس", icon: Check, description: "نرخ حل مسئله در اولین تماس", component: FirstCallResolutionWidget, category: "ready" },
+  { id: "top-performers", title: "برترین کارشناسان", icon: Trophy, description: "رتبه‌بندی کارشناسان برتر", component: TopPerformersWidget, category: "ready" },
+  { id: "first-response-time", title: "زمان پاسخگویی", icon: Zap, description: "میانگین زمان پاسخگویی اول", component: FirstResponseTimeWidget, category: "ready" },
+  { id: "service-quality", title: "کیفیت خدمات", icon: Award, description: "امتیاز کلی کیفیت خدمات", component: ServiceQualityWidget, category: "ready" },
+  { id: "calls-table", title: "جدول تماس‌ها", icon: Phone, description: "نمایش جدول تماس‌ها", component: CallsTableWidget, category: "composite" },
+  { id: "agents-table", title: "جدول کارشناسان", icon: Users, description: "نمایش جدول کارشناسان", component: AgentsTableWidget, category: "composite" },
+  { id: "customers-table", title: "جدول مشتریان", icon: Users, description: "نمایش جدول مشتریان", component: CustomersTableWidget, category: "composite" },
+  { id: "total-sales", title: "فروش کل", icon: TrendingUp, description: "نمایش فروش کل", component: SalesOverviewWidget, category: "composite" },
+  { id: "top-products", title: "محصولات برتر", icon: ShoppingBag, description: "نمایش محصولات برتر", component: TopSellersWidget, category: "composite" },
+  { id: "inventory-status", title: "وضعیت انبار", icon: Package, description: "دسته‌بندی محصولات", component: ProductsCategoryWidget, category: "composite" },
+  { id: "revenue", title: "درآمد", icon: DollarSign, description: "نمایش درآمد", component: RevenueChartWidget, category: "composite" },
+  { id: "top-customers", title: "مشتریان", icon: Users, description: "آمار مشتریان", component: CustomersStatsWidget, category: "composite" },
+  { id: "pending-orders", title: "سفارشات", icon: Package, description: "وضعیت سفارشات", component: OrdersStatusWidget, category: "composite" },
+  { id: "recent-sales", title: "فروش‌های اخیر", icon: ShoppingBag, description: "آخرین فروش‌ها", component: RecentSalesWidget, category: "composite" },
+  { id: "exhibition-visits", title: "بازدید نمایشگاه", icon: Users, description: "آمار بازدیدکنندگان", component: ExhibitionVisitsWidget, category: "composite" },
+  { id: "sales-trend", title: "نوسان فروش", icon: TrendingUp, description: "نمودار نوسان فروش", component: SalesTrendWidget, category: "composite" },
+  { id: "calendar", title: "تقویم", icon: Calendar, description: "نمایش تقویم", component: CalendarWidget, category: "ready" },
+  { id: "todo-list", title: "لیست وظایف", icon: ListTodo, description: "نمایش لیست وظایف", component: TodoListWidget, category: "ready" },
 ];
 
 export function DashboardPage() {
@@ -123,7 +126,10 @@ export function DashboardPage() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"rahgir" | "binesh" | "general">("rahgir");
+  const [activeTab, setActiveTab] = useState<"ready" | "composite">("ready");
+  const [showCustomWidgetBuilder, setShowCustomWidgetBuilder] = useState(false);
+  const [editingWidget, setEditingWidget] = useState<CustomWidgetData | undefined>(undefined);
+  const [deleteConfirmWidget, setDeleteConfirmWidget] = useState<{ id: string; title: string; type: 'custom' | 'normal' } | null>(null);
   
   // Load active widgets from localStorage
   const [activeWidgets, setActiveWidgets] = useState<string[]>(() => {
@@ -135,6 +141,12 @@ export function DashboardPage() {
   const [widgetSizes, setWidgetSizes] = useState<Record<string, 'small' | 'medium' | 'large'>>(() => {
     const saved = localStorage.getItem("dashboard-widget-sizes");
     return saved ? JSON.parse(saved) : {};
+  });
+
+  // Load custom widgets from localStorage
+  const [customWidgets, setCustomWidgets] = useState<CustomWidgetData[]>(() => {
+    const saved = localStorage.getItem("dashboard-custom-widgets");
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Simulate data loading
@@ -155,6 +167,11 @@ export function DashboardPage() {
   useEffect(() => {
     localStorage.setItem("dashboard-widget-sizes", JSON.stringify(widgetSizes));
   }, [widgetSizes]);
+
+  // Save custom widgets to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("dashboard-custom-widgets", JSON.stringify(customWidgets));
+  }, [customWidgets]);
 
   // Handle scroll to hide/show drawer button
   useEffect(() => {
@@ -276,7 +293,6 @@ export function DashboardPage() {
             backgroundColor: isOver ? `${colors.primary}05` : 'transparent',
             borderRadius: isOver ? '12px' : '0',
             padding: isOver ? '12px' : '0',
-            transition: 'all 0.3s ease',
             gridAutoRows: 'minmax(350px, auto)',
             gridAutoFlow: 'dense', // پر کردن هوشمند فضاهای خالی
           }}
@@ -294,35 +310,87 @@ export function DashboardPage() {
           ) : (
             // Actual Widgets
             activeWidgets.map((widgetId, index) => {
+              // بررسی اینکه آیا این یک ویجت از پیش تعریف شده است
               const config = availableWidgetsConfig.find((w) => w.id === widgetId);
-              if (!config) return null;
+              
+              // بررسی اینکه آیا این یک ویجت سفارشی است
+              const customWidget = customWidgets.find((w) => w.id === widgetId);
+              
+              // اگر نه ویجت از پیش تعریف شده و نه سفارشی باشد، null برگردان
+              if (!config && !customWidget) return null;
 
-              const WidgetComponent = config.component;
-              // تقویم با سایز پیش‌فرض کوچک، بقیه متوسط
-              const defaultSize = widgetId === 'calendar' ? 'small' : 'medium';
-              const size = widgetSizes[widgetId] || defaultSize;
-              const gridSpan = getGridSpan(widgetId, size);
-              
-              // تقویم قط تا سایز متوسط
-              const maxSize = widgetId === 'calendar' ? 'medium' : 'large';
-              
-              return (
-                <div key={widgetId} className={`${gridSpan} h-full`}>
-                  <DraggableWidgetWrapper
-                    id={widgetId}
-                    index={index}
-                    title={config.title}
-                    icon={config.icon}
-                    onRemove={() => removeWidget(widgetId)}
-                    onMove={moveWidget}
-                    size={size}
-                    onSizeChange={(newSize) => handleSizeChange(widgetId, newSize)}
-                    maxSize={maxSize}
+              // اگر ویجت سفارشی باشد
+              if (customWidget) {
+                const defaultSize = 'medium';
+                const size = widgetSizes[widgetId] || defaultSize;
+                const gridSpan = getGridSpan(widgetId, size);
+                
+                return (
+                  <div 
+                    key={widgetId} 
+                    className={`${gridSpan} h-full`}
+                    style={{ 
+                      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
                   >
-                    <WidgetComponent />
-                  </DraggableWidgetWrapper>
-                </div>
-              );
+                    <DraggableWidgetWrapper
+                      id={widgetId}
+                      index={index}
+                      title={customWidget.title}
+                      icon={Sparkles}
+                      onMove={moveWidget}
+                      size={size}
+                      onSizeChange={(newSize) => handleSizeChange(widgetId, newSize)}
+                      maxSize="large"
+                      onEdit={() => {
+                        setEditingWidget(customWidget);
+                        setShowCustomWidgetBuilder(true);
+                      }}
+                      onRemove={() => removeWidget(widgetId)}
+                    >
+                      <CustomWidgetRenderer widget={customWidget} />
+                    </DraggableWidgetWrapper>
+                  </div>
+                );
+              }
+
+              // اگر ویجت از پیش تعریف شده باشد
+              if (config) {
+                const WidgetComponent = config.component;
+                // تقویم با سایز پیش‌فرض کوچک، بقیه متوسط
+                const defaultSize = widgetId === 'calendar' ? 'small' : 'medium';
+                const size = widgetSizes[widgetId] || defaultSize;
+                const gridSpan = getGridSpan(widgetId, size);
+                
+                // تقویم فقط تا سایز متوسط
+                const maxSize = widgetId === 'calendar' ? 'medium' : 'large';
+                
+                return (
+                  <div 
+                    key={widgetId} 
+                    className={`${gridSpan} h-full`}
+                    style={{ 
+                      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  >
+                    <DraggableWidgetWrapper
+                      id={widgetId}
+                      index={index}
+                      title={config.title}
+                      icon={config.icon}
+                      onMove={moveWidget}
+                      size={size}
+                      onSizeChange={(newSize) => handleSizeChange(widgetId, newSize)}
+                      maxSize={maxSize}
+                      onRemove={() => removeWidget(widgetId)}
+                    >
+                      <WidgetComponent />
+                    </DraggableWidgetWrapper>
+                  </div>
+                );
+              }
+
+              return null;
             })
           )}
         </div>
@@ -529,78 +597,56 @@ export function DashboardPage() {
               {/* Category Tabs */}
               <div className="flex gap-2 mb-4">
                 <button
-                  onClick={() => setActiveTab("rahgir")}
+                  onClick={() => setActiveTab("ready")}
                   className="flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all"
                   style={{
-                    backgroundColor: activeTab === "rahgir" ? colors.primary : colors.backgroundSecondary,
-                    color: activeTab === "rahgir" ? "#ffffff" : colors.textPrimary,
-                    border: `1px solid ${activeTab === "rahgir" ? colors.primary : colors.border}`
-                  }}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <Phone className="w-4 h-4" />
-                    <span>مدیریت تماس‌ها</span>
-                    <span 
-                      className="px-2 py-0.5 rounded-full text-xs"
-                      style={{
-                        backgroundColor: activeTab === "rahgir" ? "#ffffff20" : colors.primary + "15",
-                        color: activeTab === "rahgir" ? "#ffffff" : colors.primary
-                      }}
-                    >
-                      {availableWidgetsConfig.filter(w => w.category === "rahgir" && !activeWidgets.includes(w.id)).length}
-                    </span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setActiveTab("binesh")}
-                  className="flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all"
-                  style={{
-                    backgroundColor: activeTab === "binesh" ? colors.primary : colors.backgroundSecondary,
-                    color: activeTab === "binesh" ? "#ffffff" : colors.textPrimary,
-                    border: `1px solid ${activeTab === "binesh" ? colors.primary : colors.border}`
+                    backgroundColor: activeTab === "ready" ? colors.primary : colors.backgroundSecondary,
+                    color: activeTab === "ready" ? "#ffffff" : colors.textPrimary,
+                    border: `1px solid ${activeTab === "ready" ? colors.primary : colors.border}`
                   }}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <LayoutDashboard className="w-4 h-4" />
-                    <span>مدیریت داده‌ها</span>
+                    <span>شاخص‌های آماده</span>
                     <span 
                       className="px-2 py-0.5 rounded-full text-xs"
                       style={{
-                        backgroundColor: activeTab === "binesh" ? "#ffffff20" : colors.primary + "15",
-                        color: activeTab === "binesh" ? "#ffffff" : colors.primary
+                        backgroundColor: activeTab === "ready" ? "#ffffff20" : colors.primary + "15",
+                        color: activeTab === "ready" ? "#ffffff" : colors.primary
                       }}
                     >
-                      {availableWidgetsConfig.filter(w => w.category === "binesh" && !activeWidgets.includes(w.id)).length}
+                      {availableWidgetsConfig.filter(w => w.category === "ready" && !activeWidgets.includes(w.id)).length}
                     </span>
                   </div>
                 </button>
                 <button
-                  onClick={() => setActiveTab("general")}
+                  onClick={() => setActiveTab("composite")}
                   className="flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all"
                   style={{
-                    backgroundColor: activeTab === "general" ? colors.primary : colors.backgroundSecondary,
-                    color: activeTab === "general" ? "#ffffff" : colors.textPrimary,
-                    border: `1px solid ${activeTab === "general" ? colors.primary : colors.border}`
+                    backgroundColor: activeTab === "composite" ? colors.primary : colors.backgroundSecondary,
+                    color: activeTab === "composite" ? "#ffffff" : colors.textPrimary,
+                    border: `1px solid ${activeTab === "composite" ? colors.primary : colors.border}`
                   }}
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <ListTodo className="w-4 h-4" />
-                    <span>ابزارهای عمومی</span>
+                    <TrendingUp className="w-4 h-4" />
+                    <span>شاخص‌های ترکیبی</span>
                     <span 
                       className="px-2 py-0.5 rounded-full text-xs"
                       style={{
-                        backgroundColor: activeTab === "general" ? "#ffffff20" : colors.primary + "15",
-                        color: activeTab === "general" ? "#ffffff" : colors.primary
+                        backgroundColor: activeTab === "composite" ? "#ffffff20" : colors.primary + "15",
+                        color: activeTab === "composite" ? "#ffffff" : colors.primary
                       }}
                     >
-                      {availableWidgetsConfig.filter(w => w.category === "general" && !activeWidgets.includes(w.id)).length}
+                      {availableWidgetsConfig.filter(w => w.category === "composite" && !activeWidgets.includes(w.id)).length}
                     </span>
                   </div>
                 </button>
               </div>
 
               {/* Widgets Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                {/* ویجت‌های موجود */}
                 {availableWidgetsConfig
                   .filter(widget => !activeWidgets.includes(widget.id) && widget.category === activeTab)
                   .map(widget => {
@@ -633,9 +679,93 @@ export function DashboardPage() {
                     </WidgetWrapper>
                   );
                 })}
+
+                {/* شاخص‌های سفارشی ساخته شده */}
+                {customWidgets.map((widget) => (
+                  <WidgetWrapper
+                    key={widget.id}
+                    id={widget.id}
+                    title={widget.title}
+                    icon={Sparkles}
+                    isDraggable={!activeWidgets.includes(widget.id)}
+                    onEdit={() => {
+                      setEditingWidget(widget);
+                      setShowCustomWidgetBuilder(true);
+                    }}
+                    onRemove={() => {
+                      setDeleteConfirmWidget({ id: widget.id, title: widget.title, type: 'custom' });
+                    }}
+                  >
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <p className="text-xs mb-2" style={{ color: colors.textSecondary }}>
+                          {widget.chartType === "bar" && "نمودار میله‌ای"}
+                          {widget.chartType === "line" && "نمودار خطی"}
+                          {widget.chartType === "pie" && "نمودار دایره‌ای"}
+                          {widget.chartType === "area" && "نمودار منطقه‌ای"}
+                          {widget.chartType === "radar" && "نمودار رادار"}
+                          {widget.chartType === "table" && "جدول"}
+                        </p>
+                        {!activeWidgets.includes(widget.id) && (
+                          <div 
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
+                            style={{ 
+                              backgroundColor: `${colors.primary}11`,
+                              color: colors.primary 
+                            }}
+                          >
+                            بکشید به داشبورد
+                          </div>
+                        )}
+                        {activeWidgets.includes(widget.id) && (
+                          <div 
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
+                            style={{ 
+                              backgroundColor: `${colors.success}11`,
+                              color: colors.success 
+                            }}
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            فعال شده
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </WidgetWrapper>
+                ))}
+
+                {/* باکس ساخت شاخص سفارشی - در انتهای لیست */}
+                <button
+                  onClick={() => {
+                    setShowDrawer(false);
+                    setShowCustomWidgetBuilder(true);
+                  }}
+                  className="rounded-lg border-2 border-dashed p-6 transition-all hover:scale-105"
+                  style={{
+                    borderColor: colors.primary,
+                    backgroundColor: `${colors.primary}05`,
+                  }}
+                >
+                  <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[120px]">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${colors.primary}15` }}
+                    >
+                      <Sparkles className="w-6 h-6" style={{ color: colors.primary }} />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-bold mb-1" style={{ color: colors.primary }}>
+                        ساخت شاخص سفارشی
+                      </p>
+                      <p className="text-xs" style={{ color: colors.textSecondary }}>
+                        نمودار دلخواه خود را بسازید
+                      </p>
+                    </div>
+                  </div>
+                </button>
                 
-                {/* Empty State */}
-                {availableWidgetsConfig.filter(widget => !activeWidgets.includes(widget.id) && widget.category === activeTab).length === 0 && (
+                {/* Empty State - فقط زمانی نمایش داده شود که هیچ ویجتی موجود نباشد */}
+                {availableWidgetsConfig.filter(widget => !activeWidgets.includes(widget.id) && widget.category === activeTab).length === 0 && customWidgets.length === 0 && (
                   <div className="col-span-full text-center py-12">
                     <div 
                       className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
@@ -651,6 +781,123 @@ export function DashboardPage() {
                     </p>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Custom Widget Builder Modal */}
+      {showCustomWidgetBuilder && (
+        <CustomWidgetBuilder
+          onSave={(widget) => {
+            if (editingWidget) {
+              // حالت ویرایش - به‌روزرسانی ویجت موجود
+              setCustomWidgets(customWidgets.map(w => w.id === widget.id ? widget : w));
+            } else {
+              // حالت ساخت جدید - افزودن ویجت جدید
+              setCustomWidgets([...customWidgets, widget]);
+              setActiveWidgets([...activeWidgets, widget.id]);
+            }
+            setShowCustomWidgetBuilder(false);
+            setEditingWidget(undefined);
+          }}
+          onClose={() => {
+            setShowCustomWidgetBuilder(false);
+            setEditingWidget(undefined);
+          }}
+          editWidget={editingWidget}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmWidget && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 z-[60] transition-opacity duration-300"
+            onClick={() => setDeleteConfirmWidget(null)}
+          />
+
+          {/* Modal */}
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[70] w-full max-w-md mx-4">
+            <div
+              className="rounded-2xl shadow-2xl p-6"
+              style={{
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                border: `1px solid ${colors.border}`,
+              }}
+            >
+              {/* Icon */}
+              <div className="flex justify-center mb-4">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${colors.error}15` }}
+                >
+                  <Trash2 className="w-8 h-8" style={{ color: colors.error }} />
+                </div>
+              </div>
+
+              {/* Title */}
+              <h3
+                className="text-xl font-bold text-center mb-2"
+                style={{ color: colors.textPrimary }}
+              >
+                حذف ویجت
+              </h3>
+
+              {/* Message */}
+              <p
+                className="text-center mb-6"
+                style={{ color: colors.textSecondary }}
+              >
+                آیا از حذف ویجت <span className="font-bold" style={{ color: colors.textPrimary }}>"{deleteConfirmWidget.title}"</span> اطمینان دارید؟
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirmWidget(null)}
+                  className="flex-1 px-4 py-3 rounded-lg font-medium transition-colors"
+                  style={{
+                    backgroundColor: colors.backgroundSecondary,
+                    color: colors.textPrimary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.border;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
+                  }}
+                >
+                  انصراف
+                </button>
+                <button
+                  onClick={() => {
+                    if (deleteConfirmWidget.type === 'custom') {
+                      // حذف ویجت سفارشی
+                      setCustomWidgets(customWidgets.filter(w => w.id !== deleteConfirmWidget.id));
+                      setActiveWidgets(activeWidgets.filter(id => id !== deleteConfirmWidget.id));
+                    } else {
+                      // حذف ویجت عادی از داشبورد
+                      removeWidget(deleteConfirmWidget.id);
+                    }
+                    setDeleteConfirmWidget(null);
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg font-medium text-white transition-opacity"
+                  style={{
+                    backgroundColor: colors.error,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.9';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                >
+                  حذف کنید
+                </button>
               </div>
             </div>
           </div>

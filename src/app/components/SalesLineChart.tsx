@@ -1,6 +1,7 @@
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { AlertCircle, TrendingUp } from "lucide-react";
+import { ErrorDisplay } from "./ErrorDisplay";
 
 interface SalesDataPoint {
   type: number;
@@ -11,7 +12,7 @@ interface SalesDataPoint {
 interface SalesLineChartProps {
   data: SalesDataPoint[];
   loading?: boolean;
-  error?: string | null;
+  error?: { message: string; code?: number; details?: string } | null;
   hideHeader?: boolean;
 }
 
@@ -138,18 +139,11 @@ export function SalesLineChart({ data = [], loading = false, error = null, hideH
       {/* Error State */}
       {error && !loading && (
         <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <AlertCircle
-              className="w-12 h-12 mx-auto mb-4"
-              style={{ color: colors.error }}
-            />
-            <p className="text-base font-semibold mb-2" style={{ color: colors.textPrimary }}>
-              خطا در دریافت اطلاعات
-            </p>
-            <p className="text-sm" style={{ color: colors.textSecondary }}>
-              {error}
-            </p>
-          </div>
+          <ErrorDisplay
+            error={error}
+            onRetry={() => window.location.reload()}
+            compact={false}
+          />
         </div>
       )}
 
