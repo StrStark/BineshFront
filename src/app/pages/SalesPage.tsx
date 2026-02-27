@@ -426,7 +426,7 @@ export function SalesPage() {
         </div>
       ) : (
         <SalesTable 
-          sales={salesRecords}
+          data={salesRecords}
           totalRecords={totalRecords}
           currentPage={currentPage}
           pageSize={pageSize}

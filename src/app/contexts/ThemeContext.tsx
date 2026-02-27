@@ -11,7 +11,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     // بررسی localStorage برای حالت ذخیره شده
     const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : false;
+    if (saved === null) return true;
+    return JSON.parse(saved);
   });
 
   useEffect(() => {

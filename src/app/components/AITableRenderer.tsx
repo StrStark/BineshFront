@@ -1,4 +1,8 @@
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
+<<<<<<< HEAD
+=======
+import { AIExportButtons } from "./AIExportButtons";
+>>>>>>> upstream/main
 
 interface TableData {
   title?: string;
@@ -25,11 +29,28 @@ export function AITableRenderer({ data }: AITableRendererProps) {
 
   return (
     <div className="w-full space-y-2">
+<<<<<<< HEAD
       {data.title && (
         <h3 className="text-sm font-medium" style={{ color: colors.textPrimary }}>
           {data.title}
         </h3>
       )}
+=======
+      <div className="flex items-center justify-between">
+        {data.title && (
+          <h3 className="text-sm font-medium" style={{ color: colors.textPrimary }}>
+            {data.title}
+          </h3>
+        )}
+        <AIExportButtons
+          showPdf
+          showExcel
+          title={data.title || "جدول"}
+          data={data.rows}
+          columns={columns}
+        />
+      </div>
+>>>>>>> upstream/main
       <div className="w-full overflow-x-auto rounded-lg border" style={{ borderColor: colors.border }}>
         <table className="w-full text-sm" dir="rtl">
           <thead>
@@ -82,4 +103,8 @@ export function AITableRenderer({ data }: AITableRendererProps) {
       </div>
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> upstream/main

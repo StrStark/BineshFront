@@ -121,6 +121,7 @@ export function ThemeColorsProvider({ children }: { children: ReactNode }) {
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
+    if (saved === null) return true;
     return saved === "true";
   });
 

@@ -122,6 +122,14 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
         
         const mockTotal = mockData.reduce((sum, item) => sum + item.value, 0) + mockOthersValue;
         setTotalSales(mockTotal);
+        
+        // Set mock salesCards data
+        setSalesCards({
+          totalSales: { value: mockTotal, growth: 12.5 },
+          returnTotal: { value: 150000000, growth: -5.2 },
+          offSales: { value: 450000000, growth: 8.3 },
+          newModelsSales: { value: 320000000, growth: 15.7 }
+        });
       } finally {
         setLoading(false);
       }
@@ -139,7 +147,7 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
     
     if (salesCards) {
       // کل فروش
-      if (salesCards.totalSales) {
+      if (salesCards.totalSales?.value !== undefined) {
         cards.push({
           icon: DollarSign,
           label: "کل فروش",
@@ -151,7 +159,7 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
       }
       
       // کل برگشتی
-      if (salesCards.returnTotal) {
+      if (salesCards.returnTotal?.value !== undefined) {
         cards.push({
           icon: ShoppingCart,
           label: "کل برگشتی",
@@ -163,7 +171,7 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
       }
       
       // فروش محصولات تخفیف‌دار
-      if (salesCards.offSales) {
+      if (salesCards.offSales?.value !== undefined) {
         cards.push({
           icon: Tag,
           label: "فروش محصولات تخفیف‌دار",
@@ -175,7 +183,7 @@ export function SalesStatsSection({ dateRange }: SalesStatsSectionProps) {
       }
       
       // فروش مدل‌های جدید
-      if (salesCards.newModelsSales) {
+      if (salesCards.newModelsSales?.value !== undefined) {
         cards.push({
           icon: Package,
           label: "فروش مدل‌های جدید",

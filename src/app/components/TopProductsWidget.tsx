@@ -59,6 +59,9 @@ export function TopProductsWidget({ dateRange }: TopProductsWidgetProps) {
     fetchTopProducts();
   }, [dateRange]);
 
+  // Calculate total count of all products
+  const totalCount = products.reduce((sum, product) => sum + product.count, 0);
+
   return (
     <div
       className="rounded-xl p-6 border"
@@ -155,7 +158,7 @@ export function TopProductsWidget({ dateRange }: TopProductsWidgetProps) {
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
-                      width: `${products.length > 0 ? (product.totalAmount / products[0].totalAmount) * 100 : 0}%`,
+                      width: `${totalCount > 0 ? (product.count / totalCount) * 100 : 0}%`,
                       backgroundColor: colors.primary,
                     }}
                   />

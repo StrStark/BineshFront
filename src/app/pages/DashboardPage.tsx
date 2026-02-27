@@ -1,4 +1,5 @@
-import { Info, GraduationCap, Settings, ArrowRight, Plus, Minus, X, LayoutDashboard, CheckCircle2, Phone, Check, Clock, Users, Star, Timer, PhoneOff, Hourglass, Zap, Trophy, Award, Table, Calendar, ListTodo, TrendingUp, DollarSign, ShoppingBag, Package, Sparkles, Trash2 } from "lucide-react";
+import { Info, GraduationCap, Settings, ArrowRight, Plus, Minus, X, LayoutDashboard, CheckCircle2, Phone, Check, Clock, Users, Star, Timer, PhoneOff, Hourglass, Zap, Trophy, Award, Table, Calendar, ListTodo, TrendingUp, DollarSign, ShoppingBag, Package, Sparkles, Trash2, BarChart3 } from "lucide-react";
+// v2 - forced recompile
 import { useNavigation } from "../contexts/NavigationContext";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { useSidebar } from "../contexts/SidebarContext";
@@ -38,7 +39,9 @@ import { SalesTrendWidget } from "../components/widgets/SalesTrendWidget";
 import { StatCardSkeleton, ChartSkeleton } from "../components/SkeletonLoader";
 // کامپوننت‌های ویجت سفارشی
 import { CustomWidgetBuilder, CustomWidgetData } from "../components/dashboard-widgets/CustomWidgetBuilder";
+import { TableauStyleWidgetBuilder, TableauWidgetConfig } from "../components/dashboard-widgets/TableauStyleWidgetBuilder";
 import { CustomWidgetRenderer } from "../components/dashboard-widgets/CustomWidgetRenderer";
+import { TableauWidgetRenderer } from "../components/dashboard-widgets/TableauWidgetRenderer";
 
 const quickActions = [
   {
@@ -104,7 +107,7 @@ const availableWidgetsConfig: WidgetConfig[] = [
   { id: "first-response-time", title: "زمان پاسخگویی", icon: Zap, description: "میانگین زمان پاسخگویی اول", component: FirstResponseTimeWidget, category: "ready" },
   { id: "service-quality", title: "کیفیت خدمات", icon: Award, description: "امتیاز کلی کیفیت خدمات", component: ServiceQualityWidget, category: "ready" },
   { id: "calls-table", title: "جدول تماس‌ها", icon: Phone, description: "نمایش جدول تماس‌ها", component: CallsTableWidget, category: "composite" },
-  { id: "agents-table", title: "جدول کارشناسان", icon: Users, description: "نمایش جدول کارشناسان", component: AgentsTableWidget, category: "composite" },
+  { id: "agents-table", title: "جدول کارشناسان", icon: Users, description: "نمایش جدل کارشناسان", component: AgentsTableWidget, category: "composite" },
   { id: "customers-table", title: "جدول مشتریان", icon: Users, description: "نمایش جدول مشتریان", component: CustomersTableWidget, category: "composite" },
   { id: "total-sales", title: "فروش کل", icon: TrendingUp, description: "نمایش فروش کل", component: SalesOverviewWidget, category: "composite" },
   { id: "top-products", title: "محصولات برتر", icon: ShoppingBag, description: "نمایش محصولات برتر", component: TopSellersWidget, category: "composite" },
@@ -128,6 +131,7 @@ export function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"ready" | "composite">("ready");
   const [showCustomWidgetBuilder, setShowCustomWidgetBuilder] = useState(false);
+  const [showTableauBuilder, setShowTableauBuilder] = useState(false);
   const [editingWidget, setEditingWidget] = useState<CustomWidgetData | undefined>(undefined);
   const [deleteConfirmWidget, setDeleteConfirmWidget] = useState<{ id: string; title: string; type: 'custom' | 'normal' } | null>(null);
   
@@ -149,6 +153,12 @@ export function DashboardPage() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // Load Tableau widgets from localStorage
+  const [tableauWidgets, setTableauWidgets] = useState<TableauWidgetConfig[]>(() => {
+    const saved = localStorage.getItem("dashboard-tableau-widgets");
+    return saved ? JSON.parse(saved) : [];
+  });
+  
   // Simulate data loading
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -172,6 +182,11 @@ export function DashboardPage() {
   useEffect(() => {
     localStorage.setItem("dashboard-custom-widgets", JSON.stringify(customWidgets));
   }, [customWidgets]);
+
+  // Save Tableau widgets to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("dashboard-tableau-widgets", JSON.stringify(tableauWidgets));
+  }, [tableauWidgets]);
 
   // Handle scroll to hide/show drawer button
   useEffect(() => {
@@ -316,8 +331,11 @@ export function DashboardPage() {
               // بررسی اینکه آیا این یک ویجت سفارشی است
               const customWidget = customWidgets.find((w) => w.id === widgetId);
               
-              // اگر نه ویجت از پیش تعریف شده و نه سفارشی باشد، null برگردان
-              if (!config && !customWidget) return null;
+              // بررسی اینکه آیا این یک ویجت Tableau است
+              const tableauWidget = tableauWidgets.find((w) => w.id === widgetId);
+              
+              // اگر نه ویجت از پیش تعریف شده و نه سفارشی و نه Tableau باشد، null برگردان
+              if (!config && !customWidget && !tableauWidget) return null;
 
               // اگر ویجت سفارشی باشد
               if (customWidget) {
@@ -349,6 +367,37 @@ export function DashboardPage() {
                       onRemove={() => removeWidget(widgetId)}
                     >
                       <CustomWidgetRenderer widget={customWidget} />
+                    </DraggableWidgetWrapper>
+                  </div>
+                );
+              }
+
+              // اگر ویجت Tableau باشد
+              if (tableauWidget) {
+                const defaultSize = 'medium';
+                const size = widgetSizes[widgetId] || defaultSize;
+                const gridSpan = getGridSpan(widgetId, size);
+                
+                return (
+                  <div 
+                    key={widgetId} 
+                    className={`${gridSpan} h-full`}
+                    style={{ 
+                      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  >
+                    <DraggableWidgetWrapper
+                      id={widgetId}
+                      index={index}
+                      title={tableauWidget.title}
+                      icon={BarChart3}
+                      onMove={moveWidget}
+                      size={size}
+                      onSizeChange={(newSize) => handleSizeChange(widgetId, newSize)}
+                      maxSize="large"
+                      onRemove={() => removeWidget(widgetId)}
+                    >
+                      <TableauWidgetRenderer config={tableauWidget} />
                     </DraggableWidgetWrapper>
                   </div>
                 );
@@ -734,7 +783,52 @@ export function DashboardPage() {
                   </WidgetWrapper>
                 ))}
 
-                {/* باکس ساخت شاخص سفارشی - در انتهای لیست */}
+                {/* شاخص‌های Tableau ساخته شده */}
+                {tableauWidgets.map((widget) => (
+                  <WidgetWrapper
+                    key={widget.id}
+                    id={widget.id}
+                    title={widget.title}
+                    icon={BarChart3}
+                    isDraggable={!activeWidgets.includes(widget.id)}
+                    onRemove={() => {
+                      setDeleteConfirmWidget({ id: widget.id, title: widget.title, type: 'custom' });
+                    }}
+                  >
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <p className="text-xs mb-2" style={{ color: colors.textSecondary }}>
+                          نمودار Tableau
+                        </p>
+                        {!activeWidgets.includes(widget.id) && (
+                          <div 
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
+                            style={{ 
+                              backgroundColor: `${colors.primary}11`,
+                              color: colors.primary 
+                            }}
+                          >
+                            بکشید به داشبورد
+                          </div>
+                        )}
+                        {activeWidgets.includes(widget.id) && (
+                          <div 
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
+                            style={{ 
+                              backgroundColor: `${colors.success}11`,
+                              color: colors.success 
+                            }}
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            فعال شده
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </WidgetWrapper>
+                ))}
+
+                {/* باکس ساخت شاخص سفارشی - ساده */}
                 <button
                   onClick={() => {
                     setShowDrawer(false);
@@ -758,14 +852,44 @@ export function DashboardPage() {
                         ساخت شاخص سفارشی
                       </p>
                       <p className="text-xs" style={{ color: colors.textSecondary }}>
-                        نمودار دلخواه خود را بسازید
+                        سازنده ساده و سریع
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* باکس ساخت شاخص حرفه‌ای - Tableau Style */}
+                <button
+                  onClick={() => {
+                    setShowDrawer(false);
+                    setShowTableauBuilder(true);
+                  }}
+                  className="rounded-lg border-2 border-dashed p-6 transition-all hover:scale-105"
+                  style={{
+                    borderColor: "#8b5cf6",
+                    backgroundColor: "#8b5cf615",
+                  }}
+                >
+                  <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[120px]">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: "#8b5cf625" }}
+                    >
+                      <BarChart3 className="w-6 h-6" style={{ color: "#8b5cf6" }} />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-bold mb-1" style={{ color: "#8b5cf6" }}>
+                        سازنده حرفه‌ای نمودار
+                      </p>
+                      <p className="text-xs" style={{ color: colors.textSecondary }}>
+                        مشابه Tableau - کشیدن و رها کردن
                       </p>
                     </div>
                   </div>
                 </button>
                 
                 {/* Empty State - فقط زمانی نمایش داده شود که هیچ ویجتی موجود نباشد */}
-                {availableWidgetsConfig.filter(widget => !activeWidgets.includes(widget.id) && widget.category === activeTab).length === 0 && customWidgets.length === 0 && (
+                {availableWidgetsConfig.filter(widget => !activeWidgets.includes(widget.id) && widget.category === activeTab).length === 0 && customWidgets.length === 0 && tableauWidgets.length === 0 && (
                   <div className="col-span-full text-center py-12">
                     <div 
                       className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
@@ -876,8 +1000,9 @@ export function DashboardPage() {
                 <button
                   onClick={() => {
                     if (deleteConfirmWidget.type === 'custom') {
-                      // حذف ویجت سفارشی
+                      // حذف ویجت سفارشی یا Tableau
                       setCustomWidgets(customWidgets.filter(w => w.id !== deleteConfirmWidget.id));
+                      setTableauWidgets(prev => prev.filter(w => w.id !== deleteConfirmWidget.id));
                       setActiveWidgets(activeWidgets.filter(id => id !== deleteConfirmWidget.id));
                     } else {
                       // حذف ویجت عادی از داشبورد
@@ -902,6 +1027,24 @@ export function DashboardPage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Tableau Style Widget Builder Modal */}
+      {showTableauBuilder && (
+        <TableauStyleWidgetBuilder
+          onSave={(config) => {
+            // ذخیره ویجت Tableau جدید
+            const isEdit = tableauWidgets.some(w => w.id === config.id);
+            if (isEdit) {
+              setTableauWidgets(prev => prev.map(w => w.id === config.id ? config : w));
+            } else {
+              setTableauWidgets(prev => [...prev, config]);
+              setActiveWidgets(prev => [...prev, config.id]);
+            }
+            setShowTableauBuilder(false);
+          }}
+          onClose={() => setShowTableauBuilder(false)}
+        />
       )}
     </div>
   );

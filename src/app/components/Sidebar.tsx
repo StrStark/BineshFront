@@ -87,7 +87,7 @@ export function Sidebar() {
     };
   }, [isOpen, isHovering, openSidebar, closeSidebar]);
 
-  return (
+   return (
     <>
       {/* منطقه trigger برای باز کردن sidebar */}
       {!isOpen && (
@@ -164,8 +164,10 @@ export function Sidebar() {
                     onClick={() => handleMenuClick(item.id)}
                     className="w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all"
                     style={{
-                      backgroundColor: isActive ? colors.backgroundSecondary : 'transparent',
-                      color: isActive ? colors.primary : colors.textSecondary
+                      backgroundColor: isActive ? colors.primary + '50' : 'transparent',
+                      color: isActive ? colors.primary : colors.textSecondary,
+                      border: isActive ? `2px solid ${colors.primary}` : '2px solid transparent',
+                      fontWeight: isActive ? '600' : '400'
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
@@ -213,8 +215,10 @@ export function Sidebar() {
                   onClick={() => handleMenuClick(item.id)}
                   className="w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all"
                   style={{
-                    backgroundColor: isActive ? colors.backgroundSecondary : 'transparent',
-                    color: isActive ? colors.primary : colors.textSecondary
+                    backgroundColor: isActive ? colors.primary + '50' : 'transparent',
+                    color: isActive ? colors.primary : colors.textSecondary,
+                    border: isActive ? `2px solid ${colors.primary}` : '2px solid transparent',
+                    fontWeight: isActive ? '600' : '400'
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {

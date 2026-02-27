@@ -7,6 +7,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
+<<<<<<< HEAD
+=======
+import { AIExportButtons } from "./AIExportButtons";
+>>>>>>> upstream/main
 
 interface PieChartData {
   title?: string;
@@ -52,11 +56,27 @@ export function AIPieChart({ data }: AIPieChartProps) {
 
   return (
     <div className="w-full space-y-2" dir="ltr">
+<<<<<<< HEAD
       {data.title && (
         <h3 className="text-sm font-medium text-right" style={{ color: colors.textPrimary }} dir="rtl">
           {data.title}
         </h3>
       )}
+=======
+      <div className="flex items-center justify-between" dir="rtl">
+        {data.title && (
+          <h3 className="text-sm font-medium text-right" style={{ color: colors.textPrimary }}>
+            {data.title}
+          </h3>
+        )}
+        <AIExportButtons
+          showExcel
+          title={data.title || "نمودار دایره‌ای"}
+          data={data.data}
+          columns={[nameKey, valueKey]}
+        />
+      </div>
+>>>>>>> upstream/main
       <div className="w-full h-64 sm:h-80">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
