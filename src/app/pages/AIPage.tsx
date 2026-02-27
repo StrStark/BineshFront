@@ -37,12 +37,9 @@ import { AIBarChart } from "../components/AIBarChart";
 import { AIPieChart } from "../components/AIPieChart";
 import { AIDonutChart } from "../components/AIDonutChart";
 import { AILineChart } from "../components/AILineChart";
-<<<<<<< HEAD
-=======
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AICopyButton } from "../components/AIExportButtons";
->>>>>>> upstream/main
 
 interface ToolCall {
   toolCallId: string;
@@ -57,11 +54,8 @@ interface Message {
   timestamp: Date;
   isStreaming?: boolean;
   toolCall?: ToolCall;
-<<<<<<< HEAD
-=======
   status?: string;
   statusTimestamp?: Date;
->>>>>>> upstream/main
 }
 
 type TabType = "limitations" | "capabilities" | "examples";
@@ -321,37 +315,6 @@ export function AIPage() {
               return;
             }
 
-<<<<<<< HEAD
-            // Handle Component event (render_table, etc.)
-            if (data.type === "Component" || data.Type === "Component") {
-              const payload = data.payload || data.Payload;
-              
-              if (payload && payload.component) {
-                console.log("Component received:", payload.component, payload.args);
-                
-                const newId = Date.now();
-                const componentMessage: Message = {
-                  id: newId,
-                  text: "", // Will be filled by following Token messages
-                  sender: "ai",
-                  timestamp: new Date(),
-                  isStreaming: true,
-                  toolCall: {
-                    toolCallId: `component_${newId}`,
-                    functionName: payload.component,
-                    argumentsJson: JSON.stringify(payload.args),
-                  },
-                };
-
-                setMessages((prev) => [...prev, componentMessage]);
-                streamingMessageIdRef.current = newId;
-              }
-              return;
-            }
-
-            // Handle Done event (streaming completed)
-=======
->>>>>>> upstream/main
             if (data.type === "Done" || data.Type === "Done") {
               // Clear thinking indicator
               setAiThinkingStatus(null);
@@ -557,14 +520,8 @@ export function AIPage() {
     try {
       const response = await chatAPI.getConversationMessages(conversationId);
       if (response.code === 200 && response.body) {
-<<<<<<< HEAD
-        // Convert API messages to our Message format
-        const loadedMessages: Message[] = response.body
-          .filter((msg: any) => msg.role !== "tool") // Skip tool messages
-=======
         const loadedMessages: Message[] = response.body
           .filter((msg: any) => msg.role !== "tool")
->>>>>>> upstream/main
           .map((msg: any, index: number) => {
             const message: Message = {
               id: Date.now() + index,
@@ -574,10 +531,6 @@ export function AIPage() {
               isStreaming: false,
             };
 
-<<<<<<< HEAD
-            // Parse toolCall if exists
-=======
->>>>>>> upstream/main
             if (msg.toolCall) {
               message.toolCall = {
                 toolCallId: msg.toolCall.toolCallId,
@@ -591,17 +544,9 @@ export function AIPage() {
 
         setMessages(loadedMessages);
       } else {
-<<<<<<< HEAD
-        console.error("Failed to load conversation messages");
         setMessages([]);
       }
     } catch (error: any) {
-      console.error("Failed to load conversation:", error);
-=======
-        setMessages([]);
-      }
-    } catch (error: any) {
->>>>>>> upstream/main
       setMessages([]);
     } finally {
       setIsLoadingMessages(false);
@@ -722,43 +667,6 @@ export function AIPage() {
           ) : (
             <div className="max-w-3xl w-full space-y-3 sm:space-y-4">
               {messages.map((message) => (
-<<<<<<< HEAD
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender === "user" ? "justify-start" : "justify-end"} animate-fadeIn`}
-                >
-                  <div
-                    className={`rounded-lg p-3 sm:p-4 space-y-3 ${
-                      message.sender === "user"
-                        ? "max-w-[85%] sm:max-w-[70%]"
-                        : message.toolCall
-                        ? "w-full"
-                        : "max-w-[85%] sm:max-w-[70%]"
-                    }`}
-                    style={{
-                      backgroundColor:
-                        message.sender === "user"
-                          ? colors.primary
-                          : colors.cardBackground,
-                      color:
-                        message.sender === "user"
-                          ? "#ffffff"
-                          : colors.textPrimary,
-                      borderWidth:
-                        message.sender === "user" ? "0" : "1px",
-                      borderStyle: "solid",
-                      borderColor:
-                        message.sender === "user"
-                          ? "transparent"
-                          : colors.border,
-                    }}
-                  >
-                    {/* Render component based on toolCall functionName */}
-                    {message.toolCall && (() => {
-                      try {
-                        const parsedData = JSON.parse(message.toolCall.argumentsJson);
-                        
-=======
                 <div key={message.id} className={`flex ${message.sender === "user" ? "justify-start" : "justify-end"} animate-fadeIn`}>
                   <div className={`rounded-lg p-3 sm:p-4 space-y-3 ${message.sender === "user" ? "max-w-[85%] sm:max-w-[70%]" : message.toolCall ? "w-full" : "max-w-[85%] sm:max-w-[70%]"}`} style={{ backgroundColor: message.sender === "user" ? colors.primary : colors.cardBackground, color: message.sender === "user" ? "#ffffff" : colors.textPrimary, borderWidth: message.sender === "user" ? "0" : "1px", borderStyle: "solid", borderColor: message.sender === "user" ? "transparent" : colors.border }}>
                     
@@ -780,7 +688,6 @@ export function AIPage() {
                     {message.toolCall && (() => {
                       try {
                         const parsedData = JSON.parse(message.toolCall.argumentsJson);
->>>>>>> upstream/main
                         switch (message.toolCall.functionName) {
                           case "render_table":
                             return <AITableRenderer data={parsedData} />;
@@ -796,25 +703,6 @@ export function AIPage() {
                             return null;
                         }
                       } catch (error) {
-<<<<<<< HEAD
-                        console.error("Error rendering component:", error);
-                        return (
-                          <div className="text-xs text-red-500">
-                            خطا در نمایش کامپوننت
-                          </div>
-                        );
-                      }
-                    })()}
-                    
-                    {/* Render text if it exists (explanation after component) */}
-                    {message.text && (
-                      <p
-                        className="text-xs sm:text-sm"
-                        dir="auto"
-                      >
-                        {message.text}
-                      </p>
-=======
                         return <div className="text-xs text-red-500">خطا در نمایش کامپوننت</div>;
                       }
                     })()}
@@ -862,7 +750,6 @@ export function AIPage() {
                       <div className="flex items-center justify-end pt-2 mt-2" style={{ borderTop: `1px solid ${colors.border}40` }}>
                         <AICopyButton text={message.text} />
                       </div>
->>>>>>> upstream/main
                     )}
                   </div>
                 </div>
@@ -944,11 +831,7 @@ export function AIPage() {
 
       {/* ChatGPT-style Sidebar - Always visible, toggles between collapsed/expanded */}
       <div
-<<<<<<< HEAD
-        className="w-72 flex-shrink-0 flex flex-col border-r fixed right-0 top-[64px] bottom-0 overflow-y-auto hidden md:flex transition-colors duration-200"
-=======
         className="hidden md:flex flex-col fixed left-0 top-[64px] bottom-0 z-30 transition-all duration-300 ease-in-out"
->>>>>>> upstream/main
         style={{
           width: isChatSidebarOpen ? '272px' : '60px',
           backgroundColor: colors.cardBackground,
