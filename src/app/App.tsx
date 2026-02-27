@@ -134,8 +134,4 @@ export default function App() {
       </Provider>
     </ErrorBoundary>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> upstream/main
