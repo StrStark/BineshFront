@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
       aboutJob: prefs.aboutJob,
       aboutInterests: prefs.aboutInterests,
       apiKey: prefs.apiKey,
+      model: prefs.model,
+      apiUrl: prefs.apiUrl,
     });
   } catch (error) {
     console.error("GetAiSettings error:", error);
@@ -37,7 +39,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { character, customInstructions, aboutJob, aboutInterests, apiKey } = body;
+    const { character, customInstructions, aboutJob, aboutInterests, apiKey, model, apiUrl } = body;
 
     const data: Record<string, string> = {};
     if (character !== undefined) data.character = character;
@@ -45,6 +47,8 @@ export async function PUT(request: NextRequest) {
     if (aboutJob !== undefined) data.aboutJob = aboutJob;
     if (aboutInterests !== undefined) data.aboutInterests = aboutInterests;
     if (apiKey !== undefined) data.apiKey = apiKey;
+    if (model !== undefined) data.model = model;
+    if (apiUrl !== undefined) data.apiUrl = apiUrl;
 
     const prefs = await prisma.aiPreference.upsert({
       where: { accountId: session!.userId },
@@ -58,6 +62,8 @@ export async function PUT(request: NextRequest) {
       aboutJob: prefs.aboutJob,
       aboutInterests: prefs.aboutInterests,
       apiKey: prefs.apiKey,
+      model: prefs.model,
+      apiUrl: prefs.apiUrl,
     });
   } catch (error) {
     console.error("UpdateAiSettings error:", error);

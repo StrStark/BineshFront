@@ -20,11 +20,11 @@ model Account {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   sessions  UserSession[]
-  chatSessions ChatSession[]
+  conversations Conversation[]
   aiPreference AiPreference?
 }
 
-model ChatSession {
+model Conversation {
   id        String   @id @default(cuid())
   title     String
   pinned    Boolean  @default(false)
@@ -32,20 +32,33 @@ model ChatSession {
   updatedAt DateTime @updatedAt
   accountId String
   account   Account  @relation(fields: [accountId], references: [id])
-  messages  ChatMessage[]
+  sessions  Session[]
+}
+
+model Session {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  status         String       @default("queued") // queued | processing | done | error
+  order          Int
+  messages       ChatMessage[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([conversationId])
 }
 
 model ChatMessage {
-  id        String      @id @default(cuid())
+  id        String   @id @default(cuid())
   msgId     Int
   role      String
-  content   String      @default("")
+  content   String   @default("")
   toolCall  String?
   status    String?
   statusTs  String?
-  createdAt DateTime    @default(now())
+  createdAt DateTime @default(now())
   sessionId String
-  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
 }
@@ -59,6 +72,8 @@ model AiPreference {
   aboutJob           String   @default("")
   aboutInterests     String   @default("")
   apiKey             String   @default("")
+  model              String   @default("gpt-4o-mini")
+  apiUrl             String   @default("https://api.openai.com/v1")
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }

@@ -166,7 +166,16 @@ export const authApi = {
 
   isAuthenticated: (): boolean => {
     const authToken = getCookie('authToken');
-    return !!authToken;
+    if (!authToken) return false;
+    try {
+      const payload = JSON.parse(atob(authToken.split('.')[1]));
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        return false;
+      }
+      return true;
+    } catch {
+      return !!authToken;
+    }
   },
 
   getAccessToken: (): string | null => {

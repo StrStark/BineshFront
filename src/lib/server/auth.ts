@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { NextRequest } from "next/server";
 
 const SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "binesh-panel-dev-secret-key-change-in-production"
@@ -64,9 +65,17 @@ export async function clearAuthCookies() {
   cookieStore.delete("userSessionId");
 }
 
-export async function getServerSession(): Promise<JwtPayload | null> {
+export async function getServerSession(request?: NextRequest): Promise<JwtPayload | null> {
   const cookieStore = await cookies();
-  const authToken = cookieStore.get("authToken")?.value;
+  let authToken = cookieStore.get("authToken")?.value;
+
+  // Fallback: read from Authorization header (client-side apiFetch sends this)
+  if (!authToken && request) {
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      authToken = authHeader.slice(7);
+    }
+  }
 
   if (!authToken) return null;
 

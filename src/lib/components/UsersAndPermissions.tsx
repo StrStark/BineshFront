@@ -63,18 +63,12 @@ const availablePermissions: Permission[] = [
 
 const roleLabels: Record<string, string> = {
   admin: "مدیر کل",
-  user: "کاربر",
-  viewer: "بیننده",
-  manager: "مدیر",
-  supervisor: "سرپرست",
+  manager: "ادمین",
 };
 
 const roleColors: Record<string, { bg: string; text: string; icon: string }> = {
   admin: { bg: "#fef3c7", text: "#b45309", icon: "#f59e0b" },
   manager: { bg: "#dbeafe", text: "#1e40af", icon: "#3b82f6" },
-  supervisor: { bg: "#f3e8ff", text: "#7c3aed", icon: "#a855f7" },
-  user: { bg: "#f3e8ff", text: "#7c3aed", icon: "#a855f7" },
-  viewer: { bg: "#f3e8ff", text: "#7c3aed", icon: "#a855f7" },
 };
 
 export function UsersAndPermissions() {
@@ -122,7 +116,7 @@ export function UsersAndPermissions() {
     mobile: "",
     birthDate: "",
     position: "",
-    role: "viewer" as string,
+    role: "manager" as string,
     avatar: "" as string,
   });
 
@@ -150,7 +144,7 @@ export function UsersAndPermissions() {
       mobile: "",
       birthDate: "",
       position: "",
-      role: "viewer",
+      role: "manager",
       avatar: "",
     });
     setShowAddUserModal(true);
@@ -389,7 +383,7 @@ export function UsersAndPermissions() {
                   className="text-right px-6 py-4 text-sm font-medium"
                   style={{ color: colors.textPrimary }}
                 >
-                  دسترسی‌ها
+                  سطح دسترسی
                 </th>
                 <th
                   className="text-right px-6 py-4 text-sm font-medium"
@@ -459,27 +453,17 @@ export function UsersAndPermissions() {
                     </span>
                   </td>
 
-                  {/* Permissions */}
+                  {/* Role */}
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => handleEditPermissions(user)}
-                      className="px-3 py-1.5 rounded-lg text-xs transition-colors"
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium"
                       style={{
-                        backgroundColor: colors.backgroundSecondary,
-                        color: colors.textSecondary,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = colors.primary;
-                        e.currentTarget.style.color = "#ffffff";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                          colors.backgroundSecondary;
-                        e.currentTarget.style.color = colors.textSecondary;
+                        backgroundColor: roleColors[user.role]?.bg || colors.backgroundSecondary,
+                        color: roleColors[user.role]?.text || colors.textSecondary,
                       }}
                     >
-                      {user.permissions.length} دسترسی
-                    </button>
+                      {roleLabels[user.role] || user.role}
+                    </span>
                   </td>
 
                   {/* Last Login */}
@@ -857,10 +841,7 @@ export function UsersAndPermissions() {
                             ...formData,
                             role: e.target.value as
                               | "admin"
-                              | "manager"
-                              | "supervisor"
-                              | "user"
-                              | "viewer",
+                              | "manager",
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl border outline-none appearance-none transition-colors pr-12"
@@ -876,10 +857,7 @@ export function UsersAndPermissions() {
                           (e.currentTarget.style.borderColor = colors.border)
                         }
                       >
-                        <option value="viewer">بیننده</option>
-                        <option value="user">کاربر</option>
-                        <option value="supervisor">سرپرست</option>
-                        <option value="manager">مدیر</option>
+                        <option value="manager">ادمین</option>
                         <option value="admin">مدیر کل</option>
                       </select>
                       <ChevronDown

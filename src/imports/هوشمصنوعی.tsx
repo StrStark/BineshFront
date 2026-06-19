@@ -240,7 +240,7 @@ function Frame3() {
     <div className="bg-[#1e0202] content-stretch flex flex-col items-start p-[7.879px] relative rounded-[5px] shrink-0">
       <div className="flex flex-col font-['Vazirmatn:Black',sans-serif] font-black justify-center leading-[0] relative shrink-0 text-[14.182px] text-nowrap text-white uppercase">
         <p className="leading-[12.606px]" dir="auto">
-          رهگیر
+          بینش
         </p>
       </div>
     </div>

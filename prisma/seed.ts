@@ -160,7 +160,7 @@ async function main() {
     await prisma.aiPreference.upsert({
       where: { accountId: account.id },
       update: {},
-      create: { accountId: account.id },
+      create: { accountId: account.id, model: "gpt-4o-mini", apiUrl: "https://api.openai.com/v1" },
     })
   }
   console.log(`✅ ${accounts.length} AI preferences created`)

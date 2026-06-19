@@ -1,10 +1,11 @@
 "use client"
 
-import { Sun, Moon, Search, Maximize, Minimize, User } from "lucide-react";
+import { Sun, Moon, Search, Maximize, Minimize, User, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useNavigation } from "../contexts/NavigationContext";
+import { useAuth } from "../contexts/AuthContext";
 
 interface UserInfo {
   name: string;
@@ -16,6 +17,7 @@ export function Navbar() {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const colors = useCurrentColors();
   const { setActivePage } = useNavigation();
+  const { logout } = useAuth();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [user, setUser] = useState<UserInfo | null>(null);
 
@@ -55,7 +57,7 @@ export function Navbar() {
   return (
     <>
       <nav
-        className="fixed top-0 left-0 right-0 border-b px-3 md:px-6 py-1 transition-colors duration-300 z-50"
+        className="fixed top-0 left-0 right-0 border-b px-3 md:px-6 py-2 transition-colors duration-300 z-50"
         style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
       >
         <div className="flex items-center justify-between">
@@ -79,6 +81,21 @@ export function Navbar() {
                 </div>
               </div>
             )}
+
+            <button
+              onClick={logout}
+              className="w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300"
+              style={{ backgroundColor: "transparent" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = colors.backgroundSecondary;
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+              }}
+              title="خروج از حساب"
+            >
+              <LogOut className="w-4 h-4" style={{ color: colors.textSecondary }} />
+            </button>
 
             <div className="flex items-center gap-2 md:gap-3">
               <button

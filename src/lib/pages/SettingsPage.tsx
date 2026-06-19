@@ -2,12 +2,9 @@
 
 import {
   Palette,
-  Database,
   Shield,
   Check,
   Users,
-  Building2,
-  Receipt,
   Phone,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -21,9 +18,6 @@ import { useSettingsTab, type SettingsTab } from "../contexts/SettingsTabContext
 import { ThemedButton } from "../components/ThemedButton";
 import { Toggle } from "../components/Toggle";
 import { UsersAndPermissions } from "../components/UsersAndPermissions";
-import { CompanyInfoSection } from "../components/CompanyInfoSection";
-import { AccountMappingSettings } from "../components/AccountMappingSettings";
-import { DataManagementContent } from "../components/DataManagementContent";
 
 export function SettingsPage() {
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -50,12 +44,8 @@ export function SettingsPage() {
   };
 
   const tabs: { id: SettingsTab; label: string; icon: any }[] = [
-    { id: "company", label: "اطلاعات شرکت", icon: Building2 },
     { id: "users", label: "کاربران", icon: Users },
-    { id: "accounting", label: "اتصال کد حساب", icon: Receipt },
-    { id: "data_management", label: "مدیریت داده‌ها", icon: Database },
     { id: "support", label: "پشتیبانی", icon: Phone },
-    { id: "security", label: "قوانین نرم افزار بینش", icon: Shield },
     { id: "appearance", label: "ظاهر و نمایش", icon: Palette },
   ];
 
@@ -497,9 +487,6 @@ export function SettingsPage() {
 
 
 
-            {/* Company Info */}
-            {activeTab === "company" && <CompanyInfoSection />}
-
             {/* Appearance */}
             {activeTab === "appearance" && (
               <div className="space-y-6">
@@ -651,20 +638,6 @@ export function SettingsPage() {
             {activeTab === "users" && (
               <div className="space-y-6">
                 <UsersAndPermissions />
-              </div>
-            )}
-
-            {/* Account Mapping */}
-            {activeTab === "accounting" && (
-              <div className="space-y-6">
-                <AccountMappingSettings />
-              </div>
-            )}
-
-            {/* Data Management */}
-            {activeTab === "data_management" && (
-              <div className="space-y-6">
-                <DataManagementContent />
               </div>
             )}
 

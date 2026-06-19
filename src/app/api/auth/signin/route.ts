@@ -79,20 +79,17 @@ export async function POST(request: NextRequest) {
     // Clean phone number
     const cleanPhone = phoneNumber.replace(/\s/g, "");
 
-    // Find or create account
-    let account = await prisma.account.findUnique({
+    // Only allow pre-registered accounts
+    const account = await prisma.account.findUnique({
       where: { username: cleanPhone },
     });
 
     if (!account) {
-      account = await prisma.account.create({
-        data: {
-          username: cleanPhone,
-          password: "",
-          name: cleanPhone,
-          role: "user",
-        },
-      });
+      return fail("این شماره موبایل در سیستم ثبت نشده است. با مدیر سیستم تماس بگیرید.");
+    }
+
+    if (account.status !== "active") {
+      return fail("حساب کاربری شما غیرفعال است. با مدیر سیستم تماس بگیرید.");
     }
 
     // Generate 6-digit OTP

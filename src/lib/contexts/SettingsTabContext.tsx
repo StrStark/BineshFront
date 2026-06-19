@@ -12,7 +12,7 @@ interface SettingsTabContextType {
 const SettingsTabContext = createContext<SettingsTabContextType | undefined>(undefined);
 
 export function SettingsTabProvider({ children }: { children: ReactNode }) {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("users");
 
   return (
     <SettingsTabContext.Provider value={{ activeTab, setActiveTab }}>

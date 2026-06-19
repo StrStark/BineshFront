@@ -256,7 +256,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <form onSubmit={handlePhoneSubmit} className="space-y-6">
               <div className="text-center space-y-2 mb-6">
                 <h2 className="text-lg font-semibold text-[#0e1526] dark:text-white">
-                  ورود به سیستم رهگیر
+                  ورود به سیستم بینش
                 </h2>
                 <p className="text-sm text-[#0e1526]/70 dark:text-[#8ca3b8]">
                   لطفا جهت ورود به نرم افزار شماره موبایل خود را وارد نمایید.
@@ -613,13 +613,13 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 {termsModalTab === "terms" ? (
                   <div className="space-y-4 text-sm text-[#585757] dark:text-[#8b92a8]">
                     <h3 className="font-semibold text-[#1c1c1c] dark:text-white text-base mb-3">
-                      شرایط و ضوابط استفاده از سیستم رهگیر
+                      شرایط و ضوابط استفاده از سیستم بینش
                     </h3>
                     
                     <div>
                       <p className="font-medium text-[#1c1c1c] dark:text-white mb-2">۱. پذیرش شرایط</p>
                       <p>
-                        با استفاده از سیستم رهگیر، شما تمامی شرایط و ضوابط ذکر شده در این سند را می‌پذیرید. 
+                        با استفاده از سیستم بینش، شما تمامی شرایط و ضوابط ذکر شده در این سند را می‌پذیرید. 
                         در صورت عدم پذیرش این شرایط، لطفاً از استفاده از سیستم خودداری نمایید.
                       </p>
                     </div>
@@ -643,7 +643,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                     <div>
                       <p className="font-medium text-[#1c1c1c] dark:text-white mb-2">۴. مالکیت معنوی</p>
                       <p>
-                        تمامی حقوق مالکیت معنوی سیستم رهگیر متعلق به شرکت بینش‌افزار آتی‌نگر می‌باشد و هرگونه کپی‌برداری 
+                        تمامی حقوق مالکیت معنوی سیستم بینش متعلق به شرکت بینش‌افزار آتی‌نگر می‌باشد و هرگونه کپی‌برداری 
                         یا استفاده غیرمجاز پیگرد قانونی خواهد داشت.
                       </p>
                     </div>

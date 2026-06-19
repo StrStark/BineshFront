@@ -95,7 +95,7 @@ export function GlobalReportButton() {
           </div>
           <div style="text-align: right;">
             <div style="font-size: 32px; font-weight: bold; color: rgb(255, 255, 255); margin-bottom: 8px;">
-              رهگیر
+              بینش
             </div>
             <div style="font-size: 16px; color: rgba(255, 255, 255, 0.9);">
               سیستم مدیریت کیفیت تماس
@@ -198,7 +198,7 @@ export function GlobalReportButton() {
       `;
       footer.innerHTML = `
         <div>تعداد سکشن‌ها: ${sections.length} | تعداد کل رکوردها: ${sections.reduce((sum, s) => sum + s.data.length, 0)}</div>
-        <div style="margin-top: 8px;">تولید شده توسط سیستم رهگیر - ${persianDate}</div>
+        <div style="margin-top: 8px;">تولید شده توسط سیستم بینش - ${persianDate}</div>
       `;
       container.appendChild(footer);
 
@@ -232,7 +232,7 @@ export function GlobalReportButton() {
         heightLeft -= 297;
       }
 
-      pdf.save(`گزارش-جامع-رهگیر-${persianDate}.pdf`);
+      pdf.save(`گزارش-جامع-بینش-${persianDate}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("خطا در تولید گزارش PDF");
@@ -260,7 +260,7 @@ export function GlobalReportButton() {
 
       const now = new Date();
       const persianDate = now.toLocaleDateString("fa-IR").replace(/\//g, "-");
-      XLSX.writeFile(workbook, `گزارش-جامع-رهگیر-${persianDate}.xlsx`);
+      XLSX.writeFile(workbook, `گزارش-جامع-بینش-${persianDate}.xlsx`);
     } catch (error) {
       console.error("Error generating Excel:", error);
       alert("خطا در تولید گزارش Excel");
@@ -305,7 +305,7 @@ export function GlobalReportButton() {
       const persianDate = now.toLocaleDateString("fa-IR").replace(/\//g, "-");
 
       link.setAttribute("href", url);
-      link.setAttribute("download", `گزارش-جامع-رهگیر-${persianDate}.csv`);
+      link.setAttribute("download", `گزارش-جامع-بینش-${persianDate}.csv`);
       link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();

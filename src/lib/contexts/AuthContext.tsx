@@ -23,11 +23,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const authenticated = authApi.isAuthenticated();
-    setIsAuthenticated(authenticated);
+
+    const initAuth = async () => {
+      const authenticated = authApi.isAuthenticated();
+      if (authenticated) {
+        // Verify the token is still valid server-side
+        try {
+          const res = await fetch('/api/auth/me');
+          if (!res.ok) {
+            // Token invalid — try refresh
+            try {
+              await authApi.refreshAccessToken();
+              setIsAuthenticated(true);
+            } catch {
+              authApi.logout();
+              setIsAuthenticated(false);
+            }
+          } else {
+            setIsAuthenticated(true);
+          }
+        } catch {
+          // Network error — keep current state
+          setIsAuthenticated(authenticated);
+        }
+      } else {
+        setIsAuthenticated(false);
+        // Try refresh anyway in case only the access token is stale
+        if (authApi.getRefreshToken()) {
+          try {
+            await authApi.refreshAccessToken();
+            setIsAuthenticated(true);
+          } catch {
+            setIsAuthenticated(false);
+          }
+        }
+      }
+    };
+
+    initAuth();
 
     const refreshInterval = setInterval(async () => {
-      if (authApi.isAuthenticated() && authApi.getRefreshToken()) {
+      if (authApi.getRefreshToken()) {
         try {
           await authApi.refreshAccessToken();
           setIsAuthenticated(true);
@@ -35,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsAuthenticated(false);
         }
       }
-    }, 50 * 60 * 1000);
+    }, 5 * 60 * 1000); // Every 5 minutes (matches access token expiry)
 
     return () => clearInterval(refreshInterval);
   }, []);

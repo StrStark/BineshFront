@@ -26,7 +26,7 @@ export function logApiStatus() {
   if (!SHOW_API_STATUS) return;
 
   console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #8b5cf6;');
-  console.log('%c🛡️ سیستم مدیریت خطای API - پنل رهگیر', colors.title);
+  console.log('%c🛡️ سیستم مدیریت خطای API - پنل بینش', colors.title);
   console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #8b5cf6;');
   
   console.log('\n%c✅ وضعیت سیستم', colors.success);

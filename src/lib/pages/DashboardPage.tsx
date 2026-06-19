@@ -78,7 +78,7 @@ const quickActions = [
 const otherSoftware = [
   {
     id: 1,
-    title: "سیستم مدیریت تماس هوشمند رهگیر",
+    title: "سیستم مدیریت تماس هوشمند بینش",
     link: "#",
   },
 ];
@@ -92,7 +92,7 @@ interface WidgetConfig {
   category: "ready" | "composite"; // دسته‌بندی ویجت‌ها
 }
 
-// ویجت‌های پنل رهگیر (مرکز تماس)
+// ویجت‌های پنل بینش (مرکز تماس)
 const availableWidgetsConfig: WidgetConfig[] = [
   { id: "total-calls", title: "مجموع تماس‌ها", icon: Phone, description: "نمایش نمودار تماس‌های هفتگی", component: TotalCallsWidget, category: "ready" },
   { id: "success-rate", title: "نرخ موفقیت", icon: CheckCircle2, description: "درصد و آمار تماس‌های موفق", component: SuccessRateWidget, category: "ready" },
@@ -285,7 +285,7 @@ export function DashboardPage() {
           پنل شخصی
         </h1>
         <p className="text-sm text-[#585757] dark:text-[#8b92a8]">
-          به پنل مدیریت رهگیر خوش آمدید
+          به پنل مدیریت بینش خوش آمدید
         </p>
       </div>
 

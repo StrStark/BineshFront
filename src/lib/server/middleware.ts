@@ -3,7 +3,7 @@ import { getServerSession } from "./auth";
 import { fail } from "./response";
 
 export async function requireAuth(request: NextRequest) {
-  const session = await getServerSession();
+  const session = await getServerSession(request);
 
   if (!session) {
     return { session: null, errorResponse: fail("Unauthorized", 401) };

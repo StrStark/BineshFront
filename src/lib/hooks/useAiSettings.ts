@@ -5,9 +5,9 @@ import { useState, useEffect, useCallback } from "react"
 export interface AiSettings {
   character: string
   customInstructions: string
-  aboutJob: string
-  aboutInterests: string
   apiKey: string
+  model: string
+  apiUrl: string
 }
 
 interface UseAiSettingsReturn {
@@ -46,13 +46,13 @@ export function useAiSettings(): UseAiSettingsReturn {
         throw new Error("Failed to fetch AI settings")
       }
       const json = await res.json()
-      const data = json.data || json
+      const data = json.body || json.data || json
       const s: AiSettings = {
         character: data.character || "حرفه‌ای",
         customInstructions: data.customInstructions || "",
-        aboutJob: data.aboutJob || "",
-        aboutInterests: data.aboutInterests || "",
         apiKey: data.apiKey || "",
+        model: data.model || "gapgpt-qwen-3.6",
+        apiUrl: data.apiUrl || "https://api.gapgpt.app/v1",
       }
       setSettings(s)
       saveCache(s)
@@ -75,9 +75,9 @@ export function useAiSettings(): UseAiSettingsReturn {
     const prev = settings || {
       character: "حرفه‌ای",
       customInstructions: "",
-      aboutJob: "",
-      aboutInterests: "",
       apiKey: "",
+      model: "gapgpt-qwen-3.6",
+      apiUrl: "https://api.gapgpt.app/v1",
     }
     const merged: AiSettings = { ...prev, ...partial }
     setSettings(merged)
@@ -93,13 +93,13 @@ export function useAiSettings(): UseAiSettingsReturn {
         throw new Error("Failed to save AI settings")
       }
       const json = await res.json()
-      const data = json.data || json
+      const data = json.body || json.data || json
       const s: AiSettings = {
         character: data.character || merged.character,
         customInstructions: data.customInstructions || merged.customInstructions,
-        aboutJob: data.aboutJob || merged.aboutJob,
-        aboutInterests: data.aboutInterests || merged.aboutInterests,
         apiKey: data.apiKey || merged.apiKey,
+        model: data.model || merged.model,
+        apiUrl: data.apiUrl || merged.apiUrl,
       }
       setSettings(s)
       saveCache(s)

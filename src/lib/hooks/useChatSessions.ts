@@ -27,16 +27,10 @@ export interface ChatSession {
   createdAt: string
   updatedAt: string
   messages: StoredMessage[]
+  sessions: { id: string; status: string; userText: string }[]
 }
 
-interface ApiSession {
-  id: string
-  title: string
-  pinned: boolean
-  createdAt: string
-  updatedAt: string
-  messages?: ApiMessage[]
-}
+// --- New API types ---
 
 interface ApiMessage {
   id: string
@@ -49,6 +43,27 @@ interface ApiMessage {
   createdAt: string
 }
 
+interface ApiSession {
+  id: string
+  conversationId: string
+  status: string
+  order: number
+  messages: ApiMessage[]
+  createdAt: string
+  updatedAt: string
+}
+
+interface ApiConversation {
+  id: string
+  title: string
+  pinned: boolean
+  createdAt: string
+  updatedAt: string
+  sessions: ApiSession[]
+}
+
+// --- Conversion helpers ---
+
 function toStoredMessage(m: ApiMessage): StoredMessage {
   return {
     id: m.msgId,
@@ -60,6 +75,18 @@ function toStoredMessage(m: ApiMessage): StoredMessage {
     statusTimestamp: m.statusTs || undefined,
   }
 }
+
+function flattenMessages(sessions: ApiSession[]): StoredMessage[] {
+  const all: StoredMessage[] = []
+  for (const s of sessions) {
+    for (const m of s.messages) {
+      all.push(toStoredMessage(m))
+    }
+  }
+  return all
+}
+
+// --- API helper ---
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const token = getCookie("authToken")
@@ -76,6 +103,8 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return data.body as T
 }
 
+// --- Hook ---
+
 export function useChatSessions() {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
@@ -83,19 +112,30 @@ export function useChatSessions() {
   const [loading, setLoading] = useState(true)
   const loadedRef = useRef(false)
 
-  // Load sessions from API on mount
+  function toChatSession(c: ApiConversation): ChatSession {
+    return {
+      id: c.id,
+      title: c.title,
+      pinned: c.pinned,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      messages: flattenMessages(c.sessions),
+      sessions: c.sessions.map((s) => ({
+        id: s.id,
+        status: s.status,
+        userText: s.messages.find((m) => m.role === "user")?.content || "",
+      })),
+    }
+  }
+
+  // Load conversations from API on mount
   useEffect(() => {
     let cancelled = false
     const load = async () => {
       try {
-        const data = await apiFetch<ApiSession[]>("/api/chat-sessions")
+        const data = await apiFetch<ApiConversation[]>("/api/conversations")
         if (!cancelled) {
-          setSessions(
-            data.map((s) => ({
-              ...s,
-              messages: [],
-            })),
-          )
+          setSessions(data.map(toChatSession))
         }
       } catch {
         // silently fail
@@ -122,35 +162,52 @@ export function useChatSessions() {
         : firstUserMessage
       : "چت جدید"
 
-    const created = await apiFetch<ApiSession>("/api/chat-sessions", {
+    const created = await apiFetch<ApiConversation>("/api/conversations", {
       method: "POST",
       body: JSON.stringify({ title }),
     })
 
-    const newSession: ChatSession = {
-      id: created.id,
-      title: created.title,
-      pinned: false,
-      createdAt: created.createdAt,
-      updatedAt: created.updatedAt,
-      messages: [],
+    if (firstUserMessage) {
+      try {
+        await apiFetch<ApiSession>(`/api/conversations/${created.id}/sessions`, {
+          method: "POST",
+          body: JSON.stringify({ content: firstUserMessage }),
+        })
+      } catch {
+        // session creation failed, conversation created at least
+      }
     }
+
+    let conversation = created
+    if (firstUserMessage) {
+      try {
+        conversation = await apiFetch<ApiConversation>(`/api/conversations/${created.id}`)
+      } catch {
+        // use the original response
+      }
+    }
+
+    const newSession = toChatSession(conversation)
 
     setSessions((prev) => [newSession, ...prev])
     setCurrentSessionId(newSession.id)
-    setLoadedSessionMessages([])
+    setLoadedSessionMessages(newSession.messages)
     return newSession.id
   }, [])
 
   const deleteSession = useCallback(async (id: string) => {
-    await apiFetch(`/api/chat-sessions/${id}`, { method: "DELETE" })
     setSessions((prev) => prev.filter((s) => s.id !== id))
     setCurrentSessionId((prev) => (prev === id ? null : prev))
-    setLoadedSessionMessages((prev) => (currentSessionId === id ? [] : prev))
-  }, [currentSessionId])
+    setLoadedSessionMessages([])
+    try {
+      await apiFetch(`/api/conversations/${id}`, { method: "DELETE" })
+    } catch {
+      // best-effort
+    }
+  }, [])
 
   const renameSession = useCallback(async (id: string, title: string) => {
-    await apiFetch(`/api/chat-sessions/${id}`, {
+    await apiFetch(`/api/conversations/${id}`, {
       method: "PUT",
       body: JSON.stringify({ title }),
     })
@@ -163,54 +220,56 @@ export function useChatSessions() {
     const session = sessions.find((s) => s.id === id)
     if (!session) return
     const pinned = !session.pinned
-    await apiFetch(`/api/chat-sessions/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ pinned }),
-    })
     setSessions((prev) =>
       prev.map((s) => (s.id === id ? { ...s, pinned, updatedAt: new Date().toISOString() } : s)),
     )
+    apiFetch(`/api/conversations/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ pinned }),
+    }).catch(() => {})
   }, [sessions])
 
   const loadSession = useCallback(async (id: string) => {
     try {
-      const data = await apiFetch<ApiSession>(`/api/chat-sessions/${id}`)
+      const data = await apiFetch<ApiConversation>(`/api/conversations/${id}`)
       setCurrentSessionId(data.id)
-      const storedMessages = (data.messages || []).map(toStoredMessage)
+      const storedMessages = flattenMessages(data.sessions)
       setLoadedSessionMessages(storedMessages)
     } catch {
       // silently fail
     }
   }, [])
 
+  /**
+   * Save messages to the conversation by updating the most recent session's messages.
+   * Each session holds messages for one exchange (user message + tool calls + AI response).
+   */
   const saveMessagesToSession = useCallback(
-    async (sessionId: string, messages: StoredMessage[], firstUserText?: string) => {
-      await apiFetch(`/api/chat-sessions/${sessionId}/messages`, {
-        method: "PUT",
-        body: JSON.stringify({ messages }),
-      })
-
-      // Auto-update title from first user message
-      if (firstUserText) {
-        const title =
-          firstUserText.length > 40
-            ? firstUserText.slice(0, 40) + "…"
-            : firstUserText
+    async (conversationId: string, messages: StoredMessage[], firstUserText?: string) => {
+      try {
+        const conv = await apiFetch<ApiConversation>(`/api/conversations/${conversationId}`)
+        const latestSession = conv.sessions[conv.sessions.length - 1]
+        if (latestSession) {
+          let lastUserIdx = -1
+          for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].sender === "user") {
+              lastUserIdx = i
+              break
+            }
+          }
+          const sessionMsgs = lastUserIdx >= 0 ? messages.slice(lastUserIdx) : messages
+          await apiFetch(
+            `/api/conversations/${conversationId}/sessions/${latestSession.id}/messages`,
+            { method: "PUT", body: JSON.stringify({ messages: sessionMsgs }) },
+          )
+        }
+        // Refresh local state from server
+        const updated = await apiFetch<ApiConversation>(`/api/conversations/${conversationId}`)
         setSessions((prev) =>
-          prev.map((s) =>
-            s.id === sessionId
-              ? { ...s, title, messages, updatedAt: new Date().toISOString() }
-              : s,
-          ),
+          prev.map((s) => (s.id === conversationId ? toChatSession(updated) : s)),
         )
-      } else {
-        setSessions((prev) =>
-          prev.map((s) =>
-            s.id === sessionId
-              ? { ...s, messages, updatedAt: new Date().toISOString() }
-              : s,
-          ),
-        )
+      } catch {
+        // Silently fail
       }
     },
     [],
