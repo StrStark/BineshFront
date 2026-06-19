@@ -235,7 +235,7 @@ function AvatarOneLine() {
     <div className="content-stretch flex gap-[8px] items-center relative shrink-0" data-name="Avatar+One Line">
       <Avatar />
       <p className="font-['Yekan_Bakh_FaNum:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#1c1c1c] text-[16px] text-nowrap" dir="auto">
-        مهندس میرحسینی
+        رامتین قیامی
       </p>
     </div>
   );
@@ -831,22 +831,12 @@ function MaskGroup1() {
   );
 }
 
-function AbcLogo() {
-  return (
-    <div className="absolute content-stretch flex items-center justify-between left-1/2 top-[calc(50%-464.75px)] translate-x-[-50%] translate-y-[-50%] w-[212px]" data-name="ABC logo">
-      <Group6 />
-      <MaskGroup1 />
-    </div>
-  );
-}
-
 function Component1() {
   return (
     <div className="absolute bg-white h-[1000px] left-[1248px] overflow-clip shadow-[0px_1px_3px_0px_rgba(0,0,0,0.2)] top-0 w-[264px]" data-name="Component 3">
       <div className="absolute bg-gradient-to-r from-[#eff6ff] h-[71px] left-0 to-[#eef2ff] top-0 via-[#eef4ff] via-[48.558%] w-[264px]" />
       <DashboardMainmenu />
       <Frame40 />
-      <AbcLogo />
       <div className="absolute h-0 left-[26px] top-[822px] w-[212px]">
         <div className="absolute inset-[-1px_0_0_0]">
           <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 212 1">

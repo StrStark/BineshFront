@@ -31,3 +31,10 @@ Thumbs.db
 # Cache
 .cache/
 .turbo/
+
+# Next.js
+.next/
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal

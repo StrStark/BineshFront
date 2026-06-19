@@ -594,7 +594,7 @@ function AvatarOneLine() {
     <div className="content-stretch flex gap-[8px] items-center relative shrink-0" data-name="Avatar+One Line">
       <Avatar />
       <p className="font-['Yekan_Bakh_FaNum:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[#1c1c1c] text-[16px] text-nowrap" dir="auto">
-        مهندس میرحسینی
+        رامتین قیامی
       </p>
     </div>
   );
@@ -2562,88 +2562,7 @@ function DashboardMainmenu() {
   );
 }
 
-function Group25() {
-  return (
-    <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid not-italic place-items-start relative shrink-0 text-right">
-      <p className="[grid-area:1_/_1] font-['Yekan_Bakh_FaNum:SemiBold',sans-serif] h-[21px] leading-[20px] ml-[156.36px] mt-0 relative text-[#1c1c1c] text-[18px] tracking-[-0.9px] translate-x-[-100%] w-[155.181px]" dir="auto">
-        پـنـل رهگیر
-      </p>
-      <p className="[grid-area:1_/_1] font-['Yekan_Bakh_FaNum:Light',sans-serif] leading-[normal] ml-[162px] mt-[19.25px] relative text-[10px] text-black text-nowrap translate-x-[-100%]" dir="auto">
-        سیستم هوشمند کنترل کیفی تماس‌ها
-      </p>
-    </div>
-  );
-}
 
-function MaskGroup3() {
-  return (
-    <div className="[grid-area:1_/_1] h-[46.659px] ml-0 mt-0 relative w-[41px]" data-name="Mask group">
-      <div className="absolute inset-[-1.07%_-1.22%]">
-        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 41.9999 47.6586">
-          <g id="Mask group">
-            <mask height="48" id="mask0_1_1771" maskUnits="userSpaceOnUse" style={{ maskType: "alpha" }} width="42" x="0" y="0">
-              <g id="Vector 25">
-                <path d={svgPaths.p11bd900} fill="var(--fill-0, #A1A1A1)" />
-                <path d={svgPaths.p34985d00} fill="var(--fill-0, #A1A1A1)" />
-                <path d={svgPaths.p1e2d4900} fill="var(--fill-0, #A1A1A1)" />
-                <path d={svgPaths.p1316ff80} fill="var(--fill-0, #A1A1A1)" />
-                <path d={svgPaths.p11bd900} stroke="var(--stroke-0, black)" />
-                <path d={svgPaths.p34985d00} stroke="var(--stroke-0, black)" />
-                <path d={svgPaths.p1e2d4900} stroke="var(--stroke-0, black)" />
-                <path d={svgPaths.p1316ff80} stroke="var(--stroke-0, black)" />
-              </g>
-            </mask>
-            <g mask="url(#mask0_1_1771)">
-              <rect fill="url(#paint0_linear_1_1771)" height="65.4353" id="Rectangle 34624143" width="60.4968" x="0.5" y="-4.74716" />
-              <path d={svgPaths.p264b3b80} fill="url(#paint1_linear_1_1771)" id="Rectangle 34624148" />
-              <path d={svgPaths.p3e8af400} fill="url(#paint2_linear_1_1771)" id="Rectangle 34624147" />
-              <path d={svgPaths.p2317d700} fill="var(--fill-0, #92A2C4)" id="Rectangle 34624146" />
-              <rect fill="url(#paint3_linear_1_1771)" height="8.53951" id="Rectangle 34624144" width="24.3839" x="13.4635" y="12.7434" />
-            </g>
-          </g>
-          <defs>
-            <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear_1_1771" x1="31.9316" x2="4.15244" y1="-3.46109" y2="44.1235">
-              <stop stopColor="#5F758D" />
-              <stop offset="0.263833" stopColor="#93A4C2" />
-              <stop offset="0.695244" stopColor="#65A2CF" />
-              <stop offset="1" stopColor="#93A4C2" />
-            </linearGradient>
-            <linearGradient gradientUnits="userSpaceOnUse" id="paint1_linear_1_1771" x1="21.9517" x2="21.9517" y1="25.6041" y2="37.9504">
-              <stop stopColor="#93A3BA" />
-              <stop offset="1" stopColor="#6FA2CC" />
-            </linearGradient>
-            <linearGradient gradientUnits="userSpaceOnUse" id="paint2_linear_1_1771" x1="25.0897" x2="2.40337" y1="1.01442" y2="10.4285">
-              <stop stopColor="#6F809A" stopOpacity="0" />
-              <stop offset="0.475962" stopColor="#64758F" />
-              <stop offset="1" stopColor="#252B34" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient gradientUnits="userSpaceOnUse" id="paint3_linear_1_1771" x1="37.1272" x2="19.2765" y1="16.9617" y2="18.505">
-              <stop stopColor="#899BB7" />
-              <stop offset="1" stopColor="#3C546E" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-    </div>
-  );
-}
-
-function Logo() {
-  return (
-    <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid place-items-start relative shrink-0" data-name="Logo">
-      <MaskGroup3 />
-    </div>
-  );
-}
-
-function AbcLogo() {
-  return (
-    <div className="absolute content-stretch flex items-center justify-between leading-[0] left-1/2 top-[calc(50%-464.75px)] translate-x-[-50%] translate-y-[-50%] w-[212px]" data-name="ABC logo">
-      <Group25 />
-      <Logo />
-    </div>
-  );
-}
 
 function PhUsers1() {
   return (
@@ -2762,7 +2681,6 @@ function Component3() {
     <div className="absolute bg-white h-[1000px] left-[1248px] overflow-clip shadow-[0px_1px_3px_0px_rgba(0,0,0,0.2)] top-0 w-[264px]" data-name="Component 3">
       <div className="absolute bg-gradient-to-r from-[#eff6ff] h-[71px] left-0 to-[#eef2ff] top-0 via-[#eef4ff] via-[48.558%] w-[264px]" />
       <DashboardMainmenu />
-      <AbcLogo />
       <Frame64 />
       <div className="absolute h-0 left-[26px] top-[822px] w-[212px]">
         <div className="absolute inset-[-1px_0_0_0]">

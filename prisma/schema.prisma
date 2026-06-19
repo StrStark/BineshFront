@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String
+  role      String   @default("user")
+  position  String?
+  title     String?
+  status    String   @default("active")
+  lastLogin String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions  UserSession[]
+  chatSessions ChatSession[]
+  aiPreference AiPreference?
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  title     String
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id])
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  msgId     Int
+  role      String
+  content   String      @default("")
+  toolCall  String?
+  status    String?
+  statusTs  String?
+  createdAt DateTime    @default(now())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model AiPreference {
+  id                 String   @id @default(cuid())
+  accountId          String   @unique
+  account            Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  character          String   @default("حرفه‌ای")
+  customInstructions String   @default("")
+  aboutJob           String   @default("")
+  aboutInterests     String   @default("")
+  apiKey             String   @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id             String          @id @default(cuid())
+  name           String
+  email          String?
+  phone          String?
+  totalPurchases Float           @default(0)
+  lastPurchase   String?
+  status         String          @default("active")
+  segment        String          @default("regular")
+  joinDate       String?
+  orderCount     Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  saleRecords    Sale[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  stock       Int      @default(0)
+  minStock    Int      @default(0)
+  maxStock    Int      @default(0)
+  status      String   @default("normal")
+  daysInStock Int      @default(0)
+  price       Float    @default(0)
+  lastUpdate  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sales       Sale[]
+}
+
+model Sale {
+  id             String   @id @default(cuid())
+  invoiceNumber  String
+  productName    String
+  category       String?
+  quantity       Int      @default(1)
+  customerName   String?
+  seller         String?
+  amount         Float    @default(0)
+  date           String?
+  paymentStatus  String?
+  orderStatus    String?
+  customerId     String?
+  productId      String?
+  customerRel    Customer? @relation(fields: [customerId], references: [id])
+  productRel     Product?  @relation(fields: [productId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model WarehouseTransaction {
+  id        String   @id @default(cuid())
+  date      String
+  in        Int      @default(0)
+  out       Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model FinancialTransaction {
+  id          String   @id @default(cuid())
+  date        String
+  description String
+  amount      Float    @default(0)
+  type        String
+  category    String?
+  createdAt   DateTime @default(now())
+}
+
+model WarehouseItem {
+  id          String   @id @default(cuid())
+  productName String
+  category    String
+  warehouse   String
+  quantity    Int      @default(0)
+  unit        String   @default("عدد")
+  lastUpdate  String?
+  status      String   @default("normal")
+  minStock    Int      @default(0)
+  maxStock    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ExhibitionVisit {
+  id                   String   @id @default(cuid())
+  fullName             String
+  phoneNumber          String
+  company              String
+  city                 String
+  province             String
+  interestedProducts   String
+  notes                String
+  recordedConversation String?
+  visitDate            DateTime
+  followUpStatus       String   @default("pending")
+  priority             String   @default("medium")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model UserSession {
+  id            String   @id @default(cuid())
+  userId        String
+  accessToken   String?
+  refreshToken  String?
+  userSessionId String?
+  expires       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  account       Account  @relation(fields: [userId], references: [id])
+}

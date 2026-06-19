@@ -2,10 +2,10 @@
 FROM registry.bineshafzar.ir/library/node:18-alpine AS deps
 WORKDIR /app
 
-COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
-RUN npm install
+COPY package.json package-lock.json* ./
+RUN npm ci
 
-# Build the Vite project
+# Build the Next.js project
 FROM registry.bineshafzar.ir/library/node:18-alpine AS build
 WORKDIR /app
 
@@ -13,14 +13,31 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NODE_ENV=production
-RUN npm i -g vite
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npx prisma generate
 RUN npm run build
 
 # Production image
-FROM registry.bineshafzar.ir/library/nginx:1.25-alpine AS runner
-WORKDIR /usr/share/nginx/html
+FROM registry.bineshafzar.ir/library/node:18-alpine AS runner
+WORKDIR /app
 
-COPY --from=build /app/dist .
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=build /app/public ./public
+COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=build /app/prisma ./prisma
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

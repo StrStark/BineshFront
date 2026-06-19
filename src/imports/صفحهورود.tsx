@@ -231,7 +231,7 @@ function Frame10() {
   return (
     <div className="absolute content-stretch flex flex-col items-start left-[523px] top-[261px] w-[234px]">
       <p className="font-['Yekan_Bakh_FaNum:Regular',sans-serif] leading-[normal] not-italic relative shrink-0 text-[0px] text-black text-center w-full" dir="auto">
-        <span className="text-[20px]">پنل مدیریتی</span>
+        <span className="text-[20px]">پنل مدیریت داده </span>
         <span className="text-[40px]"> </span>
         <span className="font-['Yekan_Bakh_FaNum:Bold',sans-serif] text-[#0e1b27] text-[40px]">بـیـنش</span>
       </p>

@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'Yekan Bakh FaNum';
-  src: url('../public/font/YekanBakhFaNum-Regular.ttf') format('truetype');
+  src: url('/font/YekanBakhFaNum-Regular.ttf') format('truetype');
    font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -8,7 +8,7 @@
 
 @font-face {
   font-family: 'Yekan Bakh';
-  src: url('../public/font/YekanBakhFaNum-Regular.ttf') format('truetype');
+  src: url('/font/YekanBakhFaNum-Regular.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;

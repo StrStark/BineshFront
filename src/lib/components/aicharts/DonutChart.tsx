@@ -1,0 +1,138 @@
+"use client"
+
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { useCurrentColors } from "../../contexts/ThemeColorsContext";
+
+export interface DonutChartDataItem {
+  name: string;
+  value: number;
+}
+
+export interface DonutChartProps {
+  title?: string;
+  data: DonutChartDataItem[];
+  innerRadius?: number;
+  outerRadius?: number;
+  showLegend?: boolean;
+  showTooltip?: boolean;
+  height?: number;
+}
+
+export function DonutChart({
+  title,
+  data,
+  innerRadius = 60,
+  outerRadius = 100,
+  showLegend = true,
+  showTooltip = true,
+  height = 300,
+}: DonutChartProps) {
+  const themeColors = useCurrentColors();
+  
+  // رنگ‌های ثابت از تم سیستم
+  const CHART_COLORS = [
+    themeColors.primary,
+    "#818cf8",
+    "#4ade80",
+    "#fbbf24",
+    "#f87171",
+    "#a78bfa",
+    "#fb923c",
+    "#ec4899",
+  ];
+  
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const percentage = ((payload[0].value / total) * 100).toFixed(1);
+      return (
+        <div className="bg-white/95 dark:bg-[#1a1f2e]/95 backdrop-blur-sm border border-[#e8e8e8] dark:border-[#2a3142] rounded-xl p-4 shadow-xl" dir="rtl">
+          <p className="text-sm font-bold text-[#0e1526] dark:text-white mb-2">
+            {payload[0].name}
+          </p>
+          <div className="flex items-center justify-between gap-6 mb-1">
+            <span className="text-xs text-[#585757] dark:text-[#8b92a8]">مقدار:</span>
+            <span className="text-sm font-semibold" style={{ color: payload[0].payload.fill }}>
+              {payload[0].value.toLocaleString("fa-IR")}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-6">
+            <span className="text-xs text-[#585757] dark:text-[#8b92a8]">درصد:</span>
+            <span className="text-sm font-semibold" style={{ color: payload[0].payload.fill }}>
+              {percentage.replace(".", "/")}%
+            </span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomLegend = ({ payload }: any) => {
+    return (
+      <div className="flex flex-wrap justify-center gap-3 mt-6" dir="rtl">
+        {payload.map((entry: any, index: number) => (
+          <div 
+            key={index} 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f7f9fb] dark:bg-[#0e1526]/50 hover:scale-105 transition-transform duration-200 cursor-pointer"
+          >
+            <div
+              className="w-2.5 h-2.5 rounded-full shadow-sm"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-xs font-medium text-[#0e1526] dark:text-white">
+              {entry.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="group bg-gradient-to-br from-white to-[#f7f9fb] dark:from-[#1a1f2e] dark:to-[#151b2b] border border-[#e8e8e8] dark:border-[#2a3142] rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300">
+      {title && (
+        <div className="flex items-center gap-2 mb-6" dir="rtl">
+          <div className="w-1 h-6 rounded-full" style={{ backgroundColor: themeColors.primary }}></div>
+          <h3 className="text-lg font-bold text-[#0e1526] dark:text-white">
+            {title}
+          </h3>
+        </div>
+      )}
+      <div style={{ height: `${height}px` }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={innerRadius}
+              outerRadius={outerRadius}
+              paddingAngle={2}
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={CHART_COLORS[index % CHART_COLORS.length]}
+                />
+              ))}
+            </Pie>
+            {showTooltip && <Tooltip content={<CustomTooltip />} />}
+            {showLegend && <Legend content={<CustomLegend />} />}
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      {/* Center label with total */}
+      <div className="text-center -mt-4">
+        <p className="text-xs text-[#585757] dark:text-[#8b92a8]" dir="rtl">
+          جمع کل
+        </p>
+        <p className="text-lg font-bold text-[#0e1526] dark:text-white" dir="rtl">
+          {total.toLocaleString("fa-IR")}
+        </p>
+      </div>
+    </div>
+  );
+}
