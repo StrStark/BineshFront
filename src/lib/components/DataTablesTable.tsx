@@ -21,7 +21,6 @@ const allTables: DataTable[] = [
   { name: "calls", db: "تماس‌ها", records: 89450, size: "3.2 GB", updated: "۲ دقیقه پیش", status: "active" },
   { name: "products", db: "محصولات", records: 15230, size: "1.5 GB", updated: "۳۰ دقیقه پیش", status: "active" },
   { name: "warehouse", db: "انبار", records: 12450, size: "0.7 GB", updated: "۴۵ دقیقه پیش", status: "active" },
-  { name: "exhibition_visits", db: "بازدید نمایشگاه", records: 3850, size: "0.3 GB", updated: "۱ ساعت پیش", status: "active" },
 ];
 
 export function DataTablesTable() {

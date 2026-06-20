@@ -26,12 +26,6 @@ const sampleData: Record<string, Record<string, any>[]> = {
     { productName: "محصول ج", count: 78, totalAmount: 350, growth: -3 },
     { productName: "محصول د", count: 64, totalAmount: 280, growth: 15 },
   ],
-  exhibition_visits: [
-    { fullName: "علی رضایی", company: "شرکت آلفا", city: "تهران", province: "تهران", followUpStatus: "پیگیری شده", priority: "بالا", count: 45 },
-    { fullName: "مریم احمدی", company: "شرکت بتا", city: "اصفهان", province: "اصفهان", followUpStatus: "در انتظار", priority: "متوسط", count: 32 },
-    { fullName: "رضا کریمی", company: "شرکت گاما", city: "شیراز", province: "فارس", followUpStatus: "بدون پیگیری", priority: "پایین", count: 18 },
-    { fullName: "سارا محمدی", company: "شرکت دلتا", city: "مشهد", province: "خراسان رضوی", followUpStatus: "پیگیری شده", priority: "متوسط", count: 27 },
-  ],
   customers_list: [
     { customerName: "شرکت الف", totalPurchase: 1500, orderCount: 12 },
     { customerName: "شرکت ب", totalPurchase: 980, orderCount: 8 },

@@ -8,7 +8,6 @@ import { ThemeColorsProvider } from "@/lib/contexts/ThemeColorsContext"
 import { SettingsProvider } from "@/lib/contexts/SettingsContext"
 import { CustomersProvider } from "@/lib/contexts/CustomersContext"
 import { ReportDataProvider } from "@/lib/contexts/ReportDataContext"
-import { ExhibitionVisitsProvider } from "@/lib/contexts/ExhibitionVisitsContext"
 import { SidebarProvider } from "@/lib/contexts/SidebarContext"
 import { NavigationProvider } from "@/lib/contexts/NavigationContext"
 import { SettingsTabProvider } from "@/lib/contexts/SettingsTabContext"
@@ -30,8 +29,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               <SettingsProvider>
                 <CustomersProvider>
                   <ReportDataProvider>
-                    <ExhibitionVisitsProvider>
-                      <SidebarProvider>
+                    <SidebarProvider>
                         <NavigationProvider>
                           <SettingsTabProvider>
                             <DndProvider backend={HTML5Backend}>
@@ -40,7 +38,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
                           </SettingsTabProvider>
                         </NavigationProvider>
                       </SidebarProvider>
-                    </ExhibitionVisitsProvider>
                   </ReportDataProvider>
                 </CustomersProvider>
               </SettingsProvider>

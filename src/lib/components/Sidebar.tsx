@@ -8,7 +8,6 @@ import {
   Warehouse,
   DollarSign,
   Bot,
-  CalendarDays,
   Settings,
   X,
 } from "lucide-react";
@@ -18,7 +17,7 @@ import { useCurrentColors } from "../contexts/ThemeColorsContext";
 import { useEffect } from "react";
 
 interface SidebarItem {
-  id: "dashboard" | "sales" | "products" | "customers" | "warehouse" | "financial" | "ai" | "exhibition" | "settings";
+  id: "dashboard" | "sales" | "products" | "customers" | "warehouse" | "financial" | "ai" | "settings";
   label: string;
   icon: any;
   badge?: number;
@@ -26,7 +25,6 @@ interface SidebarItem {
 
 const menuItems: SidebarItem[] = [
   { id: "dashboard", label: "داشبورد", icon: LayoutDashboard },
-  { id: "exhibition", label: "بازدید نمایشگاه", icon: CalendarDays },
   { id: "sales", label: "فروش", icon: ShoppingCart },
   { id: "products", label: "محصولات", icon: Package },
   { id: "customers", label: "مشتریان", icon: Users },

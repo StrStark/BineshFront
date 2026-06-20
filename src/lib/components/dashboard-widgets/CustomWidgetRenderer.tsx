@@ -9,15 +9,12 @@ import { customerAPI } from "../../api/customerAPI";
 import { financialAPI } from "../../api/financialAPI";
 import { Loader2 } from "lucide-react";
 import { useCurrentColors } from "../../contexts/ThemeColorsContext";
-import { useExhibitionVisits } from "../../contexts/ExhibitionVisitsContext";
-
 interface CustomWidgetRendererProps {
   widget: CustomWidgetData;
 }
 
 export function CustomWidgetRenderer({ widget }: CustomWidgetRendererProps) {
   const colors = useCurrentColors();
-  const { visits } = useExhibitionVisits();
   const [data, setData] = useState<Array<{ label: string; value: number }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,22 +102,6 @@ export function CustomWidgetRenderer({ widget }: CustomWidgetRendererProps) {
           ];
         }
 
-        // Exhibition Visits (Aggregated from Context)
-        else if (tableId === "exhibition_visits") {
-          // Aggregate visits by date
-          const aggregated = visits.reduce((acc: any, visit) => {
-            const date = visit.visitDate ? new Date(visit.visitDate).toLocaleDateString("fa-IR") : "نامشخص";
-            if (!acc[date]) {
-              acc[date] = { date, count: 0, converted: 0 };
-            }
-            acc[date].count += 1;
-            if (visit.followUpStatus === "converted") {
-              acc[date].converted += 1;
-            }
-            return acc;
-          }, {});
-          apiData = Object.values(aggregated);
-        }
       } 
       
       // --- Call Management Panel ---
@@ -191,7 +172,7 @@ export function CustomWidgetRenderer({ widget }: CustomWidgetRendererProps) {
     } finally {
       setLoading(false);
     }
-  }, [widget, visits]);
+  }, [widget]);
 
   // Initial Fetch
   useEffect(() => {

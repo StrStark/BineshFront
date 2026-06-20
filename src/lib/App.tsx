@@ -9,7 +9,6 @@ import { FinancialPage } from "./pages/FinancialPage";
 import { AIPage } from "./pages/AIPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { LoginPage } from "./pages/LoginPage";
-import ExhibitionVisits from "./pages/ExhibitionVisits";
 import { Provider } from "react-redux";
 import { store } from "./store";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -23,7 +22,6 @@ import {
 import { SettingsTabProvider } from "./contexts/SettingsTabContext";
 import { CustomersProvider } from "./contexts/CustomersContext";
 import { ReportDataProvider } from "./contexts/ReportDataContext";
-import { ExhibitionVisitsProvider } from "./contexts/ExhibitionVisitsContext";
 import { useCurrentColors } from "./contexts/ThemeColorsContext";
 import { Navbar } from "./components/Navbar";
 import { Sidebar } from "./components/Sidebar";
@@ -59,7 +57,6 @@ function AppContent() {
           {activePage === "warehouse" && <WarehousePage />}
           {activePage === "financial" && <FinancialPage />}
           {activePage === "ai" && <AIPage />}
-          {activePage === "exhibition" && <ExhibitionVisits />}
           {activePage === "settings" && <SettingsPage />}
         </main>
         <Sidebar />
@@ -89,8 +86,7 @@ export default function App() {
               <SettingsProvider>
                 <CustomersProvider>
                   <ReportDataProvider>
-                    <ExhibitionVisitsProvider>
-                      <SidebarProvider>
+                    <SidebarProvider>
                         <NavigationProvider>
                           <SettingsTabProvider>
                             <DndProvider backend={HTML5Backend}>
@@ -99,7 +95,6 @@ export default function App() {
                           </SettingsTabProvider>
                         </NavigationProvider>
                       </SidebarProvider>
-                    </ExhibitionVisitsProvider>
                   </ReportDataProvider>
                 </CustomersProvider>
               </SettingsProvider>

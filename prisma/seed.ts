@@ -141,19 +141,6 @@ async function main() {
   }
   console.log(`✅ ${warehouseItems.length} warehouse items created`)
 
-  // Create exhibition visits
-  const visits = [
-    { fullName: 'علی احمدی', phoneNumber: '09121234567', company: 'شرکت تجارت نوین', city: 'تهران', province: 'تهران', interestedProducts: 'پمپ‌های صنعتی، شیرآلات فشار قوی', notes: 'مشتری بسیار علاقه‌مند به خرید', visitDate: new Date('2024-12-15'), followUpStatus: 'contacted', priority: 'high' },
-    { fullName: 'زهرا محمدی', phoneNumber: '09359876543', company: 'صنایع فولاد پارس', city: 'اصفهان', province: 'اصفهان', interestedProducts: 'کمپرسورهای صنعتی', notes: 'نیاز به پیشنهاد قیمت', visitDate: new Date('2024-12-18'), followUpStatus: 'pending', priority: 'high' },
-    { fullName: 'محمد رضایی', phoneNumber: '09171122334', company: 'گروه صنعتی سپهر', city: 'شیراز', province: 'فارس', interestedProducts: 'موتورهای الکتریکی', notes: 'درخواست کاتالوگ', visitDate: new Date('2024-12-20'), followUpStatus: 'contacted', priority: 'medium' },
-    { fullName: 'فاطمه کریمی', phoneNumber: '09381234567', company: 'شرکت ساختمانی آسمان', city: 'مشهد', province: 'خراسان رضوی', interestedProducts: 'ابزارآلات برقی', notes: 'در حال بررسی برندها', visitDate: new Date('2024-12-22'), followUpStatus: 'pending', priority: 'medium' },
-    { fullName: 'حسین نوری', phoneNumber: '09131234567', company: 'کارخانه نساجی رضوان', city: 'یزد', province: 'یزد', interestedProducts: 'ماشین‌آلات نساجی', notes: 'خرید قطعی', visitDate: new Date('2024-12-25'), followUpStatus: 'converted', priority: 'high' },
-  ]
-  for (const visit of visits) {
-    await prisma.exhibitionVisit.create({ data: visit })
-  }
-  console.log(`✅ ${visits.length} exhibition visits created`)
-
   // Create AI preferences for existing accounts
   const accounts = await prisma.account.findMany()
   for (const account of accounts) {

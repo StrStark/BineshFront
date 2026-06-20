@@ -173,23 +173,6 @@ model WarehouseItem {
   updatedAt   DateTime @updatedAt
 }
 
-model ExhibitionVisit {
-  id                   String   @id @default(cuid())
-  fullName             String
-  phoneNumber          String
-  company              String
-  city                 String
-  province             String
-  interestedProducts   String
-  notes                String
-  recordedConversation String?
-  visitDate            DateTime
-  followUpStatus       String   @default("pending")
-  priority             String   @default("medium")
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-}
-
 model UserSession {
   id            String   @id @default(cuid())
   userId        String

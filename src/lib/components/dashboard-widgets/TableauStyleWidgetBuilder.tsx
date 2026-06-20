@@ -138,19 +138,6 @@ const softwares = [
         ],
       },
       {
-        id: "exhibition_visits",
-        name: "بازدید نمایشگاه",
-        fields: [
-          { id: "fullName", name: "نام و نام خانوادگی", dataType: "string" as const },
-          { id: "company", name: "شرکت", dataType: "string" as const },
-          { id: "city", name: "شهر", dataType: "string" as const },
-          { id: "province", name: "استان", dataType: "string" as const },
-          { id: "followUpStatus", name: "وضعیت پیگیری", dataType: "string" as const },
-          { id: "priority", name: "اولویت", dataType: "string" as const },
-          { id: "count", name: "تعداد", dataType: "number" as const },
-        ],
-      },
-      {
         id: "customers_list",
         name: "لیست مشتریان",
         fields: [
@@ -201,12 +188,6 @@ const sampleData: Record<string, Record<string, any>[]> = {
     { productName: "محصول ب", count: 95, totalAmount: 420, growth: 8 },
     { productName: "محصول ج", count: 78, totalAmount: 350, growth: -3 },
     { productName: "محصول د", count: 64, totalAmount: 280, growth: 15 },
-  ],
-  exhibition_visits: [
-    { fullName: "علی رضایی", company: "شرکت آلفا", city: "تهران", province: "تهران", followUpStatus: "پیگیری شده", priority: "بالا", count: 45 },
-    { fullName: "مریم احمدی", company: "شرکت بتا", city: "اصفهان", province: "اصفهان", followUpStatus: "در انتظار", priority: "متوسط", count: 32 },
-    { fullName: "رضا کریمی", company: "شرکت گاما", city: "شیراز", province: "فارس", followUpStatus: "بدون پیگیری", priority: "پایین", count: 18 },
-    { fullName: "سارا محمدی", company: "شرکت دلتا", city: "مشهد", province: "خراسان رضوی", followUpStatus: "پیگیری شده", priority: "متوسط", count: 27 },
   ],
   customers_list: [
     { customerName: "شرکت الف", totalPurchase: 1500, orderCount: 12 },

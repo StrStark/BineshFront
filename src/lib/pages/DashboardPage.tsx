@@ -32,7 +32,6 @@ import { TodoListWidget } from "../components/dashboard-widgets/TodoListWidget";
 import { SalesOverviewWidget } from "../components/widgets/SalesOverviewWidget";
 import { CustomersStatsWidget } from "../components/widgets/CustomersStatsWidget";
 import { ProductsCategoryWidget } from "../components/widgets/ProductsCategoryWidget";
-import { ExhibitionVisitsWidget } from "../components/widgets/ExhibitionVisitsWidget";
 import { RevenueChartWidget } from "../components/widgets/RevenueChartWidget";
 import { TopSellersWidget } from "../components/widgets/TopSellersWidget";
 import { RecentSalesWidget } from "../components/widgets/RecentSalesWidget";
@@ -118,7 +117,6 @@ const availableWidgetsConfig: WidgetConfig[] = [
   { id: "top-customers", title: "مشتریان", icon: Users, description: "آمار مشتریان", component: CustomersStatsWidget, category: "composite" },
   { id: "pending-orders", title: "سفارشات", icon: Package, description: "وضعیت سفارشات", component: OrdersStatusWidget, category: "composite" },
   { id: "recent-sales", title: "فروش‌های اخیر", icon: ShoppingBag, description: "آخرین فروش‌ها", component: RecentSalesWidget, category: "composite" },
-  { id: "exhibition-visits", title: "بازدید نمایشگاه", icon: Users, description: "آمار بازدیدکنندگان", component: ExhibitionVisitsWidget, category: "composite" },
   { id: "sales-trend", title: "نوسان فروش", icon: TrendingUp, description: "نمودار نوسان فروش", component: SalesTrendWidget, category: "composite" },
   { id: "calendar", title: "تقویم", icon: Calendar, description: "نمایش تقویم", component: CalendarWidget, category: "ready" },
   { id: "todo-list", title: "لیست وظایف", icon: ListTodo, description: "نمایش لیست وظایف", component: TodoListWidget, category: "ready" },
